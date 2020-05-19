@@ -3,12 +3,10 @@
     <arg name="bag_name" default="livox_test_1"/>
     <arg name="bag_path" value="/home/olek/projects/agribot_ws/src/agribot_obstacle_detection/bags/$(arg bag_name).bag"/>
 
-    <arg name="pcl_vis" default="false"/>
     <arg name="ros_vis" default="true"/>
 
     <!-- Obstacle detection node -->
     <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch" >
-        <arg name="pcl_vis" value="$(arg pcl_vis)"/>
         <arg name="ros_vis" value="$(arg ros_vis)"/>
     </include>
 
