@@ -166,32 +166,4 @@ class CloudProcessor
         ROS_INFO_STREAM("VoxelGridFilter took " << elapsedTime.count()
                         << " milliseconds");
     }
-
-    void centroidsExtraction(
-        std::vector<Object<PointT>> objects,
-        typename pcl::PointCloud<PointT>::Ptr centroidsCloud)
-    {
-        PointT center;
-
-        auto startTime = std::chrono::steady_clock::now();
-        centroidsCloud->clear();
-
-        for (auto object : objects)
-        {
-            pcl::computeCentroid<PointT>(*(object.getObjectCloud()), center);
-            centroidsCloud->points.push_back(center);
-            center.z = 0.0;
-            centroidsCloud->points.push_back(center);
-        }
-
-        centroidsCloud->width = centroidsCloud->points.size();
-        centroidsCloud->height = 1;
-
-        auto endTime = std::chrono::steady_clock::now();
-        auto elapsedTime =
-            std::chrono::duration_cast<std::chrono::milliseconds>
-            (endTime - startTime);
-        ROS_INFO_STREAM("Centroids extraction took " << elapsedTime.count()
-                        << " milliseconds");
-    }
 };
