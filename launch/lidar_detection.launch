@@ -1,0 +1,20 @@
+<launch>
+
+    <arg name="pcl_vis" default="false"/>
+    <arg name="ros_vis" default="true"/>
+    
+    <arg name="lidar_frame_id"      default="front_lidar_livox_horizon_link"/>
+    <arg name="pointcloud_topic"    default="/agribot/front_lidar/livox_horizon/pc2"/>
+    <arg name="marker_topic"        default="agribot_obstacles_markers"/>
+
+    <!-- Obstacle detection node -->
+    <node pkg="agribot_obstacle_detection" type="lidar_obstacle_detection_node" name="lidar_obstacle_detection_node" output="screen" launch-prefix="">
+        <rosparam command="load" file="$(find agribot_obstacle_detection)/param/lidar_detection.yaml" />
+        <param name="pcl_vis" value="$(arg pcl_vis)"/>
+        <param name="ros_vis" value="$(arg ros_vis)"/>
+        <param name="lidar_frame_id" value="$(arg lidar_frame_id)"/>
+        <param name="pointcloud_topic" value="$(arg pointcloud_topic)"/>
+        <param name="marker_topic" value="$(arg marker_topic)"/>
+    </node>
+
+</launch>
