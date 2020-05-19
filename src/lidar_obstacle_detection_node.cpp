@@ -1,10 +1,9 @@
 #include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <rviz_visual_tools/rviz_visual_tools.h>
-#include <pcl_conversions/pcl_conversions.h>
 
-#include <pcl/common/common.h>
-#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <vector>
 
@@ -12,7 +11,6 @@
 #include "agribot_obstacle_detection/object.h"
 #include "agribot_obstacle_detection/bounding_box.h"
 
-namespace pcl_vis = ::pcl::visualization;
 
 // Point type selection
 typedef pcl::PointXYZ Point;
@@ -33,11 +31,7 @@ class LidarObstacleDetectionNode
     // Rviz visualization
     rviz_visual_tools::RvizVisualToolsPtr visualTools;
 
-    // PCL Visualization
-    pcl::visualization::PCLVisualizer::Ptr viewer;
-
     // Node parameters
-    bool bPCLVis;
     bool bROSVis;
 
     // VoxelGrid filter parameters
@@ -56,7 +50,6 @@ class LidarObstacleDetectionNode
     CloudProcessor<Point> processor;
 
     // Used clouds
-    pcl::PointCloud<Point>::Ptr inputCloud;
     pcl::PointCloud<Point>::Ptr filteredCloud;
     pcl::PointCloud<Point>::Ptr planeCloud;
     pcl::PointCloud<Point>::Ptr detectedObjectsCloud;
@@ -70,7 +63,6 @@ class LidarObstacleDetectionNode
  public:
     explicit LidarObstacleDetectionNode(ros::NodeHandle *_nh) :
         nh(_nh),
-        inputCloud(new pcl::PointCloud<Point>),
         filteredCloud(new pcl::PointCloud<Point>),
         planeCloud(new pcl::PointCloud<Point>),
         detectedObjectsCloud(new pcl::PointCloud<Point>),
@@ -79,18 +71,13 @@ class LidarObstacleDetectionNode
         // Load detection & node parameters
         loadParameters();
 
-        // Initialize PCL visualization
-        if (bPCLVis)
-        {
-            initPCLVisualization();
-        }
-
         // Initialize ROS visualization
         if (bROSVis)
         {
             initROSVisualization();
         }
 
+        // pcSub = nh->subscribe<pcl::PointCloud<Point>>(pointcloudTopic,
         pcSub = nh->subscribe(pointcloudTopic,
                               1,
                               &LidarObstacleDetectionNode::pointcloudCallback,
@@ -101,26 +88,16 @@ class LidarObstacleDetectionNode
     {
     }
 
-
-    void pointcloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+    void pointcloudCallback(const pcl::PointCloud<Point>::ConstPtr& msg)
     {
-        // Convert PC2 to pcl::PointCloud
-        pcl::fromROSMsg(*msg, *inputCloud);
-
         // Process cloud
-        processingPipeline();
+        processingPipeline(msg);
 
         /* Visualization */
         // Compute bounding boxes
         for (int i = 0; i < detectedObjects.size(); ++i)
         {
             detectedObjects[i].computeBoundingBox();
-        }
-
-        // Initialize PCL visualization
-        if (bPCLVis)
-        {
-            PCLVisualization();
         }
 
         // Initialize ROS visualization
@@ -131,7 +108,7 @@ class LidarObstacleDetectionNode
     }
 
 
-    void processingPipeline()
+    void processingPipeline(const pcl::PointCloud<Point>::ConstPtr& inputCloud)
     {
         // VoxelGrid filtering
         processor.voxelGridFilter(inputCloud,
@@ -151,30 +128,6 @@ class LidarObstacleDetectionNode
                                                clusteringClusterTolerance,
                                                clusteringMinClusterSize,
                                                clusteringMaxClusterSize);
-    }
-
-
-    void PCLVisualization()
-    {
-        // Clear previous pointclouds and objects
-        viewer->removeAllPointClouds();
-        viewer->removeAllShapes();
-
-        // Plane visualization
-        pcl_vis::PointCloudColorHandlerCustom<Point> planeCloudGreen(planeCloud,
-                                                                 0, 255, 0);
-        viewer->addPointCloud(planeCloud, planeCloudGreen, "planeCloud");
-
-        // Input cloud visualization
-        pcl_vis::PointCloudColorHandlerCustom<Point> inputCloudWhite(inputCloud,
-                                                                 255, 255, 255);
-        viewer->addPointCloud(inputCloud, inputCloudWhite, "inputCloud");
-
-        // Clusters visualization - PCL viewer
-        for (int i = 0; i < detectedObjects.size(); ++i)
-        {
-            detectedObjects[i].visualize(viewer, i);
-        }
     }
 
 
@@ -245,34 +198,17 @@ class LidarObstacleDetectionNode
 
     void run()
     {
-        if (bPCLVis)
+        while (nh->ok())
         {
-            while (!viewer->wasStopped() && nh->ok())
-            {
-                ros::spinOnce();
-                viewer->spinOnce();
-            }
-        }
-        else
-        {
-            while (nh->ok())
-            {
-                ros::spinOnce();
-            }
+            ros::spinOnce();
         }
     }
 
     void loadParameters()
     {
-        // Node parameters
-        nh->param<bool>("pcl_vis",
-                bPCLVis,
-                false);
-
         nh->param<bool>("ros_vis",
                 bROSVis,
                 true);
-
 
         // Frame and topics parameters
         nh->param<std::string>("lidar_frame_id",
@@ -326,16 +262,6 @@ class LidarObstacleDetectionNode
         "- Max Cluster Size = " << clusteringMaxClusterSize << std::endl);
     }
 
-    void initPCLVisualization()
-    {
-        viewer.reset(new pcl_vis::PCLVisualizer("Lidar obstacle viewer"));
-        viewer->setBackgroundColor(0, 0, 0);
-        viewer->addCoordinateSystem(1.0);
-        viewer->initCameraParameters();
-        double pos_x = -8.3, pos_y = 0.05, pos_z = 2.5;
-        double up_x = 0.0369313, up_y = -0.0313284, up_z = 0.998827;
-        viewer->setCameraPosition(pos_x, pos_y, pos_z, up_x, up_y, up_z);
-    }
 
     void initROSVisualization()
     {
@@ -349,7 +275,6 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "lidar_obstacle_detection_node");
     ros::NodeHandle nh("~");
-
     LidarObstacleDetectionNode lodn(&nh);
     lodn.run();
 }

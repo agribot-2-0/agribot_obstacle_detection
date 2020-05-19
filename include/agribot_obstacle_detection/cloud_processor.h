@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pcl_ros/point_cloud.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
@@ -26,7 +27,7 @@ class CloudProcessor
 
 
     void extractInliersOutliers(
-        typename pcl::PointCloud<PointT>::Ptr inputCloud,
+        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         typename pcl::PointCloud<PointT>::Ptr inliersCloud,
         typename pcl::PointCloud<PointT>::Ptr outliersCloud,
         pcl::PointIndices::Ptr inliers)
@@ -48,7 +49,7 @@ class CloudProcessor
 
 
     void planeSegmentation(
-        typename pcl::PointCloud<PointT>::Ptr inputCloud,
+        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         typename pcl::PointCloud<PointT>::Ptr planeCloud,
         typename pcl::PointCloud<PointT>::Ptr objectsCloud,
         pcl::ModelCoefficients::Ptr coefficients,
@@ -97,7 +98,7 @@ class CloudProcessor
 
 
     std::vector<Object<PointT>> clustering(
-        typename pcl::PointCloud<PointT>::Ptr inputCloud,
+        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         float clusterTolerance,
         int minClusterSize,
         int maxClusterSize)
@@ -147,7 +148,7 @@ class CloudProcessor
     }
 
 
-    void voxelGridFilter(typename pcl::PointCloud<PointT>::Ptr inputCloud,
+    void voxelGridFilter(typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
                          typename pcl::PointCloud<PointT>::Ptr filteredCloud,
                          float filterResolution)
     {

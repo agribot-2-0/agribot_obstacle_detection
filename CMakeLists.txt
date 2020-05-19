@@ -8,10 +8,12 @@ add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rviz_visual_tools
+  pcl_ros
+  pcl_conversions
 )
 
-find_package(PCL 1.10 REQUIRED)
-add_definitions(${PCL_DEFINITIONS})
+# find_package(PCL 1.10 REQUIRED)
+# add_definitions(${PCL_DEFINITIONS})
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -31,7 +33,7 @@ include_directories(
 )
 
 link_directories(
- ${PCL_LIBRARY_DIRS}
+#  ${PCL_LIBRARY_DIRS}
 )
 
 add_executable(lidar_obstacle_detection_node  src/lidar_obstacle_detection_node.cpp
@@ -39,7 +41,8 @@ add_executable(lidar_obstacle_detection_node  src/lidar_obstacle_detection_node.
                                               include/agribot_obstacle_detection/object.h
                                               include/agribot_obstacle_detection/bounding_box.h
                                               )
-target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+# target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})
 add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 
 
