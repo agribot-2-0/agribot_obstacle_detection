@@ -201,10 +201,7 @@ class LidarObstacleDetectionNode
 
     void run()
     {
-        while (nh->ok())
-        {
-            ros::spinOnce();
-        }
+        ros::spin();
     }
 
     void loadParameters()
