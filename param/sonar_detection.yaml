@@ -1,0 +1,31 @@
+# Left sonar 1
+sonar0: /agribot/left_sonar_1
+sonar0_threshold: 1.1
+
+# Left sonar 2
+sonar1: /agribot/left_sonar_2
+sonar1_threshold: 1.2
+
+# Right sonar 1
+sonar2: /agribot/right_sonar_1
+sonar2_threshold: 1.3
+
+# Right sonar 2
+sonar3: /agribot/right_sonar_2
+sonar3_threshold: 1.4
+
+# Front sonar 1
+sonar4: /agribot/front_sonar_1
+sonar4_threshold: 1.5
+
+# Front sonar 2
+sonar5: /agribot/front_sonar_2
+sonar5_threshold: 1.6
+
+# Front sonar 3
+sonar6: /agribot/front_sonar_3
+sonar6_threshold: 1.7
+
+# Front sonar 4
+sonar7: /agribot/front_sonar_4
+sonar7_threshold: 1.8

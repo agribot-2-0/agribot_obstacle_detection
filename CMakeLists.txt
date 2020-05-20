@@ -29,7 +29,6 @@ include_directories(
 )
 
 link_directories(
-
 )
 
 # Lidar Obstacle Detection Node
@@ -40,6 +39,14 @@ add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection
                                               )
 target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})
 add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
+
+
+# Sonar Obstacle Detection Node
+add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection_node.cpp
+                                              )
+target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
+add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
+
 
 
 #############
