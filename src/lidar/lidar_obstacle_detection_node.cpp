@@ -80,8 +80,8 @@ class LidarObstacleDetectionNode
             initROSVisualization();
         }
 
-        // pcSub = nh->subscribe<pcl::PointCloud<Point>>(pointcloudTopic,
-        pcSub = nh->subscribe(pointcloudTopic,
+        // pcSub = nh->subscribe(pointcloudTopic,
+        pcSub = nh->subscribe<pcl::PointCloud<Point>>(pointcloudTopic,
                               1,
                               &LidarObstacleDetectionNode::pointcloudCallback,
                               this);
