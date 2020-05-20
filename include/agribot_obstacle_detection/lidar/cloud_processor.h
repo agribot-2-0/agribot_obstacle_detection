@@ -11,7 +11,7 @@
 #include <vector>
 #include <chrono>   // NOLINT [build/c++11]
 
-#include "agribot_obstacle_detection/object.h"
+#include "agribot_obstacle_detection/lidar/object.h"
 
 template<typename PointT>
 class CloudProcessor

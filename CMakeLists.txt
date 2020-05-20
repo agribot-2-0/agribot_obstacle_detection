@@ -36,10 +36,10 @@ link_directories(
 #  ${PCL_LIBRARY_DIRS}
 )
 
-add_executable(lidar_obstacle_detection_node  src/lidar_obstacle_detection_node.cpp
-                                              include/agribot_obstacle_detection/cloud_processor.h
-                                              include/agribot_obstacle_detection/object.h
-                                              include/agribot_obstacle_detection/bounding_box.h
+add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection_node.cpp
+                                              include/agribot_obstacle_detection/lidar/cloud_processor.h
+                                              include/agribot_obstacle_detection/lidar/object.h
+                                              include/agribot_obstacle_detection/lidar/bounding_box.h
                                               )
 # target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})

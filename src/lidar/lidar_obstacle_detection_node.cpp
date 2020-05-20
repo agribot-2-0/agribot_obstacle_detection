@@ -7,9 +7,9 @@
 
 #include <vector>
 
-#include "agribot_obstacle_detection/cloud_processor.h"
-#include "agribot_obstacle_detection/object.h"
-#include "agribot_obstacle_detection/bounding_box.h"
+#include "agribot_obstacle_detection/lidar/cloud_processor.h"
+#include "agribot_obstacle_detection/lidar/object.h"
+#include "agribot_obstacle_detection/lidar/bounding_box.h"
 
 
 // Point type selection

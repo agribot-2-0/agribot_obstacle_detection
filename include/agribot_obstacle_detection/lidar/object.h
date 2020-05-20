@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "agribot_obstacle_detection/bounding_box.h"
+#include "agribot_obstacle_detection/lidar/bounding_box.h"
 
 template<typename PointT>
 class Object
