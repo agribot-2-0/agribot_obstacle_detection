@@ -68,6 +68,9 @@ class LidarObstacleDetectionNode
         detectedObjectsCloud(new pcl::PointCloud<Point>),
         groundPlaneCoefficients(new pcl::ModelCoefficients)
     {
+        pointcloudTopic = "input_cloud";
+        markerTopic = "obstacle_markers";
+
         // Load detection & node parameters
         loadParameters();
 
@@ -214,15 +217,6 @@ class LidarObstacleDetectionNode
         nh->param<std::string>("lidar_frame_id",
                 frameId,
                 "lidar_link");
-
-        nh->param<std::string>("pointcloud_topic",
-                pointcloudTopic,
-                "/agribot/lidar/pc2");
-
-        nh->param<std::string>("marker_topic",
-                markerTopic,
-                "agribot_obstacles_markers");
-
 
         // Obstacle detection parameters
         nh->param<float>("voxel_grid_filter_resolution",
