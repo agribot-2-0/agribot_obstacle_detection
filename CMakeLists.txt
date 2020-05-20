@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rviz_visual_tools
   pcl_ros
   pcl_conversions
+  sensor_msgs
 )
 
 
