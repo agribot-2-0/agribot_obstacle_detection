@@ -65,7 +65,7 @@ class SonarObstacleDetectionNode
                 boost::bind(&SonarObstacleDetectionNode::sonarCallback,
                             this, _1, topic));
 
-            // Add subscriber to soubscribers map
+            // Add subscriber to subscribers map
             std::pair<std::string, std::shared_ptr<ros::Subscriber>> pair(
                 topic, sub);
             subscribers.insert(pair);
