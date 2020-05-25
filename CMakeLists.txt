@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   sensor_msgs
+  agribot_msgs
 )
 
 
@@ -44,6 +45,7 @@ add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 
 # Sonar Obstacle Detection Node
 add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection_node.cpp
+                                              src/sonar/sonar.cpp
                                               )
 target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
 add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
