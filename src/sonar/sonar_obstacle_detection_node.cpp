@@ -27,7 +27,10 @@ class SonarObstacleDetectionNode
         nh(_nh)
     {
         // Create sonar detection publisher with latched connection
-        sonarDetectionPub = nh->advertise<agribot_msgs::SonarDetection>("sonar_detection", 1, true);
+        sonarDetectionPub =
+            nh->advertise<agribot_msgs::SonarDetection>("sonar_detection",
+                                                        1,
+                                                        true);
 
         // Load sonar parameters
         loadSonars();
@@ -86,10 +89,16 @@ class SonarObstacleDetectionNode
     }
 
 
-    void updateSonarDetectionMsg(std::string id, uint8_t status, float shortestRange, float lastRange)
+    void updateSonarDetectionMsg(std::string id,
+                                 uint8_t status,
+                                 float shortestRange,
+                                 float lastRange)
     {
         // Update status for sonar matching id
-        for (auto it = sonarDetectionMsg.sonars.begin(); it != sonarDetectionMsg.sonars.end(); ++it)
+        auto begin = sonarDetectionMsg.sonars.begin();
+        auto end = sonarDetectionMsg.sonars.end();
+
+        for (auto it = begin; it != end; ++it)
         {
             if (it->id == id)
             {
@@ -119,7 +128,7 @@ class SonarObstacleDetectionNode
             std::shared_ptr<ros::Subscriber> sub;
             sub = std::make_shared<ros::Subscriber>();
 
-            // Create boost::bind callback function, which passes 
+            // Create boost::bind callback function, which passes
             // appropriate id string, used to determine source
             // of incoming measurement
             auto boostSonarCallback = boost::bind(
@@ -152,7 +161,7 @@ class SonarObstacleDetectionNode
         std::size_t i = 0;
 
         std::string sonarField, thresholdField, topicField, historyLengthField;
-        
+
         float threshold;
         int historyLength;
         std::string id, topic;
@@ -167,7 +176,9 @@ class SonarObstacleDetectionNode
 
             if (nh->hasParam(sonarField))
             {
-                if (nh->hasParam(topicField) && nh->hasParam(thresholdField) && nh->hasParam(historyLengthField))
+                if (nh->hasParam(topicField)
+                    && nh->hasParam(thresholdField)
+                    && nh->hasParam(historyLengthField))
                 {
                     // Load all parameters for a sonar
                     nh->getParam(sonarField, id);
@@ -179,7 +190,7 @@ class SonarObstacleDetectionNode
                     Sonar sonar(threshold, historyLength, id, topic);
                     std::pair<std::string, Sonar> sonarPair(id, sonar);
                     sonars.insert(sonarPair);
-                    
+
                     ++i;
                 }
                 else

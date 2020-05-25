@@ -1,6 +1,9 @@
 #include "agribot_obstacle_detection/sonar/sonar.h"
 
-Sonar::Sonar(float setThreshold, std::size_t setHistorySize, std::string setId, std::string setTopic)
+Sonar::Sonar(float setThreshold,
+             std::size_t setHistorySize,
+             std::string setId,
+             std::string setTopic)
 {
     threshold = setThreshold;
     historySize = setHistorySize;
@@ -23,11 +26,6 @@ void Sonar::addRange(float newRange)
     ranges.push_back(newRange);
 }
 
-bool Sonar::hasAnyMeasurement()
-{
-    return ranges.size() > 0;
-}
-
 bool Sonar::isObstacleDetected()
 {
     for (auto it = ranges.begin(); it != ranges.end(); ++it)
@@ -43,6 +41,11 @@ bool Sonar::isObstacleDetected()
     return false;
 }
 
+float Sonar::getThreshold()
+{
+    return threshold;
+}
+
 float Sonar::getShortestRange()
 {
     return *std::min_element(ranges.begin(), ranges.end());
@@ -53,9 +56,9 @@ float Sonar::getLastRange()
     return ranges.back();
 }
 
-float Sonar::getThreshold()
+std::string Sonar::getId()
 {
-    return threshold;
+    return id;
 }
 
 std::string Sonar::getTopic()
@@ -63,14 +66,10 @@ std::string Sonar::getTopic()
     return topic;
 }
 
-std::string Sonar::getId()
-{
-    return id;
-}
 
 // Ostream for debugging purposes
-std::ostream &operator<<(std::ostream &os, Sonar const &sonar) 
-{ 
+std::ostream &operator<<(std::ostream &os, Sonar const &sonar)
+{
     os << std::endl << "Sonar: " << sonar.id << std::endl
        << "Threshold: " << sonar.threshold << std::endl
        << "History size: " << sonar.historySize << std::endl

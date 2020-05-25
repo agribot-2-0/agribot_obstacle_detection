@@ -8,35 +8,38 @@
 class Sonar
 {
  private:
-   // Threshold for determination of obstacle presence
-   float threshold;
+    // Threshold for determination of obstacle presence
+    float threshold;
 
-   // Vector keeping history of range measurements
-   std::vector<float> ranges;
+    // Vector keeping history of range measurements
+    std::vector<float> ranges;
 
-   // Number of samples to be kept in history
-   std::size_t historySize;
+    // Number of samples to be kept in history
+    std::size_t historySize;
 
-   // Sonar identifier
-   std::string id;
+    // Sonar identifier
+    std::string id;
 
-   // Sonar topic
-   std::string topic;
+    // Sonar topic
+    std::string topic;
 
  public:
-   Sonar(float threshold, std::size_t historySize = 1, std::string id = "", std::string topic = "");
-   ~Sonar();
+    Sonar(float threshold,
+          std::size_t historySize = 1,
+          std::string id = "",
+          std::string topic = "");
+    ~Sonar();
 
-   // Add range measurement to the vector
-   void addRange(float newRange);
+    // Add range measurement to the vector
+    void addRange(float newRange);
 
-   bool hasAnyMeasurement();
-   bool isObstacleDetected();
-   std::string getTopic();
-   std::string getId();
-   float getThreshold();
-   float getShortestRange();
-   float getLastRange();
+    bool isObstacleDetected();
 
-   friend std::ostream &operator<<(std::ostream &os, Sonar const &sonar);
+    float getThreshold();
+    float getShortestRange();
+    float getLastRange();
+    std::string getId();
+    std::string getTopic();
+
+    friend std::ostream &operator<<(std::ostream &os, Sonar const &sonar);
 };
