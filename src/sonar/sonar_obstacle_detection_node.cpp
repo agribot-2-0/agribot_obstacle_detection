@@ -75,20 +75,6 @@ class SonarObstacleDetectionNode
         publishSonarDetecionMsg();
     }
 
-    void initSonarDetectionMsg()
-    {
-        // Add entry to sonarDetectionMsg for every laoded sonar
-        for (auto it = sonars.begin(); it != sonars.end(); ++it)
-        {
-            agribot_msgs::SonarStatus sonarStatusMsg;
-            sonarStatusMsg.id = it->second.getId();
-            sonarStatusMsg.status = agribot_msgs::SonarStatus::NO_MEASUREMENT;
-            sonarStatusMsg.threshold = it->second.getThreshold();
-            sonarDetectionMsg.sonars.push_back(sonarStatusMsg);
-        }
-    }
-
-
     void updateSonarDetectionMsg(std::string id,
                                  uint8_t status,
                                  float shortestRange,
@@ -154,6 +140,18 @@ class SonarObstacleDetectionNode
         }
     }
 
+    void initSonarDetectionMsg()
+    {
+        // Add entry to sonarDetectionMsg for every laoded sonar
+        for (auto it = sonars.begin(); it != sonars.end(); ++it)
+        {
+            agribot_msgs::SonarStatus sonarStatusMsg;
+            sonarStatusMsg.id = it->second.getId();
+            sonarStatusMsg.status = agribot_msgs::SonarStatus::NO_MEASUREMENT;
+            sonarStatusMsg.threshold = it->second.getThreshold();
+            sonarDetectionMsg.sonars.push_back(sonarStatusMsg);
+        }
+    }
 
     void loadSonars()
     {
