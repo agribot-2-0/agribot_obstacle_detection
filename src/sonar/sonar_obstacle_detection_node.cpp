@@ -13,6 +13,9 @@ class SonarObstacleDetectionNode
     ros::NodeHandle *nh;
     ros::Publisher sonarDetectionPub;
 
+    // ROS variables
+    ros::Time lastTimestamp;
+
     // Sonars map with id as a key
     std::map<std::string, Sonar> sonars;
 
@@ -24,7 +27,8 @@ class SonarObstacleDetectionNode
 
  public:
     explicit SonarObstacleDetectionNode(ros::NodeHandle *_nh) :
-        nh(_nh)
+        nh(_nh),
+        lastTimestamp(ros::Time::now())
     {
         // Create sonar detection publisher with latched connection
         sonarDetectionPub =
@@ -55,9 +59,9 @@ class SonarObstacleDetectionNode
         auto sonar = sonars.find(id);
         sonar->second.addRange(msg->range);
 
-        uint8_t status;
 
         // Check if obstacle is present in any of measurements
+        uint8_t status;
         if (sonar->second.isObstacleDetected())
         {
             status = agribot_msgs::SonarStatus::OBSTACLE_DETECTED;
@@ -67,8 +71,12 @@ class SonarObstacleDetectionNode
             status = agribot_msgs::SonarStatus::NO_OBSTACLE;
         }
 
+        // Get shortest and last range of the sonar
         float shortestRange = sonar->second.getShortestRange();
         float lastRange = sonar->second.getLastRange();
+
+        // Update lastTimestamp
+        updateLastTimestamp(msg->header.stamp);
 
         // Update and publish SonarDetection message
         updateSonarDetectionMsg(id, status, shortestRange, lastRange);
@@ -98,10 +106,20 @@ class SonarObstacleDetectionNode
 
     void publishSonarDetecionMsg()
     {
-        sonarDetectionMsg.header.stamp = ros::Time::now();
+        sonarDetectionMsg.header.stamp = lastTimestamp;
         sonarDetectionPub.publish(sonarDetectionMsg);
     }
 
+    void updateLastTimestamp(ros::Time newTimestamp)
+    {
+        ros::Duration timeDiff = newTimestamp - lastTimestamp;
+
+        // Update only if newTimestamp is newer than lastTimestamp
+        if (timeDiff.toNSec() > 0)
+        {
+            lastTimestamp = newTimestamp;
+        }
+    }
 
     void registerSubscribers()
     {
