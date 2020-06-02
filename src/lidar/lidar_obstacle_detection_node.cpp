@@ -1,5 +1,8 @@
 #include <ros/ros.h>
 #include <rviz_visual_tools/rviz_visual_tools.h>
+#include <agribot_msgs/ObjectClass.h>
+#include <agribot_msgs/DetectedObject.h>
+#include <agribot_msgs/DetectedObjectsArray.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
@@ -22,7 +25,7 @@ class LidarObstacleDetectionNode
     // ROS handlers
     ros::NodeHandle *nh;
     ros::Subscriber pcSub;
-    ros::Publisher bbArrayPub;
+    ros::Publisher objectsPub;
 
     std::string frameId;
     std::string pointcloudTopic;
@@ -80,7 +83,10 @@ class LidarObstacleDetectionNode
             initROSVisualization();
         }
 
-        // pcSub = nh->subscribe(pointcloudTopic,
+        objectsPub = nh->advertise<agribot_msgs::DetectedObjectsArray>("detected_objects",
+                                                                       1,
+                                                                       true);
+
         pcSub = nh->subscribe<pcl::PointCloud<Point>>(pointcloudTopic,
                               1,
                               &LidarObstacleDetectionNode::pointcloudCallback,
@@ -93,20 +99,31 @@ class LidarObstacleDetectionNode
 
     void pointcloudCallback(const pcl::PointCloud<Point>::ConstPtr& msg)
     {
+        /* Processing */
         // Process cloud
         processingPipeline(msg);
 
-        /* Visualization */
-        // Compute bounding boxes
+        // Compute bounding box and centroid of each cluster
         for (int i = 0; i < detectedObjects.size(); ++i)
         {
             detectedObjects[i].computeBoundingBox();
+            detectedObjects[i].computeCentroid();
+            
+            // For now simply give unique index
+            detectedObjects[i].setId(i);
         }
 
-        // Initialize ROS visualization
+        // Convert PCL timestamp to ROS timestamp
+        ros::Time stamp = pcl_conversions::fromPCL(msg->header.stamp);
+        
+        // Publish array with detected objects
+        publishDetectedObjectsArray(stamp);
+
+        /* Visualization */
+        // Publish ROS visualization
         if (bROSVis)
         {
-            ROSVisualization();
+            publishROSVisualization();
         }
     }
 
@@ -134,7 +151,36 @@ class LidarObstacleDetectionNode
     }
 
 
-    void ROSVisualization()
+    void publishDetectedObjectsArray(ros::Time stamp)
+    {
+        agribot_msgs::DetectedObjectsArray objectsArray;
+
+        for (auto it = detectedObjects.begin(); it != detectedObjects.end(); ++it)
+        {
+            // Fill in pose and bounding box information
+            agribot_msgs::DetectedObject object;
+            object = it->toROSMsg();
+
+            // Set class to UNKNOWN
+            agribot_msgs::ObjectClass objectClass;
+            objectClass.object_class = agribot_msgs::ObjectClass::UNKNOWN;
+            objectClass.probability = 1.0;
+            // Add class to vector of classes
+            object.classes.push_back(objectClass);
+
+            // Add object to vector of detected objects
+            objectsArray.objects.push_back(object);
+        }
+
+        objectsArray.header.frame_id = frameId;
+        objectsArray.header.stamp = stamp;
+
+        // Publish detected objects array
+        objectsPub.publish(objectsArray);
+    }
+
+
+    void publishROSVisualization()
     {
         // Clear previous markers
         visualTools->deleteAllMarkers();
@@ -152,7 +198,6 @@ class LidarObstacleDetectionNode
 
         for (size_t i = 0; i< detectedObjects.size(); ++i)
         {
-            detectedObjects[i].computeBoundingBox();
             box = detectedObjects[i].getBoundingBox();
 
             Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
@@ -162,11 +207,14 @@ class LidarObstacleDetectionNode
             visualTools->publishWireframeCuboid(pose, minPoint, maxPoint,
                 rviz_visual_tools::RED , "Obstacle", i);
 
-            // translation pose for text TODO
+            // Translation for text alignment
             pose.translation() = Eigen::Vector3d(box.xMax, box.yMax, box.zMax);
 
+            uint32_t id = detectedObjects[i].getId();
+            std::string stringId = "Obstacle_" + std::to_string(id);
+
             visualTools->publishText(pose,
-                                    "Obstacle_" + std::to_string(i),
+                                    stringId,
                                     rviz_visual_tools::WHITE,
                                     rviz_visual_tools::TEXTSIZE,
                                     false);
