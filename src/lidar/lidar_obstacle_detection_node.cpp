@@ -83,9 +83,8 @@ class LidarObstacleDetectionNode
             initROSVisualization();
         }
 
-        objectsPub = nh->advertise<agribot_msgs::DetectedObjectsArray>("detected_objects",
-                                                                       1,
-                                                                       true);
+        objectsPub = nh->advertise<agribot_msgs::DetectedObjectsArray>
+                     ("detected_objects", 1, true);
 
         pcSub = nh->subscribe<pcl::PointCloud<Point>>(pointcloudTopic,
                               1,
@@ -108,14 +107,14 @@ class LidarObstacleDetectionNode
         {
             detectedObjects[i].computeBoundingBox();
             detectedObjects[i].computeCentroid();
-            
+
             // For now simply give unique index
             detectedObjects[i].setId(i);
         }
 
         // Convert PCL timestamp to ROS timestamp
         ros::Time stamp = pcl_conversions::fromPCL(msg->header.stamp);
-        
+
         // Publish array with detected objects
         publishDetectedObjectsArray(stamp);
 
@@ -155,7 +154,9 @@ class LidarObstacleDetectionNode
     {
         agribot_msgs::DetectedObjectsArray objectsArray;
 
-        for (auto it = detectedObjects.begin(); it != detectedObjects.end(); ++it)
+        for (auto it = detectedObjects.begin();
+             it != detectedObjects.end();
+             ++it)
         {
             // Fill in pose and bounding box information
             agribot_msgs::DetectedObject object;

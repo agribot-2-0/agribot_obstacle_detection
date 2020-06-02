@@ -69,5 +69,4 @@ class BoundingBox
 
         return box;
     }
-
 };
