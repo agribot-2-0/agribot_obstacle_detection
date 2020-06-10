@@ -3,7 +3,7 @@
     <param name="/use_sim_time" value="true"/>
 
     <arg name="bag_name" default="livox_test_1"/>
-    <arg name="bag_path" value="/home/olek/projects/agribot_ws/src/agribot_obstacle_detection/bags/$(arg bag_name).bag"/>
+    <arg name="bag_path" value="$(find agribot_obstacle_detection)/bags/$(arg bag_name).bag"/>
 
     <arg name="ros_vis" default="true"/>
 
