@@ -16,7 +16,7 @@
     <include file="$(find agribot_bringup)/launch/bringup_playback.launch" >
         <arg name="vis" value="$(arg ros_vis)" />
         <arg name="bag_path" value="$(arg bag_path)" />
-        <arg name="loop" value="false" />
+        <arg name="clock" value="false" />
     </include>
 
 </launch>
