@@ -45,6 +45,7 @@ add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 
 # Sonar Obstacle Detection Node
 add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection_node.cpp
+                                              src/sonar/SonarObstacleDetectionNode.cpp
                                               src/sonar/sonar.cpp
                                               )
 target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
