@@ -35,6 +35,7 @@ link_directories(
 
 # Lidar Obstacle Detection Node
 add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection_node.cpp
+                                              include/agribot_obstacle_detection/lidar/LidarObstacleDetectionNode.h
                                               include/agribot_obstacle_detection/lidar/cloud_processor.h
                                               include/agribot_obstacle_detection/lidar/object.h
                                               include/agribot_obstacle_detection/lidar/bounding_box.h
