@@ -4,7 +4,7 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle *_nh) :
     nh(_nh),
     status(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT),
     sonarStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT),
-    lidarStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT)
+    visionStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT)
 {
     // Advertise latched obstacles detection publisher
     obstacleDetectionPub = nh->advertise<agribot_msgs::AgribotObstacleDetection>
@@ -20,9 +20,9 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle *_nh) :
         &ObstacleArbiterNode::sonarDetectionCallback,
         this);
 
-    detectedObjectsArraySub = _nh->subscribe("/agribot/obstacles_array",
+    visionDetectionSub = _nh->subscribe("/agribot/vision_detection",
         1,
-        &ObstacleArbiterNode::detectedObjectsArrayCallback,
+        &ObstacleArbiterNode::visionDetectionCallback,
         this);
 }
 
@@ -70,7 +70,7 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
     publishDetectionStatus();
 }
 
-void ObstacleArbiterNode::detectedObjectsArrayCallback(const agribot_msgs::DetectedObjectsArray::ConstPtr& msg)
+void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg)
 {
 
 }
@@ -78,12 +78,12 @@ void ObstacleArbiterNode::detectedObjectsArrayCallback(const agribot_msgs::Detec
 void ObstacleArbiterNode::updateDetectionStatus()
 {
     if (sonarStatus == agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED ||
-        lidarStatus == agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED)
+        visionStatus == agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED)
     {
         status = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
     }
     else if (sonarStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT ||
-             lidarStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT)
+             visionStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT)
     {
         status = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT;
     }
@@ -98,7 +98,7 @@ void ObstacleArbiterNode::publishDetectionStatus()
     agribot_msgs::AgribotObstacleDetection msg;
     msg.status = status;
     msg.sonar_status = sonarStatus;
-    msg.lidar_status = lidarStatus;
+    msg.vision_status = visionStatus;
     obstacleDetectionPub.publish(msg);
 }
 
@@ -107,6 +107,3 @@ void ObstacleArbiterNode::run()
 {
     ros::spin();
 }
-
-// agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE
-// agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED

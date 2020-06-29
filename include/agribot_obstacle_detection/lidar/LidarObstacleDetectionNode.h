@@ -3,7 +3,7 @@
 #include <rviz_visual_tools/rviz_visual_tools.h>
 #include <agribot_msgs/ObjectClass.h>
 #include <agribot_msgs/DetectedObject.h>
-#include <agribot_msgs/DetectedObjectsArray.h>
+#include <agribot_msgs/VisionDetection.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
@@ -24,7 +24,7 @@ class LidarObstacleDetectionNode
     // ROS handlers
     ros::NodeHandle *nh;
     ros::Subscriber pcSub;
-    ros::Publisher objectsPub;
+    ros::Publisher visionDetectionPub;
 
     std::string frameId;
     std::string pointcloudTopic;
@@ -82,8 +82,8 @@ class LidarObstacleDetectionNode
             initROSVisualization();
         }
 
-        objectsPub = nh->advertise<agribot_msgs::DetectedObjectsArray>
-                     ("detected_objects", 1, true);
+        visionDetectionPub = nh->advertise<agribot_msgs::VisionDetection>
+                     ("vision_detection", 1, true);
 
         pcSub = nh->subscribe<pcl::PointCloud<PointT>>(pointcloudTopic,
                               1,
@@ -116,7 +116,7 @@ class LidarObstacleDetectionNode
         ros::Time stamp = pcl_conversions::fromPCL(msg->header.stamp);
 
         // Publish array with detected objects
-        publishDetectedObjectsArray(stamp);
+        publishVisionDetection(stamp);
 
         /* Visualization */
         // Publish ROS visualization
@@ -151,9 +151,9 @@ class LidarObstacleDetectionNode
     }
 
 
-    void publishDetectedObjectsArray(ros::Time stamp)
+    void publishVisionDetection(ros::Time stamp)
     {
-        agribot_msgs::DetectedObjectsArray objectsArray;
+        agribot_msgs::VisionDetection detection;
 
         for (auto it = detectedObjects.begin();
              it != detectedObjects.end();
@@ -170,15 +170,15 @@ class LidarObstacleDetectionNode
             // Add class to vector of classes
             object.classes.push_back(objectClass);
 
-            // Add object to vector of detected objects
-            objectsArray.objects.push_back(object);
+            // Add object to vector inside vision detection
+            detection.objects.push_back(object);
         }
 
-        objectsArray.header.frame_id = frameId;
-        objectsArray.header.stamp = stamp;
+        detection.header.frame_id = frameId;
+        detection.header.stamp = stamp;
 
-        // Publish detected objects array
-        objectsPub.publish(objectsArray);
+        // Publish vision detection
+        visionDetectionPub.publish(detection);
     }
 
 
