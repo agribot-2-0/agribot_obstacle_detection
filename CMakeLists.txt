@@ -52,6 +52,13 @@ add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection
 target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
 add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 
+# Obstacle Arbiter Node
+add_executable(obstacle_arbiter_node  src/arbiter/obstacle_arbiter_node.cpp
+                                      src/arbiter/ObstacleArbiterNode.cpp
+                                      )
+target_link_libraries(obstacle_arbiter_node ${catkin_LIBRARIES})
+add_dependencies(obstacle_arbiter_node ${catkin_EXPORTED_TARGETS})
+
 
 #############
 ## Install ##
@@ -60,6 +67,7 @@ add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 install(TARGETS
   lidar_obstacle_detection_node
   sonar_obstacle_detection_node
+  obstacle_arbiter_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
