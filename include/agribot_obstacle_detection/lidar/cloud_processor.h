@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pcl_ros/point_cloud.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
@@ -10,7 +11,7 @@
 #include <vector>
 #include <chrono>   // NOLINT [build/c++11]
 
-#include "agribot_obstacle_detection/object.h"
+#include "agribot_obstacle_detection/lidar/object.h"
 
 template<typename PointT>
 class CloudProcessor
@@ -26,7 +27,7 @@ class CloudProcessor
 
 
     void extractInliersOutliers(
-        typename pcl::PointCloud<PointT>::Ptr inputCloud,
+        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         typename pcl::PointCloud<PointT>::Ptr inliersCloud,
         typename pcl::PointCloud<PointT>::Ptr outliersCloud,
         pcl::PointIndices::Ptr inliers)
@@ -48,7 +49,7 @@ class CloudProcessor
 
 
     void planeSegmentation(
-        typename pcl::PointCloud<PointT>::Ptr inputCloud,
+        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         typename pcl::PointCloud<PointT>::Ptr planeCloud,
         typename pcl::PointCloud<PointT>::Ptr objectsCloud,
         pcl::ModelCoefficients::Ptr coefficients,
@@ -97,7 +98,7 @@ class CloudProcessor
 
 
     std::vector<Object<PointT>> clustering(
-        typename pcl::PointCloud<PointT>::Ptr inputCloud,
+        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         float clusterTolerance,
         int minClusterSize,
         int maxClusterSize)
@@ -147,7 +148,7 @@ class CloudProcessor
     }
 
 
-    void voxelGridFilter(typename pcl::PointCloud<PointT>::Ptr inputCloud,
+    void voxelGridFilter(typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
                          typename pcl::PointCloud<PointT>::Ptr filteredCloud,
                          float filterResolution)
     {
@@ -163,34 +164,6 @@ class CloudProcessor
             std::chrono::duration_cast<std::chrono::milliseconds>
             (endTime - startTime);
         ROS_INFO_STREAM("VoxelGridFilter took " << elapsedTime.count()
-                        << " milliseconds");
-    }
-
-    void centroidsExtraction(
-        std::vector<Object<PointT>> objects,
-        typename pcl::PointCloud<PointT>::Ptr centroidsCloud)
-    {
-        PointT center;
-
-        auto startTime = std::chrono::steady_clock::now();
-        centroidsCloud->clear();
-
-        for (auto object : objects)
-        {
-            pcl::computeCentroid<PointT>(*(object.getObjectCloud()), center);
-            centroidsCloud->points.push_back(center);
-            center.z = 0.0;
-            centroidsCloud->points.push_back(center);
-        }
-
-        centroidsCloud->width = centroidsCloud->points.size();
-        centroidsCloud->height = 1;
-
-        auto endTime = std::chrono::steady_clock::now();
-        auto elapsedTime =
-            std::chrono::duration_cast<std::chrono::milliseconds>
-            (endTime - startTime);
-        ROS_INFO_STREAM("Centroids extraction took " << elapsedTime.count()
                         << " milliseconds");
     }
 };

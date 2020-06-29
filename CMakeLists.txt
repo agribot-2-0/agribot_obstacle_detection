@@ -2,16 +2,16 @@ cmake_minimum_required(VERSION 2.8.3)
 project(agribot_obstacle_detection)
 add_compile_options(-std=c++14)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rviz_visual_tools
+  pcl_ros
+  pcl_conversions
+  sensor_msgs
+  agribot_msgs
 )
 
-find_package(PCL 1.10 REQUIRED)
-add_definitions(${PCL_DEFINITIONS})
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -31,21 +31,44 @@ include_directories(
 )
 
 link_directories(
- ${PCL_LIBRARY_DIRS}
 )
 
-add_executable(lidar_obstacle_detection_node  src/lidar_obstacle_detection_node.cpp
-                                              include/agribot_obstacle_detection/cloud_processor.h
-                                              include/agribot_obstacle_detection/object.h
-                                              include/agribot_obstacle_detection/bounding_box.h
+# Lidar Obstacle Detection Node
+add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection_node.cpp
+                                              include/agribot_obstacle_detection/lidar/LidarObstacleDetectionNode.h
+                                              include/agribot_obstacle_detection/lidar/cloud_processor.h
+                                              include/agribot_obstacle_detection/lidar/object.h
+                                              include/agribot_obstacle_detection/lidar/bounding_box.h
                                               )
-target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})
 add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
+
+
+# Sonar Obstacle Detection Node
+add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection_node.cpp
+                                              src/sonar/SonarObstacleDetectionNode.cpp
+                                              src/sonar/sonar.cpp
+                                              )
+target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
+add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 
 
 #############
 ## Install ##
 #############
+
+install(TARGETS
+  lidar_obstacle_detection_node
+  sonar_obstacle_detection_node
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(DIRECTORY launch param bags
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+)
+
 
 #############
 ## Testing ##

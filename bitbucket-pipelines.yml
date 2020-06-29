@@ -1,0 +1,30 @@
+image: docker:18-git
+
+pipelines:
+  default:
+     - step:
+         name: "Check cppcheck"
+         script:
+           - apk add --update bash coreutils tar cppcheck
+           - cppcheck src/*
+     - step:
+         name: "Check cpplint"
+         script:
+           - apk add --update bash coreutils tar python3 py3-pip
+           - pip3 install cpplint==1.4.6
+           - cpplint --recursive src/* include/*
+     - step:
+         name: "ROS Build"
+         services:
+           - docker
+         script:
+           - apk add --update bash coreutils tar
+           - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci .industrial_ci -b master
+           - git clone https://github.com/panpawelchmiel/rviz_visual_tools.git
+           - git clone https://github.com/panpawelchmiel/agribot_msgs.git
+           - .industrial_ci/bitbucket.sh BUILDER="colcon" ROS_DISTRO="melodic" UPSTREAM_WORKSPACE="rviz_visual_tools agribot_msgs"
+
+definitions:
+  services:
+    docker:
+      memory: 2048
