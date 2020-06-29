@@ -2,15 +2,15 @@
 
 ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle *_nh) :
     nh(_nh),
-    status(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT),
-    sonarStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT),
-    visionStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT)
+    status(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT),
+    sonarStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT),
+    visionStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
 {
     // Advertise latched obstacles detection publisher
     obstacleDetectionPub = nh->advertise<agribot_msgs::AgribotObstacleDetection>
         ("/agribot/obstacle_detected", 1, true);
 
-    // Publish initial detection status (WAITING_FOR_MEASUREMENT)
+    // Publish initial detection status (WAITING_FOR_FIRST_MEASUREMENT)
     publishDetectionStatus();
 
     // Subscribe to Sonar & Lidar detection status
@@ -44,7 +44,7 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
             ++detectedCount;
             break;
         }
-        else if (sonar.status == agribot_msgs::SonarStatus::WAITING_FOR_MEASUREMENT)
+        else if (sonar.status == agribot_msgs::SonarStatus::WAITING_FOR_FIRST_MEASUREMENT)
         {
             // Following sonars may have OBSTACLE_DETECTED status - can't break
             ++waitingCount;
@@ -58,7 +58,7 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
     }
     else if (waitingCount > 0)
     {
-        sonarStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT;
+        sonarStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
     }
     else
     {
@@ -82,10 +82,10 @@ void ObstacleArbiterNode::updateDetectionStatus()
     {
         status = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
     }
-    else if (sonarStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT ||
-             visionStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT)
+    else if (sonarStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT ||
+             visionStatus == agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
     {
-        status = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_MEASUREMENT;
+        status = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
     }
     else
     {
