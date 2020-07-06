@@ -1,3 +1,7 @@
+/*
+* Copyright (C) 2020 Agribot. All rights reserved.
+*/
+
 #include "agribot_obstacle_detection/arbiter/ObstacleArbiterNode.h"
 
 ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle *_nh) :
@@ -70,9 +74,9 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
     publishDetectionStatus();
 }
 
-void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg)
+void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr&
+        msg)
 {
-
 }
 
 void ObstacleArbiterNode::updateDetectionStatus()
