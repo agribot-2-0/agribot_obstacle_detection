@@ -1,3 +1,7 @@
+/*
+* Copyright (C) 2020 Agribot. All rights reserved.
+*/
+
 #pragma once
 
 #include <rviz_visual_tools/rviz_visual_tools.h>

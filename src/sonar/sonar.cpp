@@ -1,3 +1,7 @@
+/*
+* Copyright (C) 2020 Agribot. All rights reserved.
+*/
+
 #include "agribot_obstacle_detection/sonar/sonar.h"
 
 Sonar::Sonar(float setThreshold,
