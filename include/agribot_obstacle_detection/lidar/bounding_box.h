@@ -6,67 +6,65 @@
 
 #include <string>
 
-template<typename PointT>
+template <typename PointT>
 class BoundingBox
 {
- public:
-    float xMin;
-    float yMin;
-    float zMin;
-    float xMax;
-    float yMax;
-    float zMax;
+public:
+  float xMin;
+  float yMin;
+  float zMin;
+  float xMax;
+  float yMax;
+  float zMax;
 
-    float depth;
-    float width;
-    float height;
+  float depth;
+  float width;
+  float height;
 
-    BoundingBox():
-        xMin(0.0), yMin(0.0), zMin(0.0),
-        xMax(0.0), yMax(0.0), zMax(0.0)
-    {
-    }
+  BoundingBox() : xMin(0.0), yMin(0.0), zMin(0.0), xMax(0.0), yMax(0.0), zMax(0.0)
+  {
+  }
 
-    ~BoundingBox()
-    {
-    }
+  ~BoundingBox()
+  {
+  }
 
-    void compute(const typename pcl::PointCloud<PointT>::ConstPtr& cluster)
-    {
-        PointT minPoint, maxPoint;
-        pcl::getMinMax3D(*cluster, minPoint, maxPoint);
+  void compute(const typename pcl::PointCloud<PointT>::ConstPtr& cluster)
+  {
+    PointT minPoint, maxPoint;
+    pcl::getMinMax3D(*cluster, minPoint, maxPoint);
 
-        xMin = minPoint.x;
-        yMin = minPoint.y;
-        zMin = minPoint.z;
-        xMax = maxPoint.x;
-        yMax = maxPoint.y;
-        zMax = maxPoint.z;
+    xMin = minPoint.x;
+    yMin = minPoint.y;
+    zMin = minPoint.z;
+    xMax = maxPoint.x;
+    yMax = maxPoint.y;
+    zMax = maxPoint.z;
 
-        depth = xMax - xMin;
-        width = yMax - yMin;
-        height = zMax - zMin;
-    }
+    depth = xMax - xMin;
+    width = yMax - yMin;
+    height = zMax - zMin;
+  }
 
-    agribot_msgs::BoundingBox toROSMsg() const
-    {
-        agribot_msgs::BoundingBox box;
+  agribot_msgs::BoundingBox toROSMsg() const
+  {
+    agribot_msgs::BoundingBox box;
 
-        // Set min_point
-        box.min_point.x = xMin;
-        box.min_point.y = yMin;
-        box.min_point.z = zMin;
+    // Set min_point
+    box.min_point.x = xMin;
+    box.min_point.y = yMin;
+    box.min_point.z = zMin;
 
-        // Set max_point
-        box.max_point.x = xMax;
-        box.max_point.y = yMax;
-        box.max_point.z = zMax;
+    // Set max_point
+    box.max_point.x = xMax;
+    box.max_point.y = yMax;
+    box.max_point.z = zMax;
 
-        // Set depth, width and height
-        box.depth = depth;
-        box.width = width;
-        box.height = height;
+    // Set depth, width and height
+    box.depth = depth;
+    box.width = width;
+    box.height = height;
 
-        return box;
-    }
+    return box;
+  }
 };

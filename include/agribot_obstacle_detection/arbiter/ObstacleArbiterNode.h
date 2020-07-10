@@ -20,61 +20,63 @@
 
 class ObstacleArbiterNode
 {
- private:
-    ros::NodeHandle *nh;
+private:
+  ros::NodeHandle* nh;
 
-    // Obstalce detection publisher
-    ros::Publisher obstacleDetectionPub;
+  // Obstalce detection publisher
+  ros::Publisher obstacleDetectionPub;
 
-    // Sonar & Lidar detection subscribers
-    ros::Subscriber sonarDetectionSub;
-    ros::Subscriber visionDetectionSub;
-    ros::Subscriber predictedPathSub;
+  // Sonar & Lidar detection subscribers
+  ros::Subscriber sonarDetectionSub;
+  ros::Subscriber visionDetectionSub;
+  ros::Subscriber predictedPathSub;
 
-    // TF Buffer and listener
-    tf2_ros::Buffer* TFBuffer;
-    tf2_ros::TransformListener* TFListener;
+  // TF Buffer and listener
+  tf2_ros::Buffer* TFBuffer;
+  tf2_ros::TransformListener* TFListener;
 
-    float predictedPathTimeout;
-    ros::Timer predictedPathTimeoutTimer;
+  float predictedPathTimeout;
+  ros::Timer predictedPathTimeoutTimer;
 
-    float robotLength;
-    float robotWidth;
-    float widthOffset;
+  float robotLength;
+  float robotWidth;
+  float widthOffset;
 
-    std::vector<geometry_msgs::Point> predictedPathPoints;
-    std::vector<agribot_msgs::DetectedObject> visionObjects;
-    std::string predictedPathFrameId;
-    std::string visionFrameId;
+  std::vector<geometry_msgs::Point> predictedPathPoints;
+  std::vector<agribot_msgs::DetectedObject> visionObjects;
+  std::string predictedPathFrameId;
+  std::string visionFrameId;
 
-    // Detection status
-    uint8_t status;
-    uint8_t sonarStatus;
-    uint8_t visionStatus;
+  // Detection status
+  uint8_t status;
+  uint8_t sonarStatus;
+  uint8_t visionStatus;
 
- public:
-    explicit ObstacleArbiterNode(ros::NodeHandle *_nh);
-    ~ObstacleArbiterNode();
+public:
+  explicit ObstacleArbiterNode(ros::NodeHandle* _nh);
+  ~ObstacleArbiterNode();
 
-    void sonarDetectionCallback(const agribot_msgs::SonarDetection::ConstPtr& msg);
-    void visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg);
-    void predictedPathCallback(const visualization_msgs::Marker::ConstPtr& msg);
-    void visionDetectionPipeline();
-    void checkVisionCollisions();
+  void sonarDetectionCallback(const agribot_msgs::SonarDetection::ConstPtr& msg);
+  void visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg);
+  void predictedPathCallback(const visualization_msgs::Marker::ConstPtr& msg);
+  void visionDetectionPipeline();
+  void checkVisionCollisions();
 
-    void updateDetectionStatus();
-    void publishDetectionStatus();
-    void loadParameters();
+  void updateDetectionStatus();
+  void publishDetectionStatus();
+  void loadParameters();
 
-    void createPredictedPathTimeoutTimer();
-    void stopPredictedPathTimeoutTimer();
-    void startPredictedPathTimeoutTimer();
-    void restartPredictedPathTimeoutTimer();
-    void predictedPathTimeoutCallback(const ros::TimerEvent& event);
+  void createPredictedPathTimeoutTimer();
+  void stopPredictedPathTimeoutTimer();
+  void startPredictedPathTimeoutTimer();
+  void restartPredictedPathTimeoutTimer();
+  void predictedPathTimeoutCallback(const ros::TimerEvent& event);
 
-    geometry_msgs::PoseStamped getRobotPoseInPredictedPathFrame();
-    Polygon detectedObjectToPolygon(const agribot_msgs::DetectedObject& detectedObject, const std::string& targetFrameId) const;
-    std::vector<Polygon> detectedObjectsToPolygons(const std::vector<agribot_msgs::DetectedObject>& detectedObjects, const std::string& targetFrameId) const;
+  geometry_msgs::PoseStamped getRobotPoseInPredictedPathFrame();
+  Polygon detectedObjectToPolygon(const agribot_msgs::DetectedObject& detectedObject,
+                                  const std::string& targetFrameId) const;
+  std::vector<Polygon> detectedObjectsToPolygons(const std::vector<agribot_msgs::DetectedObject>& detectedObjects,
+                                                 const std::string& targetFrameId) const;
 
-    void run();
+  void run();
 };
