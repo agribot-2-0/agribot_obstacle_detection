@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #pragma once
 
 #include <pcl_ros/point_cloud.h>
@@ -29,9 +25,8 @@ class CloudProcessor
     {
     }
 
-
     void extractInliersOutliers(
-        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+        const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         typename pcl::PointCloud<PointT>::Ptr inliersCloud,
         typename pcl::PointCloud<PointT>::Ptr outliersCloud,
         pcl::PointIndices::Ptr inliers)
@@ -53,7 +48,7 @@ class CloudProcessor
 
 
     void planeSegmentation(
-        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+        const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         typename pcl::PointCloud<PointT>::Ptr planeCloud,
         typename pcl::PointCloud<PointT>::Ptr objectsCloud,
         pcl::ModelCoefficients::Ptr coefficients,
@@ -102,7 +97,7 @@ class CloudProcessor
 
 
     std::vector<Object<PointT>> clustering(
-        typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+        const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
         float clusterTolerance,
         int minClusterSize,
         int maxClusterSize)
@@ -124,15 +119,14 @@ class CloudProcessor
         ec.setInputCloud(inputCloud);
         ec.extract(clusterIndices);
 
-        for (auto it = clusterIndices.begin(); it != clusterIndices.end(); ++it)
+        for (const auto& it : clusterIndices)
         {
             typename pcl::PointCloud<PointT>::Ptr
                 cluster (new pcl::PointCloud<PointT>);
-            auto begin = it->indices.begin();
-            auto end = it->indices.end();
-            for (auto cit = begin; cit != end; ++cit)
+
+            for (const auto& index : it.indices)
             {
-                cluster->points.push_back(inputCloud->points[*cit]);
+                cluster->points.push_back(inputCloud->points[index]);
             }
             cluster->width = cluster->points.size();
             cluster->height = 1;
@@ -152,9 +146,10 @@ class CloudProcessor
     }
 
 
-    void voxelGridFilter(typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
-                         typename pcl::PointCloud<PointT>::Ptr filteredCloud,
-                         float filterResolution)
+    void voxelGridFilter(
+        const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+        typename pcl::PointCloud<PointT>::Ptr filteredCloud,
+        float filterResolution)
     {
         auto startTime = std::chrono::steady_clock::now();
 

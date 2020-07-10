@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #pragma once
 
 #include <pcl_ros/point_cloud.h>
@@ -24,7 +20,7 @@ class Object
     uint32_t id;
 
  public:
-    explicit Object(typename pcl::PointCloud<PointT>::Ptr setObjectCloud)
+    explicit Object(const typename pcl::PointCloud<PointT>::Ptr setObjectCloud)
     {
         objectCloud = setObjectCloud;
     }
@@ -48,22 +44,22 @@ class Object
         id = newId;
     }
 
-    uint32_t getId()
+    uint32_t getId() const
     {
         return id;
     }
 
-    typename pcl::PointCloud<PointT>::Ptr getObjectCloud()
+    typename pcl::PointCloud<PointT>::Ptr getObjectCloud() const
     {
         return objectCloud;
     }
 
-    BoundingBox<PointT> getBoundingBox()
+    BoundingBox<PointT> getBoundingBox() const
     {
         return box;
     }
 
-    agribot_msgs::DetectedObject toROSMsg()
+    agribot_msgs::DetectedObject toROSMsg() const
     {
         agribot_msgs::DetectedObject objectMsg;
 

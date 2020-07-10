@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #pragma once
 
 #include <pcl_ros/point_cloud.h>
@@ -35,7 +31,7 @@ class BoundingBox
     {
     }
 
-    void compute(typename pcl::PointCloud<PointT>::Ptr cluster)
+    void compute(const typename pcl::PointCloud<PointT>::ConstPtr& cluster)
     {
         PointT minPoint, maxPoint;
         pcl::getMinMax3D(*cluster, minPoint, maxPoint);
@@ -52,7 +48,7 @@ class BoundingBox
         height = zMax - zMin;
     }
 
-    agribot_msgs::BoundingBox toROSMsg()
+    agribot_msgs::BoundingBox toROSMsg() const
     {
         agribot_msgs::BoundingBox box;
 

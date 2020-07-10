@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #pragma once
 
 #include <ros/ros.h>
@@ -9,7 +5,7 @@
 #include <agribot_msgs/SonarDetection.h>
 #include <sensor_msgs/Range.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <memory>
 
@@ -27,10 +23,10 @@ class SonarObstacleDetectionNode
     ros::Time lastTimestamp;
 
     // Sonars map with id as a key
-    std::map<std::string, Sonar> sonars;
+    std::unordered_map<std::string, Sonar> sonars;
 
     // Subscribers map with id as a key
-    std::map<std::string, std::shared_ptr<ros::Subscriber>> subscribers;
+    std::unordered_map<std::string, std::shared_ptr<ros::Subscriber>> subscribers;
 
     // SonarDetection message
     agribot_msgs::SonarDetection sonarDetectionMsg;
@@ -41,15 +37,15 @@ class SonarObstacleDetectionNode
 
     void sonarCallback(
         const sensor_msgs::Range::ConstPtr& msg,
-        std::string id);
+        const std::string& id);
 
-    void updateSonarDetectionMsg(std::string id,
+    void updateSonarDetectionMsg(const std::string& id,
         uint8_t status,
         float shortestRange,
         float lastRange);
 
     void publishSonarDetecionMsg();
-    void updateLastTimestamp(ros::Time newTimestamp);
+    void updateLastTimestamp(const ros::Time& newTimestamp);
     void registerSubscribers();
     void initSonarDetectionMsg();
     void loadSonars();

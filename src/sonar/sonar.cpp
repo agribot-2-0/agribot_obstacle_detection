@@ -1,13 +1,9 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #include "agribot_obstacle_detection/sonar/sonar.h"
 
 Sonar::Sonar(float setThreshold,
              std::size_t setHistorySize,
-             std::string setId,
-             std::string setTopic)
+             const std::string& setId,
+             const std::string& setTopic)
 {
     threshold = setThreshold;
     historySize = setHistorySize;
@@ -30,11 +26,11 @@ void Sonar::addRange(float newRange)
     ranges.push_back(newRange);
 }
 
-bool Sonar::isObstacleDetected()
+bool Sonar::isObstacleDetected() const
 {
-    for (auto it = ranges.begin(); it != ranges.end(); ++it)
+    for (const auto& it : ranges)
     {
-        if (*it < threshold)
+        if (it < threshold)
         {
             // Obstacle detected in at least one of measurements
             return true;
@@ -45,34 +41,33 @@ bool Sonar::isObstacleDetected()
     return false;
 }
 
-float Sonar::getThreshold()
+float Sonar::getThreshold() const
 {
     return threshold;
 }
 
-float Sonar::getShortestRange()
+float Sonar::getShortestRange() const
 {
     return *std::min_element(ranges.begin(), ranges.end());
 }
 
-float Sonar::getLastRange()
+float Sonar::getLastRange() const
 {
     return ranges.back();
 }
 
-std::string Sonar::getId()
+std::string Sonar::getId() const
 {
     return id;
 }
 
-std::string Sonar::getTopic()
+std::string Sonar::getTopic() const
 {
     return topic;
 }
 
-
 // Ostream for debugging purposes
-std::ostream &operator<<(std::ostream &os, Sonar const &sonar)
+std::ostream &operator<<(std::ostream& os, const Sonar& sonar)
 {
     os << std::endl << "Sonar: " << sonar.id << std::endl
        << "Threshold: " << sonar.threshold << std::endl
@@ -80,9 +75,9 @@ std::ostream &operator<<(std::ostream &os, Sonar const &sonar)
        << "Measurements in history: " << sonar.ranges.size() << std::endl
        << "\t[From oldest to newest]" << std::endl;
 
-    for (auto it = sonar.ranges.begin(); it != sonar.ranges.end(); ++it)
+    for (const auto& it : sonar.ranges)
     {
-        os << "\tRange: " << *it << std::endl;
+        os << "\tRange: " << it << std::endl;
     }
 
     return os;

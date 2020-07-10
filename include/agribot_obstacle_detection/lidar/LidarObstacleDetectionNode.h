@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #pragma once
 
 #include <rviz_visual_tools/rviz_visual_tools.h>
@@ -87,27 +83,28 @@ class LidarObstacleDetectionNode
         }
 
         visionDetectionPub = nh->advertise<agribot_msgs::VisionDetection>
-                     ("vision_detection", 1, true);
+            ("vision_detection", 1, true);
 
-        pcSub = nh->subscribe<pcl::PointCloud<PointT>>(pointcloudTopic,
-                              1,
-                              &LidarObstacleDetectionNode::pointcloudCallback,
-                              this);
+        pcSub = nh->subscribe<pcl::PointCloud<PointT>>(
+            pointcloudTopic,
+            1,
+            &LidarObstacleDetectionNode::pointcloudCallback,
+            this);
     }
 
     ~LidarObstacleDetectionNode()
     {
     }
 
-    void pointcloudCallback(const typename pcl::PointCloud<PointT>::ConstPtr&
-        msg)
+    void pointcloudCallback(
+        const typename pcl::PointCloud<PointT>::ConstPtr& msg)
     {
         /* Processing */
         // Process cloud
         processingPipeline(msg);
 
         // Compute bounding box and centroid of each cluster
-        for (int i = 0; i < detectedObjects.size(); ++i)
+        for (std::size_t i = 0; i < detectedObjects.size(); ++i)
         {
             detectedObjects[i].computeBoundingBox();
             detectedObjects[i].computeCentroid();
@@ -131,41 +128,42 @@ class LidarObstacleDetectionNode
     }
 
 
-    void processingPipeline(const typename pcl::PointCloud<PointT>::ConstPtr&
-        inputCloud)
+    void processingPipeline(
+        const typename pcl::PointCloud<PointT>::ConstPtr& inputCloud)
     {
         // VoxelGrid filtering
-        processor.voxelGridFilter(inputCloud,
-                                  filteredCloud,
-                                  voxelGridFilterResolution);
+        processor.voxelGridFilter(
+            inputCloud,
+            filteredCloud,
+            voxelGridFilterResolution);
 
         // Plane segmentation
-        processor.planeSegmentation(filteredCloud,
-                                    planeCloud,
-                                    detectedObjectsCloud,
-                                    groundPlaneCoefficients,
-                                    segmentationMaxIterations,
-                                    segmentationDistanceThreshold);
+        processor.planeSegmentation(
+            filteredCloud,
+            planeCloud,
+            detectedObjectsCloud,
+            groundPlaneCoefficients,
+            segmentationMaxIterations,
+            segmentationDistanceThreshold);
 
         // Clustering
-        detectedObjects = processor.clustering(detectedObjectsCloud,
-                                               clusteringClusterTolerance,
-                                               clusteringMinClusterSize,
-                                               clusteringMaxClusterSize);
+        detectedObjects = processor.clustering(
+            detectedObjectsCloud,
+            clusteringClusterTolerance,
+            clusteringMinClusterSize,
+            clusteringMaxClusterSize);
     }
 
 
-    void publishVisionDetection(ros::Time stamp)
+    void publishVisionDetection(const ros::Time& stamp)
     {
         agribot_msgs::VisionDetection detection;
 
-        for (auto it = detectedObjects.begin();
-             it != detectedObjects.end();
-             ++it)
+        for (const auto& it : detectedObjects)
         {
             // Fill in pose and bounding box information
             agribot_msgs::DetectedObject object;
-            object = it->toROSMsg();
+            object = it.toROSMsg();
 
             // Set class to UNKNOWN
             agribot_msgs::ObjectClass objectClass;
@@ -185,7 +183,6 @@ class LidarObstacleDetectionNode
         visionDetectionPub.publish(detection);
     }
 
-
     void publishROSVisualization()
     {
         // Clear previous markers
@@ -197,12 +194,11 @@ class LidarObstacleDetectionNode
         visualTools->trigger();
     }
 
-
     void publishBoundingBoxArray()
     {
         BoundingBox<PointT> box;
 
-        for (size_t i = 0; i< detectedObjects.size(); ++i)
+        for (std::size_t i = 0; i< detectedObjects.size(); ++i)
         {
             box = detectedObjects[i].getBoundingBox();
 
@@ -210,7 +206,8 @@ class LidarObstacleDetectionNode
             Eigen::Vector3d minPoint(box.xMin, box.yMin, box.zMin);
             Eigen::Vector3d maxPoint(box.xMax, box.yMax, box.zMax);
 
-            visualTools->publishWireframeCuboid(pose, minPoint, maxPoint,
+            visualTools->publishWireframeCuboid(
+                pose, minPoint, maxPoint,
                 rviz_visual_tools::RED , "Obstacle", i);
 
             // Translation for text alignment
@@ -219,11 +216,12 @@ class LidarObstacleDetectionNode
             uint32_t id = detectedObjects[i].getId();
             std::string stringId = "Obstacle_" + std::to_string(id);
 
-            visualTools->publishText(pose,
-                                    stringId,
-                                    rviz_visual_tools::WHITE,
-                                    rviz_visual_tools::TEXTSIZE,
-                                    false);
+            visualTools->publishText(
+                pose,
+                stringId,
+                rviz_visual_tools::WHITE,
+                rviz_visual_tools::TEXTSIZE,
+                false);
         }
     }
 
@@ -249,8 +247,8 @@ class LidarObstacleDetectionNode
         double height = 0.001;
         double x_width = 15.0;
         double y_width = 15.0;
-        visualTools->publishCuboid(pose, x_width, y_width,
-                                   height, rviz_visual_tools::ORANGE);
+        visualTools->publishCuboid(
+            pose, x_width, y_width, height, rviz_visual_tools::ORANGE);
     }
 
     void run()
@@ -260,39 +258,47 @@ class LidarObstacleDetectionNode
 
     void loadParameters()
     {
-        nh->param<bool>("ros_vis",
-                bROSVis,
-                true);
+        nh->param<bool>(
+            "ros_vis",
+            bROSVis,
+            true);
 
         // Frame and topics parameters
-        nh->param<std::string>("lidar_frame_id",
-                frameId,
-                "lidar_link");
+        nh->param<std::string>(
+            "lidar_frame_id",
+            frameId,
+            "lidar_link");
 
         // Obstacle detection parameters
-        nh->param<float>("voxel_grid_filter_resolution",
-                         voxelGridFilterResolution,
-                         0.1);
+        nh->param<float>(
+            "voxel_grid_filter_resolution",
+            voxelGridFilterResolution,
+            0.1);
 
-        nh->param<int>("segmentation_max_iterations",
-                       segmentationMaxIterations,
-                       1000);
+        nh->param<int>(
+            "segmentation_max_iterations",
+            segmentationMaxIterations,
+            1000);
 
-        nh->param<float>("segmentation_distance_threshold",
-                         segmentationDistanceThreshold,
-                         0.05);
+        nh->param<float>(
+            "segmentation_distance_threshold",
+            segmentationDistanceThreshold,
+            0.05);
 
-        nh->param<float>("clustering_cluster_tolerance",
-                         clusteringClusterTolerance,
-                         0.2);
+        nh->param<float>(
+            "clustering_cluster_tolerance",
+            clusteringClusterTolerance,
+            0.2);
 
-        nh->param<int>("clustering_min_cluster_size",
-                       clusteringMinClusterSize,
-                       10);
+        nh->param<int>(
+            "clustering_min_cluster_size",
+            clusteringMinClusterSize,
+            10);
 
-        nh->param<int>("clustering_max_cluster_size",
-                        clusteringMaxClusterSize,
-                        1000);
+        nh->param<int>(
+            "clustering_max_cluster_size",
+            clusteringMaxClusterSize,
+            1000);
 
         ROS_INFO_STREAM(
         "\nStarting Lidar Obstacle Detection with parameters:\n\n" <<

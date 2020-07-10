@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #include "agribot_obstacle_detection/sonar/SonarObstacleDetectionNode.h"
 
 SonarObstacleDetectionNode::SonarObstacleDetectionNode(
@@ -33,12 +29,11 @@ SonarObstacleDetectionNode::~SonarObstacleDetectionNode()
 
 void SonarObstacleDetectionNode::sonarCallback(
     const sensor_msgs::Range::ConstPtr& msg,
-    std::string id)
+    const std::string& id)
 {
     // Add range to sonar detector object assigned to id
     auto sonar = sonars.find(id);
     sonar->second.addRange(msg->range);
-
 
     // Check if obstacle is present in any of measurements
     uint8_t status;
@@ -63,22 +58,19 @@ void SonarObstacleDetectionNode::sonarCallback(
     publishSonarDetecionMsg();
 }
 
-void SonarObstacleDetectionNode::updateSonarDetectionMsg(std::string id,
+void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id,
     uint8_t status,
     float shortestRange,
     float lastRange)
 {
     // Update status for sonar matching id
-    auto begin = sonarDetectionMsg.sonars.begin();
-    auto end = sonarDetectionMsg.sonars.end();
-
-    for (auto it = begin; it != end; ++it)
+    for (auto& it : sonarDetectionMsg.sonars)
     {
-        if (it->id == id)
+        if (it.id == id)
         {
-            it->status = status;
-            it->shortest_range = shortestRange;
-            it->last_range = lastRange;
+            it.status = status;
+            it.shortest_range = shortestRange;
+            it.last_range = lastRange;
             break;
         }
     }
@@ -91,7 +83,7 @@ void SonarObstacleDetectionNode::publishSonarDetecionMsg()
     sonarDetectionPub.publish(sonarDetectionMsg);
 }
 
-void SonarObstacleDetectionNode::updateLastTimestamp(ros::Time newTimestamp)
+void SonarObstacleDetectionNode::updateLastTimestamp(const ros::Time& newTimestamp)
 {
     ros::Duration timeDiff = newTimestamp - lastTimestamp;
 
@@ -104,10 +96,9 @@ void SonarObstacleDetectionNode::updateLastTimestamp(ros::Time newTimestamp)
 
 void SonarObstacleDetectionNode::registerSubscribers()
 {
-    for (auto it = sonars.begin(); it != sonars.end(); ++it)
+    for (const auto& [id, sonar] : sonars)
     {
-        std::string id = it->first;
-        std::string topic = it->second.getTopic();
+        std::string topic = sonar.getTopic();
 
         // Create subscriber ptr to avoid copying, when inserting into map
         std::shared_ptr<ros::Subscriber> sub;
@@ -142,13 +133,13 @@ void SonarObstacleDetectionNode::registerSubscribers()
 void SonarObstacleDetectionNode::initSonarDetectionMsg()
 {
     // Add entry to sonarDetectionMsg for every laoded sonar
-    for (auto it : sonars)
+    for (const auto& [id, sonar] : sonars)
     {
         agribot_msgs::SonarStatus sonarStatusMsg;
-        sonarStatusMsg.id = it.second.getId();
+        sonarStatusMsg.id = sonar.getId();
         sonarStatusMsg.status =
             agribot_msgs::SonarStatus::WAITING_FOR_FIRST_MEASUREMENT;
-        sonarStatusMsg.threshold = it.second.getThreshold();
+        sonarStatusMsg.threshold = sonar.getThreshold();
         sonarDetectionMsg.sonars.push_back(sonarStatusMsg);
     }
 }

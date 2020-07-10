@@ -1,7 +1,3 @@
-/*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
-
 #pragma once
 
 #include <vector>
@@ -30,20 +26,20 @@ class Sonar
  public:
     Sonar(float threshold,
           std::size_t historySize = 1,
-          std::string id = "",
-          std::string topic = "");
+          const std::string& id = "",
+          const std::string& topic = "");
     ~Sonar();
 
     // Add range measurement to the vector
     void addRange(float newRange);
 
-    bool isObstacleDetected();
+    bool isObstacleDetected() const;
 
-    float getThreshold();
-    float getShortestRange();
-    float getLastRange();
-    std::string getId();
-    std::string getTopic();
+    float getThreshold() const;
+    float getShortestRange() const;
+    float getLastRange() const;
+    std::string getId() const;
+    std::string getTopic() const;
 
-    friend std::ostream &operator<<(std::ostream &os, Sonar const &sonar);
+    friend std::ostream &operator<<(std::ostream& os, const Sonar& sonar);
 };
