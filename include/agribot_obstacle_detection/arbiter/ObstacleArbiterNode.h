@@ -6,17 +6,20 @@
 #include <agribot_msgs/SonarDetection.h>
 #include <agribot_msgs/VisionDetection.h>
 #include <agribot_msgs/DetectedObject.h>
+#include <agribot_msgs/PolygonStamped.h>
 #include <geometry_msgs/Point.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <vector>
 #include <string>
+#include <cmath>
 
-#include "agribot_obstacle_detection/arbiter/sat_collision_detection/Polygon.h"
+#include "agribot_obstacle_detection/arbiter/sat_collision_detection/sat.h"
 
 class ObstacleArbiterNode
 {
@@ -32,8 +35,8 @@ private:
   ros::Subscriber predictedPathSub;
 
   // TF Buffer and listener
-  tf2_ros::Buffer* TFBuffer;
-  tf2_ros::TransformListener* TFListener;
+  tf2_ros::Buffer TFBuffer;
+  tf2_ros::TransformListener TFListener;
 
   float predictedPathTimeout;
   ros::Timer predictedPathTimeoutTimer;
@@ -73,10 +76,15 @@ public:
   void predictedPathTimeoutCallback(const ros::TimerEvent& event);
 
   geometry_msgs::PoseStamped getRobotPoseInPredictedPathFrame();
-  Polygon detectedObjectToPolygon(const agribot_msgs::DetectedObject& detectedObject,
-                                  const std::string& targetFrameId) const;
-  std::vector<Polygon> detectedObjectsToPolygons(const std::vector<agribot_msgs::DetectedObject>& detectedObjects,
-                                                 const std::string& targetFrameId) const;
+  float getAngleBetweenPoints(geometry_msgs::Point firstPoint, geometry_msgs::Point secondPoint);
+  agribot_msgs::PolygonStamped getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const;
+  agribot_msgs::PolygonStamped detectedObjectToPolygon(const agribot_msgs::DetectedObject& detectedObject,
+                                                       const std::string& targetFrameId) const;
+  std::vector<agribot_msgs::PolygonStamped> detectedObjectsToPolygons(
+      const std::vector<agribot_msgs::DetectedObject>& detectedObjects, const std::string& targetFrameId) const;
+
+  agribot_msgs::PolygonStamped doTransform(const agribot_msgs::PolygonStamped& inPolygon,
+                                         const geometry_msgs::TransformStamped& transform) const;
 
   void run();
 };

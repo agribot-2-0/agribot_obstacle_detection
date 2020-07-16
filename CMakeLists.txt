@@ -57,7 +57,7 @@ add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
 # Obstacle Arbiter Node
 add_executable(obstacle_arbiter_node  src/arbiter/obstacle_arbiter_node.cpp
                                       src/arbiter/ObstacleArbiterNode.cpp
-                                      src/arbiter/sat_collision_detection/Polygon.cpp
+                                      src/arbiter/sat_collision_detection/sat.cpp
                                       src/arbiter/sat_collision_detection/Projection.cpp
                                       )
 target_link_libraries(obstacle_arbiter_node ${catkin_LIBRARIES})
@@ -65,7 +65,7 @@ add_dependencies(obstacle_arbiter_node ${catkin_EXPORTED_TARGETS})
 
 # SAT test
 add_executable(sat_test  src/arbiter/sat_test.cpp
-                         src/arbiter/sat_collision_detection/Polygon.cpp
+                         src/arbiter/sat_collision_detection/sat.cpp
                          src/arbiter/sat_collision_detection/Projection.cpp
                          )
 target_link_libraries(sat_test ${catkin_LIBRARIES})

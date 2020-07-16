@@ -1,6 +1,9 @@
+#include <agribot_msgs/PolygonStamped.h>
+
 #include <eigen3/Eigen/Core>
 #include <iostream>
-#include "agribot_obstacle_detection/arbiter/sat_collision_detection/Polygon.h"
+
+#include "agribot_obstacle_detection/arbiter/sat_collision_detection/sat.h"
 
 int main(int argc, char** argv)
 {
@@ -26,11 +29,11 @@ int main(int argc, char** argv)
   // secondPolyPoints.push_back(Eigen::Vector2f(3, 12));
   // secondPolyPoints.push_back(Eigen::Vector2f(6, 3));
 
-  Polygon poly1;
+  agribot_msgs::PolygonStamped poly1;
   for (const auto& point : firstPolyPoints)
   {
     // Add point to polygon
-    poly1.addPoint(point);
+    poly1.polygon.points.push_back(SAT::toRosPoint(point));
 
     // Print polygon coordinates
     std::cout << point[0] << " " << point[1] << std::endl;
@@ -40,18 +43,18 @@ int main(int argc, char** argv)
   // Aditional empty lines to separate polygons
   std::cout << std::endl;
 
-  Polygon poly2;
+  agribot_msgs::PolygonStamped poly2;
   for (const auto& point : secondPolyPoints)
   {
     // Add point to polygon
-    poly2.addPoint(point);
+    poly2.polygon.points.push_back(SAT::toRosPoint(point));
 
     // Print polygon coordinates
     std::cout << point[0] << " " << point[1] << std::endl;
   }
   std::cout << secondPolyPoints.front()[0] << " " << secondPolyPoints.front()[1] << std::endl;
 
-  if (poly1.intersect(poly2))
+  if (SAT::intersect(poly1, poly2))
   {
     std::cerr << "Polygons intersect" << std::endl;
   }
@@ -60,7 +63,7 @@ int main(int argc, char** argv)
     std::cerr << "NO intersection" << std::endl;
   }
 
-  if (poly2.intersect(poly1))
+  if (SAT::intersect(poly2, poly1))
   {
     std::cerr << "Polygons intersect" << std::endl;
   }
