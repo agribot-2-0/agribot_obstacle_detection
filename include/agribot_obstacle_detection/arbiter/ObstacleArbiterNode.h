@@ -45,10 +45,11 @@ private:
   float robotWidth;
   float widthOffset;
 
-  std::vector<geometry_msgs::Point> predictedPathPoints;
-  std::vector<agribot_msgs::DetectedObject> visionObjects;
   std::string predictedPathFrameId;
   std::string visionFrameId;
+
+  std::vector<agribot_msgs::PolygonStamped> visionPolygons;
+  std::vector<agribot_msgs::PolygonStamped> predictedPathPolygons;
 
   // Detection status
   uint8_t status;
@@ -59,32 +60,35 @@ public:
   explicit ObstacleArbiterNode(ros::NodeHandle* _nh);
   ~ObstacleArbiterNode();
 
+  // ROS callbacks
   void sonarDetectionCallback(const agribot_msgs::SonarDetection::ConstPtr& msg);
   void visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg);
   void predictedPathCallback(const visualization_msgs::Marker::ConstPtr& msg);
+
+  // Vision detection
   void visionDetectionPipeline();
   void checkVisionCollisions();
 
-  void updateDetectionStatus();
-  void publishDetectionStatus();
-  void loadParameters();
+  // Vision detection transformations
+  void updatePredictedPathPolygons(const std::vector<geometry_msgs::Point>& predictedPathPoints);
+  void updateVisionPolygons(const std::vector<agribot_msgs::DetectedObject>& detectedObjects);
+  agribot_msgs::PolygonStamped getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const;
+  agribot_msgs::PolygonStamped getVisionObjectPolygon(const agribot_msgs::DetectedObject& detectedObject) const;
 
+  float getAngleBetweenPoints(geometry_msgs::Point firstPoint, geometry_msgs::Point secondPoint) const;
+  agribot_msgs::PolygonStamped doTransform(const agribot_msgs::PolygonStamped& inPolygon,
+                                           const geometry_msgs::TransformStamped& transform) const;
+
+  // Predicted path timeout timer
   void createPredictedPathTimeoutTimer();
   void stopPredictedPathTimeoutTimer();
   void startPredictedPathTimeoutTimer();
   void restartPredictedPathTimeoutTimer();
   void predictedPathTimeoutCallback(const ros::TimerEvent& event);
 
-  geometry_msgs::PoseStamped getRobotPoseInPredictedPathFrame();
-  float getAngleBetweenPoints(geometry_msgs::Point firstPoint, geometry_msgs::Point secondPoint);
-  agribot_msgs::PolygonStamped getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const;
-  agribot_msgs::PolygonStamped detectedObjectToPolygon(const agribot_msgs::DetectedObject& detectedObject,
-                                                       const std::string& targetFrameId) const;
-  std::vector<agribot_msgs::PolygonStamped> detectedObjectsToPolygons(
-      const std::vector<agribot_msgs::DetectedObject>& detectedObjects, const std::string& targetFrameId) const;
-
-  agribot_msgs::PolygonStamped doTransform(const agribot_msgs::PolygonStamped& inPolygon,
-                                         const geometry_msgs::TransformStamped& transform) const;
-
+  // General methods
+  void updateDetectionStatus();
+  void publishDetectionStatus();
+  void loadParameters();
   void run();
 };

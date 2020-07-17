@@ -80,9 +80,19 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
 void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg)
 {
   visionFrameId = msg->header.frame_id;
-  visionObjects = msg->objects;
 
-  visionDetectionPipeline();
+  if (predictedPathFrameId != "")
+  {
+    updateVisionPolygons(msg->objects);
+    visionDetectionPipeline();
+  }
+  else
+  {
+    visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
+    updateDetectionStatus();
+    publishDetectionStatus();
+    ROS_WARN_STREAM("predictedPathFrameId not set yet. Skipping vision detection...");
+  }
 }
 
 void ObstacleArbiterNode::predictedPathCallback(const visualization_msgs::Marker::ConstPtr& msg)
@@ -91,30 +101,34 @@ void ObstacleArbiterNode::predictedPathCallback(const visualization_msgs::Marker
   restartPredictedPathTimeoutTimer();
 
   predictedPathFrameId = msg->header.frame_id;
-  predictedPathPoints = msg->points;
-
+  updatePredictedPathPolygons(msg->points);
   visionDetectionPipeline();
 }
 
 void ObstacleArbiterNode::visionDetectionPipeline()
 {
   checkVisionCollisions();
+
+  // Update general detection status and publish it
   updateDetectionStatus();
   publishDetectionStatus();
 }
 
 void ObstacleArbiterNode::checkVisionCollisions()
 {
-  if (predictedPathPoints.empty())
+  // TODO(olek) Change this method so it only performs checks (and separate conversions into different methods called
+  // either in visionDetectionCallback or in predictedPathCallback)
+
+  if (predictedPathPolygons.empty())
   {
     // Predicted path missing
-    ROS_INFO_STREAM("Predicted path empty. Skipping vision check...");
+    ROS_WARN_STREAM("Predicted path empty. Skipping vision detection...");
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
     return;
   }
 
-  // TODO(olek) - add timeout check for list of obstacles
-  if (visionObjects.empty())
+  // TODO(olek) - add timeout check for list of obstacles (an maybe additional flag - obstaclesReceived?)
+  if (visionPolygons.empty())
   {
     // Predicted path missing
     ROS_DEBUG_STREAM("Obstacles vector empty. Returning NO_OBSTACLE status...");
@@ -122,16 +136,30 @@ void ObstacleArbiterNode::checkVisionCollisions()
     return;
   }
 
-  // Transform obstacles to the polygons in the frame of path
-  std::vector<agribot_msgs::PolygonStamped> visionObjectsPolygons =
-      detectedObjectsToPolygons(visionObjects, predictedPathFrameId);
-
   ROS_INFO_STREAM("Checking collisions...");
+
   // Check collisions
+  for (const auto& robotPolygon : predictedPathPolygons)
+  {
+    for (const auto& visionPolygon : visionPolygons)
+    {
+      if (SAT::intersect(robotPolygon, visionPolygon))
+      {
+        // Any of the polygons intersect - set status and return (no need to check another polygons)
+        visionStatus = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
+        return;
+      }
+    }
+  }
+
+  // No intersections detected - set status
+  visionStatus = agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE;
+}
+
+void ObstacleArbiterNode::updatePredictedPathPolygons(const std::vector<geometry_msgs::Point>& predictedPathPoints)
+{
   for (std::size_t i = 0; i < predictedPathPoints.size(); i++)
   {
-    ROS_ERROR_STREAM("i: " << i);
-
     // Create robot polygon with angle between previous and current point
     if (i > 0)
     {
@@ -139,16 +167,7 @@ void ObstacleArbiterNode::checkVisionCollisions()
       geometry_msgs::Point currentPoint = predictedPathPoints[i];
       float angle = getAngleBetweenPoints(previousPoint, currentPoint);
       agribot_msgs::PolygonStamped robotPolygon = getRobotPolygon(currentPoint, angle);
-
-      for (const auto& visionPolygon : visionObjectsPolygons)
-      {
-        if (SAT::intersect(robotPolygon, visionPolygon))
-        {
-          // Any of the polygons intersect - set status and return (no need to check another polygons)
-          visionStatus = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
-          return;
-        }
-      }
+      predictedPathPolygons.push_back(robotPolygon);
     }
 
     // Create robot polygon with angle between current and next point
@@ -158,21 +177,141 @@ void ObstacleArbiterNode::checkVisionCollisions()
       geometry_msgs::Point nextPoint = predictedPathPoints[i + 1];
       float angle = getAngleBetweenPoints(currentPoint, nextPoint);
       agribot_msgs::PolygonStamped robotPolygon = getRobotPolygon(currentPoint, angle);
-
-      for (const auto& visionPolygon : visionObjectsPolygons)
-      {
-        if (SAT::intersect(robotPolygon, visionPolygon))
-        {
-          // Any of the polygons intersect - set status and return (no need to check another polygons)
-          visionStatus = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
-          return;
-        }
-      }
+      predictedPathPolygons.push_back(robotPolygon);
     }
   }
+}
 
-  // No intersections detected - set status
-  visionStatus = agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE;
+void ObstacleArbiterNode::updateVisionPolygons(const std::vector<agribot_msgs::DetectedObject>& visionObjects)
+{
+  std::vector<agribot_msgs::PolygonStamped> polygons;
+
+  for (const auto& object : visionObjects)
+  {
+    agribot_msgs::PolygonStamped polygon = getVisionObjectPolygon(object);
+    polygons.push_back(polygon);
+  }
+
+  // Rewrite vector with object polygons
+  visionPolygons = polygons;
+}
+
+agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const
+{
+  float a = robotWidth + widthOffset;
+  float b = robotLength;
+
+  agribot_msgs::PolygonStamped polygon;
+  polygon.header.stamp = ros::Time::now();
+  polygon.header.frame_id = "temp_map_1";
+
+  // Create polygon based on size constraints
+  geometry_msgs::Point polygonVertex;
+  polygonVertex.x = b / 2;
+  polygonVertex.y = a / 2;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygonVertex.x = -b / 2;
+  polygonVertex.y = a / 2;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygonVertex.x = -b / 2;
+  polygonVertex.y = -a / 2;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygonVertex.x = b / 2;
+  polygonVertex.y = -a / 2;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  // Create rotation transform
+  geometry_msgs::TransformStamped rotationTransform;
+  rotationTransform.header.frame_id = "temp_map_1";
+  rotationTransform.child_frame_id = "temp_map_2";
+  rotationTransform.header.stamp = ros::Time::now();
+  tf2::Quaternion rotationQuaternion;
+  rotationQuaternion.setRPY(0, 0, angle);
+  tf2::convert(rotationQuaternion, rotationTransform.transform.rotation);
+  agribot_msgs::PolygonStamped rotatedPolygon = doTransform(polygon, rotationTransform);
+
+  geometry_msgs::TransformStamped translationTransform;
+  translationTransform.header.frame_id = "temp_map_2";
+  translationTransform.child_frame_id = predictedPathFrameId;
+  translationTransform.header.stamp = ros::Time::now();
+  translationTransform.transform.rotation.w = 1;
+  translationTransform.transform.translation.x = centerPoint.x;
+  translationTransform.transform.translation.y = centerPoint.y;
+  agribot_msgs::PolygonStamped finalPolygon = doTransform(rotatedPolygon, translationTransform);
+
+  // Return rotated polygon
+  return finalPolygon;
+}
+
+agribot_msgs::PolygonStamped
+ObstacleArbiterNode::getVisionObjectPolygon(const agribot_msgs::DetectedObject& detectedObject) const
+{
+  // TODO(olek) - better casting (taking projection on ground plane) (or is it ok right now?)
+  // Probably i should consider angle w.r.t to the ground (as lidar is mounted at some angle w.r.t. ground)
+  agribot_msgs::PolygonStamped polygon;
+
+  double dx = detectedObject.box.max_point.x - detectedObject.box.min_point.x;
+  double dy = detectedObject.box.max_point.y - detectedObject.box.min_point.y;
+  double z = detectedObject.box.min_point.z;
+
+  geometry_msgs::Point polygonVertex;
+  polygonVertex.x = detectedObject.box.min_point.x;
+  polygonVertex.y = detectedObject.box.min_point.y;
+  polygonVertex.z = z;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygonVertex.x = detectedObject.box.min_point.x;
+  polygonVertex.y = detectedObject.box.min_point.y + dy;
+  polygonVertex.z = z;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygonVertex.x = detectedObject.box.min_point.x + dx;
+  polygonVertex.y = detectedObject.box.min_point.y;
+  polygonVertex.z = z;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygonVertex.x = detectedObject.box.min_point.x + dx;
+  polygonVertex.y = detectedObject.box.min_point.y + dy;
+  polygonVertex.z = z;
+  polygon.polygon.points.push_back(polygonVertex);
+
+  polygon.header.frame_id = visionFrameId;
+  polygon.header.stamp = ros::Time::now();
+
+  // Lookup transform from visionFrameId to predictedPathFrameId
+  geometry_msgs::TransformStamped transform =
+      TFBuffer.lookupTransform(visionFrameId, predictedPathFrameId, ros::Time::now(), ros::Duration(0.2));
+  agribot_msgs::PolygonStamped polygonTransformed = doTransform(polygon, transform);
+
+  return polygonTransformed;
+}
+
+float ObstacleArbiterNode::getAngleBetweenPoints(geometry_msgs::Point firstPoint,
+                                                 geometry_msgs::Point secondPoint) const
+{
+  float dx = secondPoint.x - firstPoint.x;
+  float dy = secondPoint.y - firstPoint.y;
+  return std::atan2(dy, dx);
+}
+
+agribot_msgs::PolygonStamped ObstacleArbiterNode::doTransform(const agribot_msgs::PolygonStamped& inPolygon,
+                                                              const geometry_msgs::TransformStamped& transform) const
+{
+  agribot_msgs::PolygonStamped outPolygon;
+  outPolygon.header.stamp = inPolygon.header.stamp;
+  outPolygon.header.frame_id = transform.child_frame_id;
+
+  for (const auto& point : inPolygon.polygon.points)
+  {
+    geometry_msgs::Point transformedPoint;
+    tf2::doTransform(point, transformedPoint, transform);
+    outPolygon.polygon.points.push_back(transformedPoint);
+  }
+
+  return outPolygon;
 }
 
 void ObstacleArbiterNode::updateDetectionStatus()
@@ -273,173 +412,10 @@ void ObstacleArbiterNode::predictedPathTimeoutCallback(const ros::TimerEvent& ev
   ROS_ERROR_STREAM("Predicted path timeout exceeded " << predictedPathTimeout << "s...");
 
   // Clear predicted path and propagate status
-  predictedPathPoints.clear();
+  predictedPathPolygons.clear();
   visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
   updateDetectionStatus();
   publishDetectionStatus();
-}
-
-float ObstacleArbiterNode::getAngleBetweenPoints(geometry_msgs::Point firstPoint, geometry_msgs::Point secondPoint)
-{
-  // TODO(olek) - check if works OK
-  float dx = secondPoint.x - firstPoint.x;
-  float dy = secondPoint.y - firstPoint.y;
-  return std::atan2(dy, dx);
-}
-
-agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const
-{
-  float a = robotWidth + widthOffset;
-  float b = robotLength;
-
-  agribot_msgs::PolygonStamped polygon;
-  polygon.header.stamp = ros::Time::now();
-  polygon.header.frame_id = "temp_map_1";
-
-  // Create polygon based on size constraints
-  geometry_msgs::Point polygonVertex;
-  polygonVertex.x = b / 2;
-  polygonVertex.y = a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = -b / 2;
-  polygonVertex.y = a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = -b / 2;
-  polygonVertex.y = -a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = b / 2;
-  polygonVertex.y = -a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  // TODO(olek)
-  // Create rotation transform
-  geometry_msgs::TransformStamped rotationTransform;
-  rotationTransform.header.frame_id = "temp_map_1";
-  rotationTransform.child_frame_id = "temp_map_2";
-  rotationTransform.header.stamp = ros::Time::now();
-  tf2::Quaternion rotationQuaternion;
-  rotationQuaternion.setRPY(0, 0, angle);
-  tf2::convert(rotationQuaternion, rotationTransform.transform.rotation);
-  agribot_msgs::PolygonStamped rotatedPolygon = doTransform(polygon, rotationTransform);
-
-  geometry_msgs::TransformStamped translationTransform;
-  translationTransform.header.frame_id = "temp_map_2";
-  translationTransform.child_frame_id = predictedPathFrameId;
-  translationTransform.header.stamp = ros::Time::now();
-  translationTransform.transform.rotation.w = 1;
-  translationTransform.transform.translation.x = centerPoint.x;
-  translationTransform.transform.translation.y = centerPoint.y;
-  agribot_msgs::PolygonStamped finalPolygon = doTransform(rotatedPolygon, translationTransform);
-
-  // Rotate polygon
-  ROS_WARN_STREAM("==========================================");
-  ROS_WARN_STREAM("==========================================");
-  ROS_WARN_STREAM("Angle");
-  ROS_WARN_STREAM(angle);
-  ROS_WARN_STREAM("==========================================");
-
-  // Return rotated polygon
-  return finalPolygon;
-}
-
-geometry_msgs::PoseStamped ObstacleArbiterNode::getRobotPoseInPredictedPathFrame()
-{
-  // TODO(olek) - remove this method if it is not used anywhere
-  geometry_msgs::PoseStamped robotPoseInPredictedPathFrame;
-  geometry_msgs::PoseStamped robotPoseInBaseFrame;
-
-  /* robotPoseInBaseFrame has 0.0, 0.0, 0.0 position by default so by transforming it to
-  // predictedPathFrame we obtain position of robot's center in predictedPathFrameId */
-  robotPoseInBaseFrame.header.frame_id = "base_footprint";
-  robotPoseInBaseFrame.header.stamp = ros::Time::now();
-
-  TFBuffer.transform(robotPoseInBaseFrame, robotPoseInPredictedPathFrame, predictedPathFrameId, ros::Duration(0.2));
-  return robotPoseInPredictedPathFrame;
-}
-
-agribot_msgs::PolygonStamped ObstacleArbiterNode::detectedObjectToPolygon(
-    const agribot_msgs::DetectedObject& detectedObject, const std::string& targetFrameId) const
-{
-  // TODO(olek) - better casting (taking projection on ground plane) (or is it ok right now?)
-  agribot_msgs::PolygonStamped polygon;
-
-  double dx = detectedObject.box.max_point.x - detectedObject.box.min_point.x;
-  double dy = detectedObject.box.max_point.y - detectedObject.box.min_point.y;
-  double z = detectedObject.box.min_point.z;
-
-  geometry_msgs::Point polygonVertex;
-  polygonVertex.x = detectedObject.box.min_point.x;
-  polygonVertex.y = detectedObject.box.min_point.y;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = detectedObject.box.min_point.x;
-  polygonVertex.y = detectedObject.box.min_point.y + dy;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = detectedObject.box.min_point.x + dx;
-  polygonVertex.y = detectedObject.box.min_point.y;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = detectedObject.box.min_point.x + dx;
-  polygonVertex.y = detectedObject.box.min_point.y + dy;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygon.header.frame_id = visionFrameId;
-  polygon.header.stamp = ros::Time::now();
-
-  // Lookup transform from visionFrameId to targetFrameId
-  geometry_msgs::TransformStamped transform =
-      TFBuffer.lookupTransform(visionFrameId, targetFrameId, ros::Time::now(), ros::Duration(0.2));
-  agribot_msgs::PolygonStamped polygonTransformed = doTransform(polygon, transform);
-
-  return polygonTransformed;
-}
-
-std::vector<agribot_msgs::PolygonStamped> ObstacleArbiterNode::detectedObjectsToPolygons(
-    const std::vector<agribot_msgs::DetectedObject>& detectedObjects, const std::string& targetFrameId) const
-{
-  std::vector<agribot_msgs::PolygonStamped> polygons;
-
-  for (const auto& object : detectedObjects)
-  {
-    agribot_msgs::PolygonStamped polygon = detectedObjectToPolygon(object, targetFrameId);
-    polygons.push_back(polygon);
-  }
-
-  return polygons;
-}
-
-agribot_msgs::PolygonStamped ObstacleArbiterNode::doTransform(const agribot_msgs::PolygonStamped& inPolygon,
-                                                              const geometry_msgs::TransformStamped& transform) const
-{
-  // TODO(olek)
-
-  agribot_msgs::PolygonStamped outPolygon;
-  outPolygon.header.stamp = inPolygon.header.stamp;
-  outPolygon.header.frame_id = transform.child_frame_id;
-
-  for (const auto& point : inPolygon.polygon.points)
-  {
-    geometry_msgs::Point transformedPoint;
-    tf2::doTransform(point, transformedPoint, transform);
-    outPolygon.polygon.points.push_back(transformedPoint);
-  }
-
-  ROS_WARN_STREAM("Input polygon");
-  ROS_WARN_STREAM(inPolygon);
-  ROS_WARN_STREAM("==========================================");
-  ROS_WARN_STREAM("Output polygon");
-  ROS_WARN_STREAM(outPolygon);
-  ROS_WARN_STREAM("******************************************");
-
-  return outPolygon;
 }
 
 void ObstacleArbiterNode::run()
