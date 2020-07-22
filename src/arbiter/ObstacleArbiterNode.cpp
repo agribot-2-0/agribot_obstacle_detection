@@ -6,6 +6,7 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
   , status(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
   , sonarStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
   , visionStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
+  , visionMsgReceived(false)
 {
   // Advertise latched obstacles detection publisher
   obstacleDetectionPub = nh->advertise<agribot_msgs::AgribotObstacleDetection>("/agribot/obstacle_detected", 1, true);
@@ -16,11 +17,14 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
   // Load parameters
   loadParameters();
 
-  // Create one-shot timeout timer and leave it in stopped state
+  // Create one-shot timeout timers and leave them in stopped state
   createPredictedPathTimeoutTimer();
+  createVisionTimeoutTimer();
   stopPredictedPathTimeoutTimer();
+  stopVisionTimeoutTimer();
 
-  ROS_INFO_STREAM("Created predicted path timeout timer with " << predictedPathTimeout << "s...");
+  // Initialize rviz_visual_tools
+  initVisualization();
 
   // Subscribers
   sonarDetectionSub = _nh->subscribe("/sonar_obstacle_detection_node/sonar_detection", 1,
@@ -79,6 +83,9 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
 
 void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg)
 {
+  restartVisionTimeoutTimer();
+  visionMsgReceived = true;
+
   visionFrameId = msg->header.frame_id;
 
   if (predictedPathFrameId != "")
@@ -116,8 +123,15 @@ void ObstacleArbiterNode::visionDetectionPipeline()
 
 void ObstacleArbiterNode::checkVisionCollisions()
 {
-  // TODO(olek) Change this method so it only performs checks (and separate conversions into different methods called
-  // either in visionDetectionCallback or in predictedPathCallback)
+  publishVisualMarkers();
+
+  if (!visionMsgReceived)
+  {
+    // No vision message received (or timeout occured)
+    ROS_WARN_STREAM("No vision message received yet. Skipping vision detection...");
+    visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
+    return;
+  }
 
   if (predictedPathPolygons.empty())
   {
@@ -127,21 +141,10 @@ void ObstacleArbiterNode::checkVisionCollisions()
     return;
   }
 
-  // TODO(olek) - add timeout check for list of obstacles (an maybe additional flag - obstaclesReceived?)
-  if (visionPolygons.empty())
-  {
-    // Predicted path missing
-    ROS_DEBUG_STREAM("Obstacles vector empty. Returning NO_OBSTACLE status...");
-    visionStatus = agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE;
-    return;
-  }
-
-  ROS_INFO_STREAM("Checking collisions...");
-
   // Check collisions
-  for (const auto& robotPolygon : predictedPathPolygons)
+  for (const auto& visionPolygon : visionPolygons)
   {
-    for (const auto& visionPolygon : visionPolygons)
+    for (const auto& robotPolygon : predictedPathPolygons)
     {
       if (SAT::intersect(robotPolygon, visionPolygon))
       {
@@ -156,8 +159,28 @@ void ObstacleArbiterNode::checkVisionCollisions()
   visionStatus = agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE;
 }
 
+void ObstacleArbiterNode::updateVisionToPredictedPathTransform()
+{
+  // Lookup transform from visionFrameId to predictedPathFrameId
+  try
+  {
+    visionToPredictedPathTransform =
+        TFBuffer.lookupTransform(predictedPathFrameId, visionFrameId, ros::Time::now(), ros::Duration(0.2));
+  }
+  catch (tf2::InvalidArgumentException& e)
+  {
+    ROS_ERROR_STREAM("Error occured: " << e.what());
+  }
+  catch (ros::Exception& e)
+  {
+    ROS_ERROR_STREAM("Error occured: " << e.what());
+  }
+}
+
 void ObstacleArbiterNode::updatePredictedPathPolygons(const std::vector<geometry_msgs::Point>& predictedPathPoints)
 {
+  std::vector<agribot_msgs::PolygonStamped> polygons;
+
   for (std::size_t i = 0; i < predictedPathPoints.size(); i++)
   {
     // Create robot polygon with angle between previous and current point
@@ -167,7 +190,7 @@ void ObstacleArbiterNode::updatePredictedPathPolygons(const std::vector<geometry
       geometry_msgs::Point currentPoint = predictedPathPoints[i];
       float angle = getAngleBetweenPoints(previousPoint, currentPoint);
       agribot_msgs::PolygonStamped robotPolygon = getRobotPolygon(currentPoint, angle);
-      predictedPathPolygons.push_back(robotPolygon);
+      polygons.push_back(robotPolygon);
     }
 
     // Create robot polygon with angle between current and next point
@@ -177,14 +200,19 @@ void ObstacleArbiterNode::updatePredictedPathPolygons(const std::vector<geometry
       geometry_msgs::Point nextPoint = predictedPathPoints[i + 1];
       float angle = getAngleBetweenPoints(currentPoint, nextPoint);
       agribot_msgs::PolygonStamped robotPolygon = getRobotPolygon(currentPoint, angle);
-      predictedPathPolygons.push_back(robotPolygon);
+      polygons.push_back(robotPolygon);
     }
   }
+
+  // Rewrite vector with path polygons
+  predictedPathPolygons = polygons;
 }
 
 void ObstacleArbiterNode::updateVisionPolygons(const std::vector<agribot_msgs::DetectedObject>& visionObjects)
 {
   std::vector<agribot_msgs::PolygonStamped> polygons;
+
+  updateVisionToPredictedPathTransform();
 
   for (const auto& object : visionObjects)
   {
@@ -224,6 +252,7 @@ agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs:
   polygon.polygon.points.push_back(polygonVertex);
 
   // Create rotation transform
+  // TODO(olek) - maybe transforms can be combined
   geometry_msgs::TransformStamped rotationTransform;
   rotationTransform.header.frame_id = "temp_map_1";
   rotationTransform.child_frame_id = "temp_map_2";
@@ -255,38 +284,43 @@ ObstacleArbiterNode::getVisionObjectPolygon(const agribot_msgs::DetectedObject& 
 
   double dx = detectedObject.box.max_point.x - detectedObject.box.min_point.x;
   double dy = detectedObject.box.max_point.y - detectedObject.box.min_point.y;
-  double z = detectedObject.box.min_point.z;
+  double z = 0.0;
 
   geometry_msgs::Point polygonVertex;
+  geometry_msgs::Point polygonVertexTransformed;
   polygonVertex.x = detectedObject.box.min_point.x;
   polygonVertex.y = detectedObject.box.min_point.y;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
+  polygonVertex.z = detectedObject.box.min_point.z;
+  tf2::doTransform(polygonVertex, polygonVertexTransformed, visionToPredictedPathTransform);
+  polygonVertexTransformed.z = z;
+  polygon.polygon.points.push_back(polygonVertexTransformed);
 
   polygonVertex.x = detectedObject.box.min_point.x;
   polygonVertex.y = detectedObject.box.min_point.y + dy;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
-
-  polygonVertex.x = detectedObject.box.min_point.x + dx;
-  polygonVertex.y = detectedObject.box.min_point.y;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
+  polygonVertex.z = detectedObject.box.min_point.z;
+  tf2::doTransform(polygonVertex, polygonVertexTransformed, visionToPredictedPathTransform);
+  polygonVertexTransformed.z = z;
+  polygon.polygon.points.push_back(polygonVertexTransformed);
 
   polygonVertex.x = detectedObject.box.min_point.x + dx;
   polygonVertex.y = detectedObject.box.min_point.y + dy;
-  polygonVertex.z = z;
-  polygon.polygon.points.push_back(polygonVertex);
+  polygonVertex.z = detectedObject.box.min_point.z;
+  tf2::doTransform(polygonVertex, polygonVertexTransformed, visionToPredictedPathTransform);
+  polygonVertexTransformed.z = z;
+  polygon.polygon.points.push_back(polygonVertexTransformed);
 
-  polygon.header.frame_id = visionFrameId;
+  polygonVertex.x = detectedObject.box.min_point.x + dx;
+  polygonVertex.y = detectedObject.box.min_point.y;
+  polygonVertex.z = detectedObject.box.min_point.z;
+  tf2::doTransform(polygonVertex, polygonVertexTransformed, visionToPredictedPathTransform);
+  polygonVertexTransformed.z = z;
+  polygon.polygon.points.push_back(polygonVertexTransformed);
+
+  // polygon.header.frame_id = visionFrameId;
+  polygon.header.frame_id = predictedPathFrameId;
   polygon.header.stamp = ros::Time::now();
 
-  // Lookup transform from visionFrameId to predictedPathFrameId
-  geometry_msgs::TransformStamped transform =
-      TFBuffer.lookupTransform(visionFrameId, predictedPathFrameId, ros::Time::now(), ros::Duration(0.2));
-  agribot_msgs::PolygonStamped polygonTransformed = doTransform(polygon, transform);
-
-  return polygonTransformed;
+  return polygon;
 }
 
 float ObstacleArbiterNode::getAngleBetweenPoints(geometry_msgs::Point firstPoint,
@@ -347,8 +381,12 @@ void ObstacleArbiterNode::publishDetectionStatus()
 
 void ObstacleArbiterNode::loadParameters()
 {
+  // TODO(olek) - change default timeouts (to 1.0?)
   // Predicted path timeout
-  nh->param<float>("predicted_path_timeout", predictedPathTimeout, 1.0);
+  nh->param<float>("predicted_path_timeout", predictedPathTimeout, 3.0);
+
+  // Vision timeout
+  nh->param<float>("vision_timeout", visionTimeout, 3.0);
 
   // Geometrical detection parameters
   if (nh->hasParam("robot_length"))
@@ -416,6 +454,80 @@ void ObstacleArbiterNode::predictedPathTimeoutCallback(const ros::TimerEvent& ev
   visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
   updateDetectionStatus();
   publishDetectionStatus();
+}
+
+void ObstacleArbiterNode::createVisionTimeoutTimer()
+{
+  visionTimeoutTimer =
+      nh->createTimer(ros::Duration(visionTimeout), &ObstacleArbiterNode::visionTimeoutCallback, this, true);
+}
+
+void ObstacleArbiterNode::stopVisionTimeoutTimer()
+{
+  visionTimeoutTimer.stop();
+}
+
+void ObstacleArbiterNode::startVisionTimeoutTimer()
+{
+  visionTimeoutTimer.start();
+}
+
+void ObstacleArbiterNode::restartVisionTimeoutTimer()
+{
+  visionTimeoutTimer.stop();
+  visionTimeoutTimer.start();
+}
+
+void ObstacleArbiterNode::visionTimeoutCallback(const ros::TimerEvent& event)
+{
+  ROS_ERROR_STREAM("Vision timeout exceeded " << visionTimeout << "s...");
+
+  // Clear predicted path and propagate status
+  visionPolygons.clear();
+  visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
+  visionMsgReceived = false;
+  updateDetectionStatus();
+  publishDetectionStatus();
+}
+
+void ObstacleArbiterNode::initVisualization()
+{
+  // TODO(olek) - change frameId and markerTopic (maybe ass class fields and params)
+  std::string frameId = "map";
+  std::string markerTopic = "/agribot/obstacle_polygons_markers";
+  visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, markerTopic));
+}
+
+void ObstacleArbiterNode::publishVisualMarkers()
+{
+  // Clear previous markers
+  clearVisualMarkers();
+
+  // Publish vision objects and projected robot polygons
+  publishVisionPolygonsMarkers();
+  publishRobotPolygonsMarkers();
+  visualTools->trigger();
+}
+
+void ObstacleArbiterNode::clearVisualMarkers()
+{
+  visualTools->deleteAllMarkers();
+}
+
+void ObstacleArbiterNode::publishVisionPolygonsMarkers()
+{
+  for (const auto& polygon : visionPolygons)
+  {
+    visualTools->publishPolygon(polygon.polygon, rviz_visual_tools::PURPLE, rviz_visual_tools::XLARGE, "VisionPolygon");
+  }
+}
+
+void ObstacleArbiterNode::publishRobotPolygonsMarkers()
+{
+  for (const auto& polygon : predictedPathPolygons)
+  {
+    visualTools->publishPolygon(polygon.polygon, rviz_visual_tools::GREEN, rviz_visual_tools::XLARGE, "RobotPolygon");
+  }
 }
 
 void ObstacleArbiterNode::run()

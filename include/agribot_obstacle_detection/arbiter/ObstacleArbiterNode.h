@@ -15,6 +15,8 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+#include <rviz_visual_tools/rviz_visual_tools.h>
+
 #include <vector>
 #include <string>
 #include <cmath>
@@ -38,8 +40,17 @@ private:
   tf2_ros::Buffer TFBuffer;
   tf2_ros::TransformListener TFListener;
 
+  // TF between vision objects and predicted path
+  geometry_msgs::TransformStamped visionToPredictedPathTransform;
+
+  // Rviz visualization
+  rviz_visual_tools::RvizVisualToolsPtr visualTools;
+
   float predictedPathTimeout;
   ros::Timer predictedPathTimeoutTimer;
+
+  float visionTimeout;
+  ros::Timer visionTimeoutTimer;
 
   float robotLength;
   float robotWidth;
@@ -56,6 +67,10 @@ private:
   uint8_t sonarStatus;
   uint8_t visionStatus;
 
+  // Additional flag to distinguish between not receiving vision detection message and having no obstacles in received
+  // message
+  bool visionMsgReceived;
+
 public:
   explicit ObstacleArbiterNode(ros::NodeHandle* _nh);
   ~ObstacleArbiterNode();
@@ -70,6 +85,7 @@ public:
   void checkVisionCollisions();
 
   // Vision detection transformations
+  void updateVisionToPredictedPathTransform();
   void updatePredictedPathPolygons(const std::vector<geometry_msgs::Point>& predictedPathPoints);
   void updateVisionPolygons(const std::vector<agribot_msgs::DetectedObject>& detectedObjects);
   agribot_msgs::PolygonStamped getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const;
@@ -86,9 +102,24 @@ public:
   void restartPredictedPathTimeoutTimer();
   void predictedPathTimeoutCallback(const ros::TimerEvent& event);
 
+  // Vision timeout timer
+  void createVisionTimeoutTimer();
+  void stopVisionTimeoutTimer();
+  void startVisionTimeoutTimer();
+  void restartVisionTimeoutTimer();
+  void visionTimeoutCallback(const ros::TimerEvent& event);
+
   // General methods
   void updateDetectionStatus();
   void publishDetectionStatus();
   void loadParameters();
+
+  // Visualization
+  void initVisualization();
+  void publishVisualMarkers();
+  void clearVisualMarkers();
+  void publishVisionPolygonsMarkers();
+  void publishRobotPolygonsMarkers();
+
   void run();
 };

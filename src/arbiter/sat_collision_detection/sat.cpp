@@ -1,7 +1,6 @@
 #include "agribot_obstacle_detection/arbiter/sat_collision_detection/sat.h"
 
-bool SAT::intersect(const agribot_msgs::PolygonStamped& firstPolygon,
-                    const agribot_msgs::PolygonStamped& secondPolygon)
+bool SAT::intersect(const agribot_msgs::PolygonStamped& firstPolygon, const agribot_msgs::PolygonStamped& secondPolygon)
 {
   // Get projection axes for both polygons
   std::vector<Eigen::Vector2f> firstPolyNormalAxes = getNormalAxes(firstPolygon);
@@ -35,7 +34,6 @@ bool SAT::intersect(const agribot_msgs::PolygonStamped& firstPolygon,
 
 Projection SAT::getProjection(const agribot_msgs::PolygonStamped& polygon, const Eigen::Vector2f& axis)
 {
-  // TODO(olek) - maybe it can be optimized with some lambda / filter / something else
   std::vector<float> pointProjections;
   for (const auto& p : polygon.polygon.points)
   {

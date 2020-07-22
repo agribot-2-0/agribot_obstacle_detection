@@ -13,21 +13,11 @@ int main(int argc, char** argv)
   firstPolyPoints.push_back(Eigen::Vector2f(5, 5));
   firstPolyPoints.push_back(Eigen::Vector2f(0, 5));
 
-  // firstPolyPoints.push_back(Eigen::Vector2f(0, 0));
-  // firstPolyPoints.push_back(Eigen::Vector2f(5, 0));
-  // firstPolyPoints.push_back(Eigen::Vector2f(5, 5));
-  // firstPolyPoints.push_back(Eigen::Vector2f(0, 5));
-
   std::vector<Eigen::Vector2f> secondPolyPoints;
   secondPolyPoints.push_back(Eigen::Vector2f(6, 2));
   secondPolyPoints.push_back(Eigen::Vector2f(3, 11.2));
   secondPolyPoints.push_back(Eigen::Vector2f(3, 12));
   secondPolyPoints.push_back(Eigen::Vector2f(6, 3));
-
-  // secondPolyPoints.push_back(Eigen::Vector2f(6, 2));
-  // secondPolyPoints.push_back(Eigen::Vector2f(3, 11.2));
-  // secondPolyPoints.push_back(Eigen::Vector2f(3, 12));
-  // secondPolyPoints.push_back(Eigen::Vector2f(6, 3));
 
   agribot_msgs::PolygonStamped poly1;
   for (const auto& point : firstPolyPoints)

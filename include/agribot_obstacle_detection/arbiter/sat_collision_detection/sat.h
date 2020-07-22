@@ -1,5 +1,7 @@
 #pragma once
 
+// Inspired by http://www.dyn4j.org/2010/01/sat
+
 #include <eigen3/Eigen/Core>
 #include <agribot_msgs/PolygonStamped.h>
 #include <geometry_msgs/Point.h>
