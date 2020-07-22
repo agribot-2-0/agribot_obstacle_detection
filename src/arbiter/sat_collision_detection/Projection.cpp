@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
+
 #include "agribot_obstacle_detection/arbiter/sat_collision_detection/Projection.h"
 
 Projection::Projection(float minValue, float maxValue)

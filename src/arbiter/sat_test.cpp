@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
+
 #include <agribot_msgs/PolygonStamped.h>
 
 #include <eigen3/Eigen/Core>

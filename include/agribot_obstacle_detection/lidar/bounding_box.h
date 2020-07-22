@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
+
 #pragma once
 
 #include <pcl_ros/point_cloud.h>

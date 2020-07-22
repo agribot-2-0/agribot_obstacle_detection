@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
+
 #include "agribot_obstacle_detection/sonar/SonarObstacleDetectionNode.h"
 
 SonarObstacleDetectionNode::SonarObstacleDetectionNode(ros::NodeHandle* _nh) : nh(_nh), lastTimestamp(ros::Time::now())

@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
+
 #pragma once
 
 // Inspired by http://www.dyn4j.org/2010/01/sat
