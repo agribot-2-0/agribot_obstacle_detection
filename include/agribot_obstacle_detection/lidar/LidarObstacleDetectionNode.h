@@ -173,12 +173,12 @@ public:
     visualTools->deleteAllMarkers();
 
     // Publish bounding boxes for detected objects
-    publishBoundingBoxArray();
-    publishGroundPlane();
+    publishBoundingBoxArrayMarker();
+    publishGroundPlaneMarker();
     visualTools->trigger();
   }
 
-  void publishBoundingBoxArray()
+  void publishBoundingBoxArrayMarker()
   {
     BoundingBox<PointT> box;
 
@@ -202,7 +202,7 @@ public:
     }
   }
 
-  void publishGroundPlane()
+  void publishGroundPlaneMarker()
   {
     // Publish ground plane
     double A = groundPlaneCoefficients->values[0];
