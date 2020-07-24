@@ -282,8 +282,6 @@ agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs:
 agribot_msgs::PolygonStamped
 ObstacleArbiterNode::getVisionObjectPolygon(const agribot_msgs::DetectedObject& detectedObject) const
 {
-  // TODO(olek) - better casting (taking projection on ground plane) (or is it ok right now?)
-  // Probably i should consider angle w.r.t to the ground (as lidar is mounted at some angle w.r.t. ground)
   agribot_msgs::PolygonStamped polygon;
 
   double dx = detectedObject.box.max_point.x - detectedObject.box.min_point.x;
@@ -320,7 +318,6 @@ ObstacleArbiterNode::getVisionObjectPolygon(const agribot_msgs::DetectedObject& 
   polygonVertexTransformed.z = z;
   polygon.polygon.points.push_back(polygonVertexTransformed);
 
-  // polygon.header.frame_id = visionFrameId;
   polygon.header.frame_id = predictedPathFrameId;
   polygon.header.stamp = ros::Time::now();
 
