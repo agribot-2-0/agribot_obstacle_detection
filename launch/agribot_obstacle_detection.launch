@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch" />
+    <include file="$(find agribot_obstacle_detection)/launch/sonar_detection.launch" />
+    <include file="$(find agribot_obstacle_detection)/launch/obstacle_arbiter.launch" />
+</launch>

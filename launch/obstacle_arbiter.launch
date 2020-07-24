@@ -1,0 +1,4 @@
+<launch>
+    <!-- Obstacle detection node -->
+    <node pkg="agribot_obstacle_detection" type="obstacle_arbiter_node" name="obstacle_arbiter_node" output="screen" launch-prefix=""/>
+</launch>

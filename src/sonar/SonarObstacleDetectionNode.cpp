@@ -1,3 +1,7 @@
+/*
+* Copyright (C) 2020 Agribot. All rights reserved.
+*/
+
 #include "agribot_obstacle_detection/sonar/SonarObstacleDetectionNode.h"
 
 SonarObstacleDetectionNode::SonarObstacleDetectionNode(
@@ -16,7 +20,7 @@ SonarObstacleDetectionNode::SonarObstacleDetectionNode(
 
     // Create initial SonarDetection message based on loaded sonars
     initSonarDetectionMsg();
-    // Publish initial msg with WAITING_FOR_MEASUREMENT status
+    // Publish initial msg with WAITING_FOR_FIRST_MEASUREMENT status
     publishSonarDetecionMsg();
 
     // Register sonar subscribers
@@ -143,7 +147,7 @@ void SonarObstacleDetectionNode::initSonarDetectionMsg()
         agribot_msgs::SonarStatus sonarStatusMsg;
         sonarStatusMsg.id = it.second.getId();
         sonarStatusMsg.status =
-            agribot_msgs::SonarStatus::WAITING_FOR_MEASUREMENT;
+            agribot_msgs::SonarStatus::WAITING_FOR_FIRST_MEASUREMENT;
         sonarStatusMsg.threshold = it.second.getThreshold();
         sonarDetectionMsg.sonars.push_back(sonarStatusMsg);
     }
