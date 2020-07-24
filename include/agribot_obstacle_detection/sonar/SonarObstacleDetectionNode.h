@@ -22,9 +22,6 @@ private:
   ros::NodeHandle* nh;
   ros::Publisher sonarDetectionPub;
 
-  // ROS variables
-  ros::Time lastTimestamp;
-
   // Sonars map with id as a key
   std::unordered_map<std::string, Sonar> sonars;
 
@@ -40,10 +37,10 @@ public:
 
   void sonarCallback(const sensor_msgs::Range::ConstPtr& msg, const std::string& id);
 
-  void updateSonarDetectionMsg(const std::string& id, uint8_t status, float shortestRange, float lastRange);
+  void updateSonarDetectionMsg(const std::string& id, const std::string& frameId, ros::Time stamp, uint8_t status,
+                               float shortestRange, float lastRange);
 
   void publishSonarDetecionMsg();
-  void updateLastTimestamp(const ros::Time& newTimestamp);
   void registerSubscribers();
   void initSonarDetectionMsg();
   void loadSonars();

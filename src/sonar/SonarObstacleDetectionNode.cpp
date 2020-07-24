@@ -4,7 +4,7 @@
 
 #include "agribot_obstacle_detection/sonar/SonarObstacleDetectionNode.h"
 
-SonarObstacleDetectionNode::SonarObstacleDetectionNode(ros::NodeHandle* _nh) : nh(_nh), lastTimestamp(ros::Time::now())
+SonarObstacleDetectionNode::SonarObstacleDetectionNode(ros::NodeHandle* _nh) : nh(_nh)
 {
   // Create sonar detection publisher with latched connection
   sonarDetectionPub = nh->advertise<agribot_msgs::SonarDetection>("sonar_detection", 1, true);
@@ -46,15 +46,13 @@ void SonarObstacleDetectionNode::sonarCallback(const sensor_msgs::Range::ConstPt
   float shortestRange = sonar->second.getShortestRange();
   float lastRange = sonar->second.getLastRange();
 
-  // Update lastTimestamp
-  updateLastTimestamp(msg->header.stamp);
-
   // Update and publish SonarDetection message
-  updateSonarDetectionMsg(id, status, shortestRange, lastRange);
+  updateSonarDetectionMsg(id, msg->header.frame_id, msg->header.stamp, status, shortestRange, lastRange);
   publishSonarDetecionMsg();
 }
 
-void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id, uint8_t status, float shortestRange,
+void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id, const std::string& frameId,
+                                                         ros::Time stamp, uint8_t status, float shortestRange,
                                                          float lastRange)
 {
   // Update status for sonar matching id
@@ -62,6 +60,8 @@ void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id, 
   {
     if (it.id == id)
     {
+      it.header.stamp = stamp;
+      it.header.frame_id = frameId;
       it.status = status;
       it.shortest_range = shortestRange;
       it.last_range = lastRange;
@@ -72,19 +72,7 @@ void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id, 
 
 void SonarObstacleDetectionNode::publishSonarDetecionMsg()
 {
-  sonarDetectionMsg.header.stamp = lastTimestamp;
   sonarDetectionPub.publish(sonarDetectionMsg);
-}
-
-void SonarObstacleDetectionNode::updateLastTimestamp(const ros::Time& newTimestamp)
-{
-  ros::Duration timeDiff = newTimestamp - lastTimestamp;
-
-  // Update only if newTimestamp is newer than lastTimestamp
-  if (timeDiff.toNSec() > 0)
-  {
-    lastTimestamp = newTimestamp;
-  }
 }
 
 void SonarObstacleDetectionNode::registerSubscribers()
