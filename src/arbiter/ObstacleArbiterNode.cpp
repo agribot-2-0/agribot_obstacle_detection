@@ -50,18 +50,18 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
   uint8_t detectedCount = 0;
   uint8_t waitingCount = 0;
 
+  std::vector<agribot_msgs::SonarStatus> collidingSonars;
+
   // Iterate over sonars
   for (const auto& sonar : msg->sonars)
   {
     if (sonar.status == agribot_msgs::SonarStatus::OBSTACLE_DETECTED)
     {
-      // Break if any obstacle is detected
       ++detectedCount;
-      break;
+      collidingSonars.push_back(sonar);
     }
     else if (sonar.status == agribot_msgs::SonarStatus::WAITING_FOR_FIRST_MEASUREMENT)
     {
-      // Following sonars may have OBSTACLE_DETECTED status - can't break
       ++waitingCount;
     }
   }
@@ -83,6 +83,16 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
   // Update general detection status and publish it
   updateDetectionStatus();
   publishDetectionStatus();
+
+  // Update sonar detection visualization
+  if (predictedPathFrameId != "")
+  {
+    publishSonarDetectionMarkers(collidingSonars);
+  }
+  else
+  {
+    ROS_WARN_STREAM("predictedPathFrameId not set yet. Skipping sonar detection visualization...");
+  }
 }
 
 void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg)
@@ -127,7 +137,7 @@ void ObstacleArbiterNode::visionDetectionPipeline()
 
 void ObstacleArbiterNode::checkVisionCollisions()
 {
-  publishVisualMarkers();
+  publishPolygonsMarkers();
 
   if (!visionMsgReceived)
   {
@@ -145,22 +155,24 @@ void ObstacleArbiterNode::checkVisionCollisions()
     return;
   }
 
+  // Use temporary status to determine if status was changed in below loops
+  uint8_t tempVisionStatus = agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE;
+
   // Check collisions
-  for (const auto& visionPolygon : visionPolygons)
+  for (auto& visionPolygonPair : visionPolygonsPairs)
   {
     for (const auto& robotPolygon : predictedPathPolygons)
     {
-      if (SAT::intersect(robotPolygon, visionPolygon))
+      if (SAT::intersect(robotPolygon, visionPolygonPair.first))
       {
-        // Any of the polygons intersect - set status and return (no need to check another polygons)
-        visionStatus = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
-        return;
+        tempVisionStatus = agribot_msgs::AgribotObstacleDetection::OBSTACLE_DETECTED;
+        visionPolygonPair.second = true;
       }
     }
   }
 
-  // No intersections detected - set status
-  visionStatus = agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE;
+  // Rewrite temporary status to visionStatus
+  visionStatus = tempVisionStatus;
 }
 
 void ObstacleArbiterNode::updateVisionToPredictedPathTransform()
@@ -214,18 +226,18 @@ void ObstacleArbiterNode::updatePredictedPathPolygons(const std::vector<geometry
 
 void ObstacleArbiterNode::updateVisionPolygons(const std::vector<agribot_msgs::DetectedObject>& visionObjects)
 {
-  std::vector<agribot_msgs::PolygonStamped> polygons;
+  std::vector<std::pair<agribot_msgs::PolygonStamped, bool>> polygons;
 
   updateVisionToPredictedPathTransform();
 
   for (const auto& object : visionObjects)
   {
     agribot_msgs::PolygonStamped polygon = getVisionObjectPolygon(object);
-    polygons.push_back(polygon);
+    polygons.push_back(std::make_pair(polygon, false));
   }
 
   // Rewrite vector with object polygons
-  visionPolygons = polygons;
+  visionPolygonsPairs = polygons;
 }
 
 agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const
@@ -484,7 +496,7 @@ void ObstacleArbiterNode::visionTimeoutCallback(const ros::TimerEvent& event)
   ROS_ERROR_STREAM("Vision timeout exceeded " << visionTimeout << "s...");
 
   // Clear predicted path and propagate status
-  visionPolygons.clear();
+  visionPolygonsPairs.clear();
   visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
   visionMsgReceived = false;
   updateDetectionStatus();
@@ -495,31 +507,44 @@ void ObstacleArbiterNode::initVisualization()
 {
   // TODO(olek) - change frameId and markerTopic (maybe ass class fields and params)
   std::string frameId = "map";
-  std::string markerTopic = "/agribot/obstacle_polygons_markers";
-  visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, markerTopic));
+  std::string polygonsMarkersTopic = "/agribot/obstacle_polygons_markers";
+  std::string sonarDetectionMarkersTopic = "/agribot/sonar_detection_markers";
+  polygonsVisualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, polygonsMarkersTopic));
+  sonarDetectionVisualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, sonarDetectionMarkersTopic));
 }
 
-void ObstacleArbiterNode::publishVisualMarkers()
+void ObstacleArbiterNode::publishPolygonsMarkers()
 {
   // Clear previous markers
-  clearVisualMarkers();
+  clearPolygonsMarkers();
 
   // Publish vision objects and projected robot polygons
   publishVisionPolygonsMarkers();
   publishRobotPolygonsMarkers();
-  visualTools->trigger();
+  polygonsVisualTools->trigger();
 }
 
-void ObstacleArbiterNode::clearVisualMarkers()
+void ObstacleArbiterNode::clearPolygonsMarkers()
 {
-  visualTools->deleteAllMarkers();
+  polygonsVisualTools->deleteAllMarkers();
 }
 
 void ObstacleArbiterNode::publishVisionPolygonsMarkers()
 {
-  for (const auto& polygon : visionPolygons)
+  for (const auto& polygonPair : visionPolygonsPairs)
   {
-    visualTools->publishPolygon(polygon.polygon, rviz_visual_tools::PURPLE, rviz_visual_tools::XLARGE, "VisionPolygon");
+    if (polygonPair.second == true)
+    {
+      // Polygon collides with robot polygon
+      polygonsVisualTools->publishPolygon(polygonPair.first.polygon, rviz_visual_tools::RED, rviz_visual_tools::XLARGE,
+                                          "VisionPolygon");
+    }
+    else
+    {
+      // No collision
+      polygonsVisualTools->publishPolygon(polygonPair.first.polygon, rviz_visual_tools::GREEN,
+                                          rviz_visual_tools::XLARGE, "VisionPolygon");
+    }
   }
 }
 
@@ -527,8 +552,54 @@ void ObstacleArbiterNode::publishRobotPolygonsMarkers()
 {
   for (const auto& polygon : predictedPathPolygons)
   {
-    visualTools->publishPolygon(polygon.polygon, rviz_visual_tools::GREEN, rviz_visual_tools::XLARGE, "RobotPolygon");
+    polygonsVisualTools->publishPolygon(polygon.polygon, rviz_visual_tools::PURPLE, rviz_visual_tools::XLARGE,
+                                        "RobotPolygon");
   }
+}
+
+void ObstacleArbiterNode::publishSonarDetectionMarkers(const std::vector<agribot_msgs::SonarStatus>& collidingSonars)
+{
+  // Clear previous markers
+  clearSonarDetectionMarkers();
+
+  for (const auto& sonar : collidingSonars)
+  {
+    try
+    {
+      geometry_msgs::Pose conePoseInSonarFrame;
+      geometry_msgs::Pose conePoseInPredictedPathFrame;
+
+      conePoseInSonarFrame.orientation.w = 1.0;
+
+      // Lookup transform from sonar FrameId to predictedPathFrameId
+      geometry_msgs::TransformStamped sonarToPredictedPathTransform =
+          TFBuffer.lookupTransform(predictedPathFrameId, sonar.header.frame_id, ros::Time::now(), ros::Duration(0.2));
+      // Transform cone pose from soanr frame to predicted path frame
+      sonarToPredictedPathTransform.header.frame_id = sonar.header.frame_id;
+      sonarToPredictedPathTransform.child_frame_id = predictedPathFrameId;
+
+      tf2::doTransform(conePoseInSonarFrame, conePoseInPredictedPathFrame, sonarToPredictedPathTransform);
+
+      // Publish marker
+      // TODO(olek) - change angle value
+      sonarDetectionVisualTools->publishCone(conePoseInPredictedPathFrame, 1.0);
+    }
+    catch (tf2::InvalidArgumentException& e)
+    {
+      ROS_ERROR_STREAM("Error occured: " << e.what());
+    }
+    catch (ros::Exception& e)
+    {
+      ROS_ERROR_STREAM("Error occured: " << e.what());
+    }
+  }
+
+  sonarDetectionVisualTools->trigger();
+}
+
+void ObstacleArbiterNode::clearSonarDetectionMarkers()
+{
+  sonarDetectionVisualTools->deleteAllMarkers();
 }
 
 void ObstacleArbiterNode::run()

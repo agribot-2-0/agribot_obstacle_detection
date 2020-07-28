@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <string>
+#include <utility>
 #include <cmath>
 
 #include "agribot_obstacle_detection/arbiter/sat_collision_detection/sat.h"
@@ -48,7 +49,8 @@ private:
   geometry_msgs::TransformStamped visionToPredictedPathTransform;
 
   // Rviz visualization
-  rviz_visual_tools::RvizVisualToolsPtr visualTools;
+  rviz_visual_tools::RvizVisualToolsPtr polygonsVisualTools;
+  rviz_visual_tools::RvizVisualToolsPtr sonarDetectionVisualTools;
 
   float predictedPathTimeout;
   ros::Timer predictedPathTimeoutTimer;
@@ -63,7 +65,11 @@ private:
   std::string predictedPathFrameId;
   std::string visionFrameId;
 
-  std::vector<agribot_msgs::PolygonStamped> visionPolygons;
+  // Vector containing pairs of: polygon casted from vision object bounding box, and bool informing if this polygon
+  // intersects with any of predictedPathPolygons
+  std::vector<std::pair<agribot_msgs::PolygonStamped, bool>> visionPolygonsPairs;
+
+  // Vector containing polygons representing projection of robot on path
   std::vector<agribot_msgs::PolygonStamped> predictedPathPolygons;
 
   // Detection status
@@ -120,10 +126,12 @@ public:
 
   // Visualization
   void initVisualization();
-  void publishVisualMarkers();
-  void clearVisualMarkers();
+  void publishPolygonsMarkers();
+  void clearPolygonsMarkers();
   void publishVisionPolygonsMarkers();
   void publishRobotPolygonsMarkers();
+  void publishSonarDetectionMarkers(const std::vector<agribot_msgs::SonarStatus>& collidingSonarsFrameIds);
+  void clearSonarDetectionMarkers();
 
   void run();
 };
