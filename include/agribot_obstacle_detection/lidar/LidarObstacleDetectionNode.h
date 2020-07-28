@@ -190,7 +190,7 @@ public:
       Eigen::Vector3d minPoint(box.xMin, box.yMin, box.zMin);
       Eigen::Vector3d maxPoint(box.xMax, box.yMax, box.zMax);
 
-      visualTools->publishWireframeCuboid(pose, minPoint, maxPoint, rviz_visual_tools::RED, "Obstacle");
+      visualTools->publishWireframeCuboid(pose, minPoint, maxPoint, rviz_visual_tools::BLUE, "Obstacle");
 
       // Translation for text alignment
       pose.translation() = Eigen::Vector3d(box.xMax, box.yMax, box.zMax);
