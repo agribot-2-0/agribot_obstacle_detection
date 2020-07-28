@@ -91,7 +91,8 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
   }
   else
   {
-    ROS_WARN_STREAM("predictedPathFrameId not set yet. Skipping sonar detection visualization...");
+    ROS_WARN_STREAM("[Obstacle Arbiter Node] predictedPathFrameId not set yet. Skipping sonar detection "
+                    "visualization...");
   }
 }
 
@@ -112,7 +113,7 @@ void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDete
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
     updateDetectionStatus();
     publishDetectionStatus();
-    ROS_WARN_STREAM("predictedPathFrameId not set yet. Skipping vision detection...");
+    ROS_WARN_STREAM("[Obstacle Arbiter Node] predictedPathFrameId not set yet. Skipping vision detection...");
   }
 }
 
@@ -142,7 +143,7 @@ void ObstacleArbiterNode::checkVisionCollisions()
   if (!visionMsgReceived)
   {
     // No vision message received (or timeout occured)
-    ROS_WARN_STREAM("No vision message received yet. Skipping vision detection...");
+    ROS_WARN_STREAM("[Obstacle Arbiter Node] No vision message received yet. Skipping vision detection...");
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
     return;
   }
@@ -150,7 +151,7 @@ void ObstacleArbiterNode::checkVisionCollisions()
   if (predictedPathPolygons.empty())
   {
     // Predicted path missing
-    ROS_WARN_STREAM("Predicted path empty. Skipping vision detection...");
+    ROS_WARN_STREAM("[Obstacle Arbiter Node] Predicted path empty. Skipping vision detection...");
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
     return;
   }
@@ -185,11 +186,11 @@ void ObstacleArbiterNode::updateVisionToPredictedPathTransform()
   }
   catch (tf2::InvalidArgumentException& e)
   {
-    ROS_ERROR_STREAM("Error occured: " << e.what());
+    ROS_ERROR_STREAM("[Obstacle Arbiter Node] Error occured: " << e.what());
   }
   catch (ros::Exception& e)
   {
-    ROS_ERROR_STREAM("Error occured: " << e.what());
+    ROS_ERROR_STREAM("[Obstacle Arbiter Node] Error occured: " << e.what());
   }
 }
 
@@ -408,7 +409,7 @@ void ObstacleArbiterNode::loadParameters()
   }
   else
   {
-    ROS_FATAL_STREAM("Missing robot_length parameter. Exiting...");
+    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing robot_length parameter. Exiting...");
     nh->shutdown();
     exit(0);
   }
@@ -419,7 +420,7 @@ void ObstacleArbiterNode::loadParameters()
   }
   else
   {
-    ROS_FATAL_STREAM("Missing robot_width parameter. Exiting...");
+    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing robot_width parameter. Exiting...");
     nh->shutdown();
     exit(0);
   }
@@ -430,7 +431,7 @@ void ObstacleArbiterNode::loadParameters()
   }
   else
   {
-    ROS_FATAL_STREAM("Missing width_offset parameter. Exiting...");
+    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing width_offset parameter. Exiting...");
     nh->shutdown();
     exit(0);
   }
@@ -460,7 +461,7 @@ void ObstacleArbiterNode::restartPredictedPathTimeoutTimer()
 
 void ObstacleArbiterNode::predictedPathTimeoutCallback(const ros::TimerEvent& event)
 {
-  ROS_ERROR_STREAM("Predicted path timeout exceeded " << predictedPathTimeout << "s...");
+  ROS_ERROR_STREAM("[Obstacle Arbiter Node] Predicted path timeout exceeded " << predictedPathTimeout << "s...");
 
   // Clear predicted path and propagate status
   predictedPathPolygons.clear();
@@ -493,7 +494,7 @@ void ObstacleArbiterNode::restartVisionTimeoutTimer()
 
 void ObstacleArbiterNode::visionTimeoutCallback(const ros::TimerEvent& event)
 {
-  ROS_ERROR_STREAM("Vision timeout exceeded " << visionTimeout << "s...");
+  ROS_ERROR_STREAM("[Obstacle Arbiter Node] Vision timeout exceeded " << visionTimeout << "s...");
 
   // Clear predicted path and propagate status
   visionPolygonsPairs.clear();
@@ -586,11 +587,11 @@ void ObstacleArbiterNode::publishSonarDetectionMarkers(const std::vector<agribot
     }
     catch (tf2::InvalidArgumentException& e)
     {
-      ROS_ERROR_STREAM("Error occured: " << e.what());
+      ROS_ERROR_STREAM("[Obstacle Arbiter Node] Error occured: " << e.what());
     }
     catch (ros::Exception& e)
     {
-      ROS_ERROR_STREAM("Error occured: " << e.what());
+      ROS_ERROR_STREAM("[Obstacle Arbiter Node] Error occured: " << e.what());
     }
   }
 

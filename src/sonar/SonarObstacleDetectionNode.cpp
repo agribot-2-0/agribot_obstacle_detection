@@ -98,7 +98,7 @@ void SonarObstacleDetectionNode::registerSubscribers()
     subscribers.insert(subPair);
 
     // Print information
-    ROS_INFO_STREAM_NAMED("sonar_obstacle_detection_node", "Subscribed to topic: " << topic);
+    ROS_INFO_STREAM("[Sonar Obstacle Detection] Subscribed to topic: " << topic);
   }
 }
 
@@ -154,9 +154,9 @@ void SonarObstacleDetectionNode::loadSonars()
       else
       {
         // Error in configuration - no threshold for this sonar
-        ROS_ERROR_STREAM_NAMED("sonar_obstacle_detection_node", topicField << ", " << thresholdField << " or "
-                                                                           << historyLengthField << " unspecified for "
-                                                                           << sonarField << ". Exiting...");
+        ROS_ERROR_STREAM("[Sonar Obstacle Detection] " << topicField << ", " << thresholdField << " or "
+                                                       << historyLengthField << " unspecified for " << sonarField
+                                                       << ". Exiting...");
 
         ros::shutdown();
       }
@@ -167,7 +167,7 @@ void SonarObstacleDetectionNode::loadSonars()
     }
   }
 
-  ROS_INFO_STREAM_NAMED("sonar_obstacle_detection_node", "Loaded " << i << " sonars.");
+  ROS_INFO_STREAM("[Sonar Obstacle Detection] Loaded " << i << " sonars.");
 }
 
 void SonarObstacleDetectionNode::run()

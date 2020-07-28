@@ -252,7 +252,7 @@ public:
 
     nh->param<int>("clustering_max_cluster_size", clusteringMaxClusterSize, 1000);
 
-    ROS_INFO_STREAM("\nStarting Lidar Obstacle Detection with parameters:\n\n"
+    ROS_INFO_STREAM("[Lidar Obstacle Detection] Starting Lidar Obstacle Detection with parameters:\n\n"
                     << "### Voxel Grid Filter ###" << std::endl
                     << "- Resolution = " << voxelGridFilterResolution << "\n\n### Segmentation ###" << std::endl
                     << "- Max Iterations = " << segmentationMaxIterations << std::endl
