@@ -12,6 +12,7 @@
 #include <agribot_msgs/DetectedObject.h>
 #include <agribot_msgs/PolygonStamped.h>
 #include <geometry_msgs/Point.h>
+#include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -39,38 +40,34 @@ private:
   // Sonar & Lidar detection subscribers
   ros::Subscriber sonarDetectionSub;
   ros::Subscriber visionDetectionSub;
-  ros::Subscriber predictedPathSub;
+  ros::Subscriber pathSub;
 
   // TF Buffer and listener
   tf2_ros::Buffer TFBuffer;
   tf2_ros::TransformListener TFListener;
 
-  // TF between vision objects and predicted path
-  geometry_msgs::TransformStamped visionToPredictedPathTransform;
+  // TF between vision objects and path
+  geometry_msgs::TransformStamped visionToPathTransform;
 
   // Rviz visualization
-  rviz_visual_tools::RvizVisualToolsPtr polygonsVisualTools;
-  rviz_visual_tools::RvizVisualToolsPtr sonarDetectionVisualTools;
-
-  float predictedPathTimeout;
-  ros::Timer predictedPathTimeoutTimer;
-
-  float visionTimeout;
-  ros::Timer visionTimeoutTimer;
+  rviz_visual_tools::RvizVisualToolsPtr visualTools;
 
   float robotLength;
   float robotWidth;
   float widthOffset;
 
-  std::string predictedPathFrameId;
+  std::string pathFrameId;
   std::string visionFrameId;
 
   // Vector containing pairs of: polygon casted from vision object bounding box, and bool informing if this polygon
-  // intersects with any of predictedPathPolygons
+  // intersects with any of pathPolygons
   std::vector<std::pair<agribot_msgs::PolygonStamped, bool>> visionPolygonsPairs;
 
   // Vector containing polygons representing projection of robot on path
-  std::vector<agribot_msgs::PolygonStamped> predictedPathPolygons;
+  std::vector<agribot_msgs::PolygonStamped> pathPolygons;
+
+  // Vector containing sonars for which collision was detected, for visualization purposes
+  std::vector<agribot_msgs::SonarStatus> collidingSonars;
 
   // Detection status
   uint8_t status;
@@ -88,36 +85,21 @@ public:
   // ROS callbacks
   void sonarDetectionCallback(const agribot_msgs::SonarDetection::ConstPtr& msg);
   void visionDetectionCallback(const agribot_msgs::VisionDetection::ConstPtr& msg);
-  void predictedPathCallback(const visualization_msgs::Marker::ConstPtr& msg);
+  void pathCallback(const nav_msgs::Path::ConstPtr& msg);
 
   // Vision detection
   void visionDetectionPipeline();
   void checkVisionCollisions();
 
   // Vision detection transformations
-  void updateVisionToPredictedPathTransform();
-  void updatePredictedPathPolygons(const std::vector<geometry_msgs::Point>& predictedPathPoints);
+  void updateVisionToPathTransform();
+  void updateRobotPolygons(const std::vector<geometry_msgs::PoseStamped>& robotPosesStamped);
   void updateVisionPolygons(const std::vector<agribot_msgs::DetectedObject>& detectedObjects);
-  agribot_msgs::PolygonStamped getRobotPolygon(geometry_msgs::Point centerPoint, float angle) const;
-  agribot_msgs::PolygonStamped getVisionObjectPolygon(const agribot_msgs::DetectedObject& detectedObject) const;
+  agribot_msgs::PolygonStamped getRobotPolygon(geometry_msgs::Pose pose) const;
+  agribot_msgs::PolygonStamped getVisionPolygon(const agribot_msgs::DetectedObject& detectedObject) const;
 
-  float getAngleBetweenPoints(geometry_msgs::Point firstPoint, geometry_msgs::Point secondPoint) const;
-  agribot_msgs::PolygonStamped doTransform(const agribot_msgs::PolygonStamped& inPolygon,
-                                           const geometry_msgs::TransformStamped& transform) const;
-
-  // Predicted path timeout timer
-  void createPredictedPathTimeoutTimer();
-  void stopPredictedPathTimeoutTimer();
-  void startPredictedPathTimeoutTimer();
-  void restartPredictedPathTimeoutTimer();
-  void predictedPathTimeoutCallback(const ros::TimerEvent& event);
-
-  // Vision timeout timer
-  void createVisionTimeoutTimer();
-  void stopVisionTimeoutTimer();
-  void startVisionTimeoutTimer();
-  void restartVisionTimeoutTimer();
-  void visionTimeoutCallback(const ros::TimerEvent& event);
+  agribot_msgs::PolygonStamped transformPolygon(const agribot_msgs::PolygonStamped& inPolygon,
+                                                const geometry_msgs::TransformStamped& transform) const;
 
   // General methods
   void updateDetectionStatus();
@@ -126,12 +108,10 @@ public:
 
   // Visualization
   void initVisualization();
-  void publishPolygonsMarkers();
-  void clearPolygonsMarkers();
+  void publishMarkers();
   void publishVisionPolygonsMarkers();
   void publishRobotPolygonsMarkers();
-  void publishSonarDetectionMarkers(const std::vector<agribot_msgs::SonarStatus>& collidingSonarsFrameIds);
-  void clearSonarDetectionMarkers();
+  void publishSonarDetectionMarkers();
 
   void run();
 };

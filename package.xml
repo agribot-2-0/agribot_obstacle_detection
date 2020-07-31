@@ -13,6 +13,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>tf2_geometry_msgs</depend>
+  <depend>nav_msgs</depend>
 
   <build_depend>roscpp</build_depend>
   <build_depend>rviz_visual_tools</build_depend>

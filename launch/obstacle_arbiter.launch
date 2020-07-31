@@ -1,8 +1,8 @@
 <launch>
 
-    <arg name="robot_length"    default="1.4"/>
-    <arg name="robot_width"     default="0.7"/>
-    <arg name="width_offset"    default="0.3"/>
+    <arg name="robot_length"/>
+    <arg name="robot_width"/>
+    <arg name="width_offset"/>
 
     <!-- Obstacle detection node -->
     <node pkg="agribot_obstacle_detection" type="obstacle_arbiter_node" name="obstacle_arbiter_node" output="screen" launch-prefix="">
