@@ -237,7 +237,7 @@ public:
     nh->param<bool>("ros_vis", bROSVis, true);
 
     // Frame and topics parameters
-    nh->param<std::string>("lidar_frame_id", frameId, "lidar_link");
+    nh->getParam("lidar_frame_id", frameId);
 
     // Obstacle detection parameters
     nh->param<float>("voxel_grid_filter_resolution", voxelGridFilterResolution, 0.1);

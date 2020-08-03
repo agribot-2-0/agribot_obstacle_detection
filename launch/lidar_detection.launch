@@ -1,8 +1,8 @@
 <launch>
 
     <arg name="ros_vis"                 default="true"/>
-    <arg name="lidar_frame_id"          default="front_lidar_livox_horizon_link"/>
-    <arg name="pointcloud_topic"        default="/agribot/front_lidar/livox_horizon/pc2"/>
+    <arg name="lidar_frame_id"          default="bumper_front_lidar_link"/>
+    <arg name="pointcloud_topic"        default="/bumper/front/lidar"/>
     <arg name="obstacles_array_topic"   default="/agribot/vision_detection"/>
     <arg name="marker_topic"            default="/agribot/obstacles_markers"/>
 
