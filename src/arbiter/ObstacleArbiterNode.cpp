@@ -254,8 +254,10 @@ agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs:
   rotationTransform.child_frame_id = "temp_map_2";
   rotationTransform.header.stamp = ros::Time::now();
   rotationTransform.transform.rotation = pose.orientation;
+  // Rotate polygon
   agribot_msgs::PolygonStamped rotatedPolygon = transformPolygon(tempPolygon, rotationTransform);
 
+  // Create translation transform
   geometry_msgs::TransformStamped translationTransform;
   translationTransform.header.frame_id = "temp_map_2";
   translationTransform.child_frame_id = pathFrameId;
@@ -263,6 +265,7 @@ agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs:
   translationTransform.transform.rotation.w = 1;
   translationTransform.transform.translation.x = pose.position.x;
   translationTransform.transform.translation.y = pose.position.y;
+  // Translate polygon
   agribot_msgs::PolygonStamped finalPolygon = transformPolygon(rotatedPolygon, translationTransform);
 
   // Return rotated polygon
@@ -412,9 +415,9 @@ void ObstacleArbiterNode::loadParameters()
 
 void ObstacleArbiterNode::initVisualization(const std::string& frameId)
 {
-  std::string polygonsMarkersTopic = "/agribot/obstacle_polygons_markers";
+  std::string obstacleArbiterMarkersTopic = "/agribot/obstacle_arbiter_markers";
   std::string sonarDetectionMarkersTopic = "/agribot/sonar_detection_markers";
-  visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, polygonsMarkersTopic, *nh));
+  visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, obstacleArbiterMarkersTopic, *nh));
   visualTools->loadMarkerPub(false, false);
 }
 
