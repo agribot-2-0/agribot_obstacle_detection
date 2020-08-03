@@ -55,8 +55,13 @@ private:
   // Rviz visualization
   rviz_visual_tools::RvizVisualToolsPtr visualTools;
 
+  // Robot size parameters
   float robotLength;
   float robotWidth;
+
+  // Offsets increasing size of the robot when creating robot polygon (offset is added on both sides - both on
+  // left+right and front+back)
+  float lengthOffset;
   float widthOffset;
 
   std::string pathFrameId;
@@ -106,15 +111,15 @@ public:
 
   // General methods
   void updateDetectionStatus();
-  void publishDetectionStatus();
+  void publishDetectionStatus() const;
   void loadParameters();
 
   // Visualization
   void initVisualization(const std::string& frameId);
-  void publishMarkers();
-  void publishVisionPolygonsMarkers();
-  void publishRobotPolygonsMarkers();
-  void publishSonarDetectionMarkers();
+  void publishMarkers() const;
+  void publishVisionPolygonsMarkers() const;
+  void publishRobotPolygonsMarkers() const;
+  void publishSonarDetectionMarkers() const;
 
-  void run();
+  void run() const;
 };

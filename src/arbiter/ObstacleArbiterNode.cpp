@@ -223,8 +223,8 @@ void ObstacleArbiterNode::updateVisionPolygons(const std::vector<agribot_msgs::D
 
 agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs::Pose pose) const
 {
-  float a = robotWidth + widthOffset;
-  float b = robotLength;
+  float a = robotWidth + 2 * widthOffset;
+  float b = robotLength + 2 * lengthOffset;
 
   agribot_msgs::PolygonStamped tempPolygon;
   tempPolygon.header.stamp = ros::Time::now();
@@ -353,7 +353,7 @@ void ObstacleArbiterNode::updateDetectionStatus()
   }
 }
 
-void ObstacleArbiterNode::publishDetectionStatus()
+void ObstacleArbiterNode::publishDetectionStatus() const
 {
   agribot_msgs::AgribotObstacleDetection msg;
   msg.status = status;
@@ -387,6 +387,17 @@ void ObstacleArbiterNode::loadParameters()
     exit(0);
   }
 
+  if (nh->hasParam("length_offset"))
+  {
+    nh->getParam("length_offset", lengthOffset);
+  }
+  else
+  {
+    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing length_offset parameter. Exiting...");
+    nh->shutdown();
+    exit(0);
+  }
+
   if (nh->hasParam("width_offset"))
   {
     nh->getParam("width_offset", widthOffset);
@@ -407,7 +418,7 @@ void ObstacleArbiterNode::initVisualization(const std::string& frameId)
   visualTools->loadMarkerPub(false, false);
 }
 
-void ObstacleArbiterNode::publishMarkers()
+void ObstacleArbiterNode::publishMarkers() const
 {
   visualTools->deleteAllMarkers();
   publishVisionPolygonsMarkers();
@@ -416,7 +427,7 @@ void ObstacleArbiterNode::publishMarkers()
   visualTools->trigger();
 }
 
-void ObstacleArbiterNode::publishVisionPolygonsMarkers()
+void ObstacleArbiterNode::publishVisionPolygonsMarkers() const
 {
   for (const auto& polygonPair : visionPolygonsPairs)
   {
@@ -435,7 +446,7 @@ void ObstacleArbiterNode::publishVisionPolygonsMarkers()
   }
 }
 
-void ObstacleArbiterNode::publishRobotPolygonsMarkers()
+void ObstacleArbiterNode::publishRobotPolygonsMarkers() const
 {
   for (const auto& polygon : pathPolygons)
   {
@@ -443,7 +454,7 @@ void ObstacleArbiterNode::publishRobotPolygonsMarkers()
   }
 }
 
-void ObstacleArbiterNode::publishSonarDetectionMarkers()
+void ObstacleArbiterNode::publishSonarDetectionMarkers() const
 {
   for (const auto& sonar : collidingSonars)
   {
@@ -477,7 +488,7 @@ void ObstacleArbiterNode::publishSonarDetectionMarkers()
   }
 }
 
-void ObstacleArbiterNode::run()
+void ObstacleArbiterNode::run() const
 {
   ros::spin();
 }
