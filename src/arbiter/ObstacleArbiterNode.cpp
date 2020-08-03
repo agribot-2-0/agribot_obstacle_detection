@@ -26,8 +26,7 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
 
   // Subscribers
   // TODO(olek) Change topic to /agribot/sonar_detection
-  sonarDetectionSub = _nh->subscribe("/sonar_obstacle_detection_node/sonar_detection", 1,
-                                     &ObstacleArbiterNode::sonarDetectionCallback, this);
+  sonarDetectionSub = _nh->subscribe("/agribot/sonar_detection", 1, &ObstacleArbiterNode::sonarDetectionCallback, this);
 
   visionDetectionSub =
       _nh->subscribe("/agribot/vision_detection", 1, &ObstacleArbiterNode::visionDetectionCallback, this);
@@ -466,7 +465,8 @@ void ObstacleArbiterNode::publishSonarDetectionMarkers()
 
       // Publish marker
       // TODO(olek) - change angle value
-      visualTools->publishCone(conePoseInPathFrame, 1.0);
+      visualTools->publishCone(conePoseInPathFrame, PI - sonar.field_of_view, rviz_visual_tools::TRANSLUCENT,
+                               sonar.shortest_range);
     }
     catch (tf2::InvalidArgumentException& e)
     {

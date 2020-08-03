@@ -38,7 +38,7 @@ public:
   void sonarCallback(const sensor_msgs::Range::ConstPtr& msg, const std::string& id);
 
   void updateSonarDetectionMsg(const std::string& id, const std::string& frameId, ros::Time stamp, uint8_t status,
-                               float shortestRange, float lastRange);
+                               float shortestRange, float lastRange, float fieldOfView);
 
   void publishSonarDetecionMsg();
   void registerSubscribers();

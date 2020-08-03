@@ -29,6 +29,9 @@
 
 #include "agribot_obstacle_detection/arbiter/sat_collision_detection/sat.h"
 
+// Constants
+constexpr double PI = 3.14159265358979323846;
+
 class ObstacleArbiterNode
 {
 private:

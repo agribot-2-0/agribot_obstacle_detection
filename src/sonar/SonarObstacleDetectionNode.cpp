@@ -7,7 +7,7 @@
 SonarObstacleDetectionNode::SonarObstacleDetectionNode(ros::NodeHandle* _nh) : nh(_nh)
 {
   // Create sonar detection publisher with latched connection
-  sonarDetectionPub = nh->advertise<agribot_msgs::SonarDetection>("sonar_detection", 1, true);
+  sonarDetectionPub = nh->advertise<agribot_msgs::SonarDetection>("/agribot/sonar_detection", 1, true);
 
   // Load sonar parameters
   loadSonars();
@@ -47,13 +47,14 @@ void SonarObstacleDetectionNode::sonarCallback(const sensor_msgs::Range::ConstPt
   float lastRange = sonar->second.getLastRange();
 
   // Update and publish SonarDetection message
-  updateSonarDetectionMsg(id, msg->header.frame_id, msg->header.stamp, status, shortestRange, lastRange);
+  updateSonarDetectionMsg(id, msg->header.frame_id, msg->header.stamp, status, shortestRange, lastRange,
+                          msg->field_of_view);
   publishSonarDetecionMsg();
 }
 
 void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id, const std::string& frameId,
                                                          ros::Time stamp, uint8_t status, float shortestRange,
-                                                         float lastRange)
+                                                         float lastRange, float fieldOfView)
 {
   // Update status for sonar matching id
   for (auto& it : sonarDetectionMsg.sonars)
@@ -65,6 +66,7 @@ void SonarObstacleDetectionNode::updateSonarDetectionMsg(const std::string& id, 
       it.status = status;
       it.shortest_range = shortestRange;
       it.last_range = lastRange;
+      it.field_of_view = fieldOfView;
       break;
     }
   }
