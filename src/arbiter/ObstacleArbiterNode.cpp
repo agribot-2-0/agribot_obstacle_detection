@@ -21,11 +21,7 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
   // Load parameters
   loadParameters();
 
-  // Initialize rviz_visual_tools
-  initVisualization();
-
   // Subscribers
-  // TODO(olek) Change topic to /agribot/sonar_detection
   sonarDetectionSub = _nh->subscribe("/agribot/sonar_detection", 1, &ObstacleArbiterNode::sonarDetectionCallback, this);
 
   visionDetectionSub =
@@ -114,6 +110,12 @@ void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDete
 
 void ObstacleArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
 {
+  if (pathFrameId == "" && msg->header.frame_id != "")
+  {
+    // Receiving first path frame id - initialize rviz_visual_tools
+    initVisualization(msg->header.frame_id);
+  }
+
   pathFrameId = msg->header.frame_id;
   updateRobotPolygons(msg->poses);
   visionDetectionPipeline();
@@ -224,36 +226,35 @@ agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs:
   float a = robotWidth + widthOffset;
   float b = robotLength;
 
-  agribot_msgs::PolygonStamped polygon;
-  polygon.header.stamp = ros::Time::now();
-  polygon.header.frame_id = "temp_map_1";
+  agribot_msgs::PolygonStamped tempPolygon;
+  tempPolygon.header.stamp = ros::Time::now();
+  tempPolygon.header.frame_id = "temp_map_1";
 
   // Create polygon based on size constraints
   geometry_msgs::Point polygonVertex;
   polygonVertex.x = b / 2;
   polygonVertex.y = a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
+  tempPolygon.polygon.points.push_back(polygonVertex);
 
   polygonVertex.x = -b / 2;
   polygonVertex.y = a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
+  tempPolygon.polygon.points.push_back(polygonVertex);
 
   polygonVertex.x = -b / 2;
   polygonVertex.y = -a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
+  tempPolygon.polygon.points.push_back(polygonVertex);
 
   polygonVertex.x = b / 2;
   polygonVertex.y = -a / 2;
-  polygon.polygon.points.push_back(polygonVertex);
+  tempPolygon.polygon.points.push_back(polygonVertex);
 
   // Create rotation transform
-  // TODO(olek) - maybe transforms can be combined
   geometry_msgs::TransformStamped rotationTransform;
   rotationTransform.header.frame_id = "temp_map_1";
   rotationTransform.child_frame_id = "temp_map_2";
   rotationTransform.header.stamp = ros::Time::now();
   rotationTransform.transform.rotation = pose.orientation;
-  agribot_msgs::PolygonStamped rotatedPolygon = transformPolygon(polygon, rotationTransform);
+  agribot_msgs::PolygonStamped rotatedPolygon = transformPolygon(tempPolygon, rotationTransform);
 
   geometry_msgs::TransformStamped translationTransform;
   translationTransform.header.frame_id = "temp_map_2";
@@ -398,10 +399,8 @@ void ObstacleArbiterNode::loadParameters()
   }
 }
 
-void ObstacleArbiterNode::initVisualization()
+void ObstacleArbiterNode::initVisualization(const std::string& frameId)
 {
-  // TODO(olek) - change frameId and markerTopic (maybe ass class fields and params)
-  std::string frameId = "map";
   std::string polygonsMarkersTopic = "/agribot/obstacle_polygons_markers";
   std::string sonarDetectionMarkersTopic = "/agribot/sonar_detection_markers";
   visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, polygonsMarkersTopic, *nh));
@@ -464,7 +463,6 @@ void ObstacleArbiterNode::publishSonarDetectionMarkers()
       tf2::doTransform(conePoseInSonarFrame, conePoseInPathFrame, sonarToPathTransform);
 
       // Publish marker
-      // TODO(olek) - change angle value
       visualTools->publishCone(conePoseInPathFrame, PI - sonar.field_of_view, rviz_visual_tools::TRANSLUCENT,
                                sonar.shortest_range);
     }

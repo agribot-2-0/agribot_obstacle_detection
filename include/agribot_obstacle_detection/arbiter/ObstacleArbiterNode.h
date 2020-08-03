@@ -110,7 +110,7 @@ public:
   void loadParameters();
 
   // Visualization
-  void initVisualization();
+  void initVisualization(const std::string& frameId);
   void publishMarkers();
   void publishVisionPolygonsMarkers();
   void publishRobotPolygonsMarkers();
