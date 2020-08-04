@@ -82,8 +82,8 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
   }
   else
   {
-    ROS_WARN_STREAM("[Obstacle Arbiter Node] pathFrameId not set yet. Skipping sonar detection "
-                    "visualization...");
+    ROS_WARN_STREAM_THROTTLE(15.0, "[Obstacle Arbiter Node] pathFrameId not set yet. Skipping sonar detection "
+                                   "visualization...");
   }
 }
 
@@ -103,7 +103,7 @@ void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDete
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
     updateDetectionStatus();
     publishDetectionStatus();
-    ROS_WARN_STREAM("[Obstacle Arbiter Node] pathFrameId not set yet. Skipping vision detection...");
+    ROS_WARN_STREAM_THROTTLE(15.0, "[Obstacle Arbiter Node] pathFrameId not set yet. Skipping vision detection...");
   }
 }
 
@@ -113,6 +113,7 @@ void ObstacleArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
   {
     // Receiving first path frame id - initialize rviz_visual_tools
     initVisualization(msg->header.frame_id);
+    ROS_INFO_STREAM("[Obstacle Arbiter Node] pathFrameId set");
   }
 
   pathFrameId = msg->header.frame_id;
@@ -136,16 +137,20 @@ void ObstacleArbiterNode::checkVisionCollisions()
 {
   if (!visionMsgReceived)
   {
-    // No vision message received (or timeout occured)
-    ROS_WARN_STREAM("[Obstacle Arbiter Node] No vision message received yet. Skipping vision detection...");
+    // No vision message received
+    ROS_WARN_STREAM_THROTTLE(15.0, "[Obstacle Arbiter Node] No vision message received yet. Skipping vision "
+                                   "detection...");
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT;
     return;
+  }
+  else
+  {
+    ROS_INFO_STREAM_ONCE("[Obstacle Arbiter Node] First vision message received");
   }
 
   if (pathPolygons.empty())
   {
-    // Path missing
-    ROS_WARN_STREAM("[Obstacle Arbiter Node] Path empty. Skipping vision detection...");
+    // Path empty
     visionStatus = agribot_msgs::AgribotObstacleDetection::WAITING_FOR_PREDICTED_PATH;
     return;
   }
