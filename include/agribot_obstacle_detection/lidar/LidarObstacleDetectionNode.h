@@ -30,8 +30,6 @@ private:
   ros::Publisher visionDetectionPub;
 
   std::string frameId;
-  std::string pointcloudTopic;
-  std::string markerTopic;
 
   // Rviz visualization
   rviz_visual_tools::RvizVisualToolsPtr visualTools;
@@ -73,9 +71,6 @@ public:
     , detectedObjectsCloud(new pcl::PointCloud<PointT>)
     , groundPlaneCoefficients(new pcl::ModelCoefficients)
   {
-    pointcloudTopic = "input_cloud";
-    markerTopic = "obstacle_markers";
-
     // Load detection & node parameters
     loadParameters();
 
@@ -87,8 +82,8 @@ public:
 
     visionDetectionPub = nh->advertise<agribot_msgs::VisionDetection>("vision_detection", 1, true);
 
-    pcSub = nh->subscribe<pcl::PointCloud<PointT>>(pointcloudTopic, 1, &LidarObstacleDetectionNode::pointcloudCallback,
-                                                   this);
+    pcSub =
+        nh->subscribe<pcl::PointCloud<PointT>>("input_cloud", 1, &LidarObstacleDetectionNode::pointcloudCallback, this);
   }
 
   ~LidarObstacleDetectionNode()
@@ -265,6 +260,6 @@ public:
 
   void initROSVisualization()
   {
-    visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, markerTopic));
+    visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, "vision_markers"));
   }
 };
