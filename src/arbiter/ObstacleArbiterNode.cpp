@@ -77,7 +77,7 @@ void ObstacleArbiterNode::sonarDetectionCallback(const agribot_msgs::SonarDetect
   collidingSonars = tempCollidingSonars;
 
   // Update sonar detection visualization
-  if (pathFrameId != "")
+  if (!pathFrameId.empty())
   {
     publishMarkers();
   }
@@ -94,7 +94,7 @@ void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDete
 
   visionFrameId = msg->header.frame_id;
 
-  if (pathFrameId != "")
+  if (!pathFrameId.empty())
   {
     updateVisionPolygons(msg->objects);
     visionDetectionPipeline();
@@ -110,7 +110,7 @@ void ObstacleArbiterNode::visionDetectionCallback(const agribot_msgs::VisionDete
 
 void ObstacleArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
 {
-  if (pathFrameId == "" && msg->header.frame_id != "")
+  if (pathFrameId.empty() && !msg->header.frame_id.empty())
   {
     // Receiving first path frame id - initialize rviz_visual_tools
     initVisualization(msg->header.frame_id);
