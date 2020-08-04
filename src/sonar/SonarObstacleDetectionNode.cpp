@@ -7,7 +7,7 @@
 SonarObstacleDetectionNode::SonarObstacleDetectionNode(ros::NodeHandle* _nh) : nh(_nh)
 {
   // Create sonar detection publisher with latched connection
-  sonarDetectionPub = nh->advertise<agribot_msgs::SonarDetection>("/agribot/sonar_detection", 1, true);
+  sonarDetectionPub = nh->advertise<agribot_msgs::SonarDetection>("sonar_detection", 1, true);
 
   // Load sonar parameters
   loadSonars();
