@@ -13,7 +13,7 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
   , visionMsgReceived(false)
 {
   // Advertise latched obstacles detection publisher
-  obstacleDetectionPub = nh->advertise<agribot_msgs::AgribotObstacleDetection>("/agribot/obstacle_detected", 1, true);
+  obstacleDetectionPub = nh->advertise<agribot_msgs::AgribotObstacleDetection>("obstacle_detected", 1, true);
 
   // Publish initial detection status (WAITING_FOR_FIRST_MEASUREMENT)
   publishDetectionStatus();
@@ -22,12 +22,11 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
   loadParameters();
 
   // Subscribers
-  sonarDetectionSub = _nh->subscribe("/agribot/sonar_detection", 1, &ObstacleArbiterNode::sonarDetectionCallback, this);
+  sonarDetectionSub = _nh->subscribe("sonar_detection", 1, &ObstacleArbiterNode::sonarDetectionCallback, this);
 
-  visionDetectionSub =
-      _nh->subscribe("/agribot/vision_detection", 1, &ObstacleArbiterNode::visionDetectionCallback, this);
+  visionDetectionSub = _nh->subscribe("vision_detection", 1, &ObstacleArbiterNode::visionDetectionCallback, this);
 
-  pathSub = _nh->subscribe("/move_base/AgribotPlannerROS/local_path", 1, &ObstacleArbiterNode::pathCallback, this);
+  pathSub = _nh->subscribe("path", 1, &ObstacleArbiterNode::pathCallback, this);
 }
 
 ObstacleArbiterNode::~ObstacleArbiterNode()
@@ -415,8 +414,7 @@ void ObstacleArbiterNode::loadParameters()
 
 void ObstacleArbiterNode::initVisualization(const std::string& frameId)
 {
-  std::string obstacleArbiterMarkersTopic = "/agribot/obstacle_arbiter_markers";
-  std::string sonarDetectionMarkersTopic = "/agribot/sonar_detection_markers";
+  std::string obstacleArbiterMarkersTopic = "obstacle_arbiter_markers";
   visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, obstacleArbiterMarkersTopic, *nh));
   visualTools->loadMarkerPub(false, false);
 }

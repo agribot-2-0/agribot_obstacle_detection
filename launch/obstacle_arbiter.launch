@@ -1,15 +1,26 @@
 <launch>
+  <arg name="robot_length"/>
+  <arg name="robot_width"/>
+  <arg name="length_offset"/>
+  <arg name="width_offset"/>
 
-    <arg name="robot_length"/>
-    <arg name="robot_width"/>
-    <arg name="length_offset"/>
-    <arg name="width_offset"/>
+  <arg name="obstacle_detection_topic"        default="/agribot/obstacle_detected"/>
+  <arg name="sonar_detection_topic"           default="/agribot/sonar_detection"/>
+  <arg name="vision_detection_topic"          default="/agribot/vision_detection"/>
+  <arg name="path_topic"                      default="/move_base/AgribotPlannerROS/local_path"/>
+  <arg name="obstacle_arbiter_markers_topic"  default="/agribot/obstacle_arbiter_markers"/>
 
-    <!-- Obstacle detection node -->
-    <node pkg="agribot_obstacle_detection" type="obstacle_arbiter_node" name="obstacle_arbiter_node" output="screen" launch-prefix="">
-        <param name="robot_length"  value="$(arg robot_length)"/>
-        <param name="robot_width"   value="$(arg robot_width)"/>
-        <param name="length_offset"  value="$(arg length_offset)"/>
-        <param name="width_offset"  value="$(arg width_offset)"/>
-    </node>
+  <!-- Obstacle detection node -->
+  <node pkg="agribot_obstacle_detection" type="obstacle_arbiter_node" name="obstacle_arbiter_node" output="screen" launch-prefix="">
+    <param name="robot_length"                value="$(arg robot_length)"/>
+    <param name="robot_width"                 value="$(arg robot_width)"/>
+    <param name="length_offset"               value="$(arg length_offset)"/>
+    <param name="width_offset"                value="$(arg width_offset)"/>
+
+    <remap from="~obstacle_detected"          to="$(arg obstacle_detection_topic)"/>
+    <remap from="~sonar_detection"            to="$(arg sonar_detection_topic)"/>
+    <remap from="~vision_detection"           to="$(arg vision_detection_topic)"/>
+    <remap from="~path"                       to="$(arg path_topic)"/>
+    <remap from="~obstacle_arbiter_markers"   to="$(arg obstacle_arbiter_markers_topic)"/>
+  </node>
 </launch>
