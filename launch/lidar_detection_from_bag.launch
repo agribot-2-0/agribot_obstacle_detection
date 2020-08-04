@@ -8,9 +8,7 @@
     <arg name="ros_vis" default="true"/>
 
     <!-- Obstacle detection node -->
-    <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch" >
-        <arg name="ros_vis" value="$(arg ros_vis)"/>
-    </include>
+    <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" />
 
     <!-- Bag playback -->
     <include file="$(find agribot_bringup)/launch/bringup_playback.launch" >

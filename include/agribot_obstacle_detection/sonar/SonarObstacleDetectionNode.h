@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
 
 #pragma once
 
@@ -9,49 +9,40 @@
 #include <agribot_msgs/SonarDetection.h>
 #include <sensor_msgs/Range.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <memory>
 
 #include "agribot_obstacle_detection/sonar/sonar.h"
 
-
 class SonarObstacleDetectionNode
 {
- private:
-    // ROS handlers
-    ros::NodeHandle *nh;
-    ros::Publisher sonarDetectionPub;
+private:
+  // ROS handlers
+  ros::NodeHandle* nh;
+  ros::Publisher sonarDetectionPub;
 
-    // ROS variables
-    ros::Time lastTimestamp;
+  // Sonars map with id as a key
+  std::unordered_map<std::string, Sonar> sonars;
 
-    // Sonars map with id as a key
-    std::map<std::string, Sonar> sonars;
+  // Subscribers map with id as a key
+  std::unordered_map<std::string, std::shared_ptr<ros::Subscriber>> subscribers;
 
-    // Subscribers map with id as a key
-    std::map<std::string, std::shared_ptr<ros::Subscriber>> subscribers;
+  // SonarDetection message
+  agribot_msgs::SonarDetection sonarDetectionMsg;
 
-    // SonarDetection message
-    agribot_msgs::SonarDetection sonarDetectionMsg;
+public:
+  explicit SonarObstacleDetectionNode(ros::NodeHandle* _nh);
+  ~SonarObstacleDetectionNode();
 
- public:
-    explicit SonarObstacleDetectionNode(ros::NodeHandle *_nh);
-    ~SonarObstacleDetectionNode();
+  void sonarCallback(const sensor_msgs::Range::ConstPtr& msg, const std::string& id);
 
-    void sonarCallback(
-        const sensor_msgs::Range::ConstPtr& msg,
-        std::string id);
+  void updateSonarDetectionMsg(const std::string& id, const std::string& frameId, ros::Time stamp, uint8_t status,
+                               float shortestRange, float lastRange, float fieldOfView);
 
-    void updateSonarDetectionMsg(std::string id,
-        uint8_t status,
-        float shortestRange,
-        float lastRange);
-
-    void publishSonarDetecionMsg();
-    void updateLastTimestamp(ros::Time newTimestamp);
-    void registerSubscribers();
-    void initSonarDetectionMsg();
-    void loadSonars();
-    void run();
+  void publishSonarDetecionMsg();
+  void registerSubscribers();
+  void initSonarDetectionMsg();
+  void loadSonars();
+  void run();
 };

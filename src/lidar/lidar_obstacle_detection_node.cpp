@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 2020 Agribot. All rights reserved.
-*/
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
 
 #include <ros/ros.h>
 #include <pcl_ros/point_cloud.h>
@@ -9,10 +9,10 @@
 
 typedef pcl::PointXYZ Point;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "lidar_obstacle_detection_node");
-    ros::NodeHandle nh("~");
-    LidarObstacleDetectionNode<Point> lodn(&nh);
-    lodn.run();
+  ros::init(argc, argv, "lidar_obstacle_detection_node");
+  ros::NodeHandle nh("~");
+  LidarObstacleDetectionNode<Point> lodn(&nh);
+  lodn.run();
 }

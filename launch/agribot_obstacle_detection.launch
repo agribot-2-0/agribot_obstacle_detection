@@ -1,5 +1,15 @@
 <launch>
+    <arg name="robot_length"    default="4.3"/>
+    <arg name="robot_width"     default="1.4"/>
+    <arg name="length_offset"   default="0.3"/>
+    <arg name="width_offset"    default="0.3"/>
+
     <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch" />
     <include file="$(find agribot_obstacle_detection)/launch/sonar_detection.launch" />
-    <include file="$(find agribot_obstacle_detection)/launch/obstacle_arbiter.launch" />
+    <include file="$(find agribot_obstacle_detection)/launch/obstacle_arbiter.launch" >
+        <arg name="robot_length"    value="$(arg robot_length)"/>
+        <arg name="robot_width"     value="$(arg robot_width)"/>
+        <arg name="length_offset"    value="$(arg length_offset)"/>
+        <arg name="width_offset"    value="$(arg width_offset)"/>
+    </include>
 </launch>
