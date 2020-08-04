@@ -84,7 +84,7 @@ public:
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    ROS_INFO_STREAM("Plane segmentation took " << elapsedTime.count() << " milliseconds");
+    ROS_DEBUG_STREAM("Plane segmentation took " << elapsedTime.count() << " milliseconds");
   }
 
   std::vector<Object<PointT>> clustering(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
@@ -122,8 +122,8 @@ public:
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    ROS_INFO_STREAM("Clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size()
-                                       << " clusters" << std::endl);
+    ROS_DEBUG_STREAM("Clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size()
+                                        << " clusters" << std::endl);
 
     return clusters;
   }
@@ -140,6 +140,6 @@ public:
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    ROS_INFO_STREAM("VoxelGridFilter took " << elapsedTime.count() << " milliseconds");
+    ROS_DEBUG_STREAM("VoxelGridFilter took " << elapsedTime.count() << " milliseconds");
   }
 };
