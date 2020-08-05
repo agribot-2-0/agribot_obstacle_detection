@@ -36,6 +36,7 @@ private:
 
   // Node parameters
   bool bROSVis;
+  bool bPublishGroundPlaneMarker;
 
   // VoxelGrid filter parameters
   float voxelGridFilterResolution;
@@ -169,7 +170,12 @@ public:
 
     // Publish bounding boxes for detected objects
     publishBoundingBoxArrayMarker();
-    publishGroundPlaneMarker();
+
+    if (bPublishGroundPlaneMarker)
+    {
+      publishGroundPlaneMarker();
+    }
+
     visualTools->trigger();
   }
 
@@ -229,7 +235,9 @@ public:
 
   void loadParameters()
   {
-    nh->param<bool>("ros_vis", bROSVis, true);
+    // Load node parameters
+    nh->getParam("ros_vis", bROSVis);
+    nh->getParam("publish_ground_plane_marker", bPublishGroundPlaneMarker);
 
     // Frame and topics parameters
     nh->getParam("lidar_frame_id", frameId);
