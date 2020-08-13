@@ -3,7 +3,7 @@
   <arg name="publish_ground_plane_marker"     default="false"/>
   <arg name="lidar_frame_id"                  default="bumper_front_lidar_link"/>
   <arg name="pointcloud_topic"                default="/bumper/front/lidar"/>
-  <arg name="obstacles_array_topic"           default="/agribot/vision_detection"/>
+  <arg name="vision_detection_topic"           default="/agribot/vision_detection"/>
   <arg name="vision_markers_topic"            default="/agribot/vision_markers"/>
 
   <!-- Obstacle detection node -->
@@ -15,6 +15,6 @@
 
     <remap from="~input_cloud"                to="$(arg pointcloud_topic)"/>
     <remap from="~vision_markers"             to="$(arg vision_markers_topic)"/>
-    <remap from="~vision_detection"           to="$(arg obstacles_array_topic)"/>  
+    <remap from="~vision_detection"           to="$(arg vision_detection_topic)"/>  
   </node>
 </launch>
