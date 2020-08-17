@@ -1,15 +1,43 @@
 <launch>
-    <arg name="robot_length"    default="4.3"/>
-    <arg name="robot_width"     default="1.4"/>
-    <arg name="length_offset"   default="0.3"/>
-    <arg name="width_offset"    default="0.3"/>
 
-    <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch" />
-    <include file="$(find agribot_obstacle_detection)/launch/sonar_detection.launch" />
-    <include file="$(find agribot_obstacle_detection)/launch/obstacle_arbiter.launch" >
-        <arg name="robot_length"    value="$(arg robot_length)"/>
-        <arg name="robot_width"     value="$(arg robot_width)"/>
-        <arg name="length_offset"    value="$(arg length_offset)"/>
-        <arg name="width_offset"    value="$(arg width_offset)"/>
-    </include>
+  <arg name="robot_length" default="4.3" />
+  <arg name="robot_width" default="1.4" />
+  <arg name="detection_robot_length_offset" default="0.3" />
+  <arg name="detection_robot_width_offset" default="0.3" />
+
+  <arg name="obstacle_detection_topic" default="/agribot/obstacle_detected" />
+  <arg name="sonar_detection_topic" default="/agribot/sonar_detection" />
+  <arg name="vision_detection_topic" default="/agribot/vision_detection" />
+  <arg name="detection_path_topic" default="/move_base/AgribotPlannerROS/local_path" />
+  <arg name="obstacle_arbiter_markers_topic" default="/agribot/obstacle_arbiter_markers" />
+
+
+  <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch">
+    <arg name="ros_vis" value="true" />
+    <arg name="publish_ground_plane_marker" value="false" />
+    <arg name="lidar_frame_id" value="bumper_front_lidar_link" />
+    <arg name="pointcloud_topic" value="/bumper/front/lidar" />
+    <arg name="vision_detection_topic" value="$(arg vision_detection_topic)" />
+    <arg name="vision_markers_topic" value="/agribot/vision_markers" />
+  </include>
+
+
+  <include file="$(find agribot_obstacle_detection)/launch/sonar_detection.launch">
+    <arg name="sonar_detection_topic" value="$(arg sonar_detection_topic)" />
+  </include>
+
+
+  <include file="$(find agribot_obstacle_detection)/launch/obstacle_arbiter.launch">
+    <arg name="robot_length" value="$(arg robot_length)" />
+    <arg name="robot_width" value="$(arg robot_width)" />
+    <arg name="detection_robot_length_offset" value="$(arg detection_robot_length_offset)" />
+    <arg name="detection_robot_width_offset" value="$(arg detection_robot_width_offset)" />
+
+    <arg name="obstacle_detection_topic" value="$(arg obstacle_detection_topic)" />
+    <arg name="sonar_detection_topic" value="$(arg sonar_detection_topic)" />
+    <arg name="vision_detection_topic" value="$(arg vision_detection_topic)" />
+    <arg name="detection_path_topic" value="$(arg detection_path_topic)" />
+    <arg name="obstacle_arbiter_markers_topic" value="$(arg obstacle_arbiter_markers_topic)" />
+
+  </include>
 </launch>
