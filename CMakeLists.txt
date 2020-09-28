@@ -87,11 +87,15 @@ install(TARGETS
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(DIRECTORY launch param bags
+install(DIRECTORY launch param bags scripts
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   PATTERN ".svn" EXCLUDE
 )
 
+catkin_install_python(PROGRAMS
+   scripts/obstacle_detection_observer_app.py
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 #############
 ## Testing ##
