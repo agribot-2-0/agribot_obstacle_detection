@@ -1,0 +1,31 @@
+/*
+ * Copyright (C) 2020 Agribot. All rights reserved.
+ */
+
+#pragma once
+
+#include <ros/ros.h>
+#include <sensor_msgs/Range.h>
+
+#include "libpcan.h"
+
+
+constexpr uint16_t balluffMsgId = 4096;
+
+class PCanSonars
+{
+private:
+  // ROS handlers
+  ros::NodeHandle* nh;
+  ros::Publisher balluffSonarPub;
+  HANDLE canHandle;
+
+public:
+  explicit PCanSonars(ros::NodeHandle* _nh);
+  void init_can();
+  void init_ros(int argc, char** argv);
+  void run();
+  void read_can();
+
+  float get_distance_from_balluff_sonar_msg(TPCANRdMsg* m);
+};

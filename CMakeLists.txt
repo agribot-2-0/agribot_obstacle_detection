@@ -74,6 +74,13 @@ target_link_libraries(sat_test ${catkin_LIBRARIES})
 add_dependencies(sat_test ${catkin_EXPORTED_TARGETS})
 
 
+# Sonar PCAN communication 
+add_executable(pcan_sonars tools/sonar_pcan_communication/pcan_sonars.cpp
+                        )
+target_link_libraries(pcan_sonars ${catkin_LIBRARIES} pcanfd)
+add_dependencies(pcan_sonars ${catkin_EXPORTED_TARGETS})
+
+
 #############
 ## Install ##
 #############
@@ -83,6 +90,7 @@ install(TARGETS
   sonar_obstacle_detection_node
   obstacle_arbiter_node
   sat_test
+  pcan_sonars
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
