@@ -50,9 +50,9 @@ class ObstacleDetectionObserverApp(QWidget):
         self.sonar_detection_indicator.setScene(self.sonar_detection_scene)
         self.sonar_detection_scene.clear()
 
-        self.sonars_n = 0
+        # Prepare sonars
         self.prepare_sonar_vis_list()
-        self.update_sonar_indicators(SonarDetection())  # Passing empty msg to set all indicators to invisible
+        self.sonars_n = 0
 
         # Initialize detection status
         self.agribot_obstacle_detection_status = AgribotObstacleDetection.WAITING_FOR_FIRST_MEASUREMENT
