@@ -38,9 +38,7 @@ void PCanSonars::init_can()
 
 void PCanSonars::init_ros(int argc, char** argv)
 {
-  ros::init(argc, argv, "sonar_pcan_communication");
-
-  balluffSonarPub = nh->advertise<sensor_msgs::Range>("/sonars/balluff", 1);
+  balluffSonarPub = nh->advertise<sensor_msgs::Range>("/bumper/front/sonar/center", 1);
 }
 
 void PCanSonars::run()
@@ -55,19 +53,18 @@ void PCanSonars::read_can()
 {
   TPCANRdMsg canMsg;
 
-
   if (LINUX_CAN_Read(canHandle, &canMsg))
   {
     ROS_WARN_STREAM("Peak CAN read error...");
     return;
   }
 
-  if (canMsg.Msg.ID == 4096)
+  if (canMsg.Msg.ID == balluffMsgId)
   {
     sensor_msgs::Range rangeMsg;
-    rangeMsg.header.frame_id = 'balluff_link';
+    rangeMsg.header.frame_id = "bumper_front_sonar_center_link";
     rangeMsg.header.stamp = ros::Time::now();
-    rangeMsg.range = get_distance_from_balluff_sonar_msg(&canMsg);;
+    rangeMsg.range = get_distance_from_balluff_sonar_msg(&canMsg);
     rangeMsg.field_of_view = 0.57;
     rangeMsg.min_range = 0.35;
     rangeMsg.max_range = 10.0;
@@ -89,7 +86,7 @@ float PCanSonars::get_distance_from_balluff_sonar_msg(TPCANRdMsg* m)
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "sonar_obstacle_detection_node");
+  ros::init(argc, argv, "sonar_pcan_communication");
   ros::NodeHandle nh("~");
   PCanSonars pcs(&nh);
 

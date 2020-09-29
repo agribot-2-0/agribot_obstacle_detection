@@ -10,15 +10,17 @@
 #include "libpcan.h"
 
 
-constexpr uint16_t balluffMsgId = 4096;
-
 class PCanSonars
 {
 private:
+  // CAN addresses
+  static constexpr uint16_t balluffMsgId = 4096;
+
   // ROS handlers
   ros::NodeHandle* nh;
   ros::Publisher balluffSonarPub;
   HANDLE canHandle;
+
 
 public:
   explicit PCanSonars(ros::NodeHandle* _nh);
