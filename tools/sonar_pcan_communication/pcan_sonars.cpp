@@ -2,7 +2,8 @@
  * Copyright (C) 2020 Agribot. All rights reserved.
  */
 
-#include "./pcan_sonars.h"
+#include "sonar_pcan_communication/pcan_sonars.h"
+
 #include <ros/ros.h>
 #include <fcntl.h>
 

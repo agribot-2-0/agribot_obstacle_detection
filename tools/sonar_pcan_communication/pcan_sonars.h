@@ -4,11 +4,9 @@
 
 #pragma once
 
+#include <libpcan.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Range.h>
-
-#include "libpcan.h"
-
 
 class PCanSonars
 {

@@ -31,6 +31,8 @@ catkin_package(
 include_directories(
   include
   include/agribot_obstacle_detection
+  tools
+  tools/sonar_pcan_communication
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -76,7 +78,7 @@ add_dependencies(sat_test ${catkin_EXPORTED_TARGETS})
 
 # Sonar PCAN communication 
 add_executable(pcan_sonars tools/sonar_pcan_communication/pcan_sonars.cpp
-                        )
+                           )
 target_link_libraries(pcan_sonars ${catkin_LIBRARIES} pcanfd)
 add_dependencies(pcan_sonars ${catkin_EXPORTED_TARGETS})
 
