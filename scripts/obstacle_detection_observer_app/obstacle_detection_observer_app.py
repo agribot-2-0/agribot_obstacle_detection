@@ -33,7 +33,7 @@ class ObstacleDetectionObserverApp(QWidget):
         rospy.init_node('obstacle_detection_observer_app')
 
         pkg_path = rospkg.RosPack().get_path('agribot_obstacle_detection')
-        ui_file = os.path.join(pkg_path, 'scripts', 'ui', 'obstacle_detection_widget.ui')
+        ui_file = os.path.join(pkg_path, 'scripts', 'obstacle_detection_observer_app', 'ui', 'obstacle_detection_widget.ui')
         loadUi(ui_file, self)
         self.setWindowTitle("Obstacle Detection Observer App")
 
