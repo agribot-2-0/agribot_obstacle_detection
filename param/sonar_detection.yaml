@@ -1,76 +1,15 @@
 # Front bumper sonars
-sonar0: bumper_front_sonar_left_side
-sonar0_topic: /bumper/front/sonar/left_side
+sonar0: bumper_front_sonar_left
+sonar0_topic: /bumper/front/sonar/left
 sonar0_threshold: 1.1
 sonar0_history_length: 5
 
-sonar1: bumper_front_sonar_left
-sonar1_topic: /bumper/front/sonar/left
+sonar1: bumper_front_sonar_center
+sonar1_topic: /bumper/front/sonar/center
 sonar1_threshold: 1.1
 sonar1_history_length: 5
 
-sonar2: bumper_front_sonar_center
-sonar2_topic: /bumper/front/sonar/center
+sonar2: bumper_front_sonar_right
+sonar2_topic: /bumper/front/sonar/right
 sonar2_threshold: 1.1
 sonar2_history_length: 5
-
-sonar3: bumper_front_sonar_right
-sonar3_topic: /bumper/front/sonar/right
-sonar3_threshold: 1.1
-sonar3_history_length: 5
-
-sonar4: bumper_front_sonar_right_side
-sonar4_topic: /bumper/front/sonar/right_side
-sonar4_threshold: 1.1
-sonar4_history_length: 5
-
-
-# Left side sonars
-sonar5: agribot_sonar_left_front
-sonar5_topic: /agribot/sonar/left/front
-sonar5_threshold: 1.1
-sonar5_history_length: 5
-
-sonar6: agribot_sonar_left_back
-sonar6_topic: /agribot/sonar/left/back
-sonar6_threshold: 1.1
-sonar6_history_length: 5
-
-
-# Right side sonars
-sonar7: agribot_sonar_right_front
-sonar7_topic: /agribot/sonar/right/front
-sonar7_threshold: 1.1
-sonar7_history_length: 5
-
-sonar8: agribot_sonar_right_back
-sonar8_topic: /agribot/sonar/right/back
-sonar8_threshold: 1.1
-sonar8_history_length: 5
-
-
-# Back bumper sonars
-sonar9: bumper_back_sonar_left_side
-sonar9_topic: /bumper/back/sonar/left_side
-sonar9_threshold: 1.1
-sonar9_history_length: 5
-
-sonar10: bumper_back_sonar_left
-sonar10_topic: /bumper/back/sonar/left
-sonar10_threshold: 1.1
-sonar10_history_length: 5
-
-sonar11: bumper_back_sonar_center
-sonar11_topic: /bumper/back/sonar/center
-sonar11_threshold: 1.1
-sonar11_history_length: 5
-
-sonar12: bumper_back_sonar_right
-sonar12_topic: /bumper/back/sonar/right
-sonar12_threshold: 1.1
-sonar12_history_length: 5
-
-sonar13: bumper_back_sonar_right_side
-sonar13_topic: /bumper/back/sonar/right_side
-sonar13_threshold: 1.1
-sonar13_history_length: 5
