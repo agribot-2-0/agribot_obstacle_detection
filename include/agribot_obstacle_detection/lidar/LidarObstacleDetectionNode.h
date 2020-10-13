@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <rviz_visual_tools/rviz_visual_tools.h>
 #include <agribot_msgs/ObjectClass.h>
 #include <agribot_msgs/DetectedObject.h>
 #include <agribot_msgs/VisionDetection.h>
@@ -30,9 +29,6 @@ private:
   ros::Publisher visionDetectionPub;
 
   std::string frameId;
-
-  // Rviz visualization
-  rviz_visual_tools::RvizVisualToolsPtr visualTools;
 
   // Node parameters
   bool bROSVis;
@@ -75,12 +71,6 @@ public:
     // Load detection & node parameters
     loadParameters();
 
-    // Initialize ROS visualization
-    if (bROSVis)
-    {
-      initROSVisualization();
-    }
-
     visionDetectionPub = nh->advertise<agribot_msgs::VisionDetection>("vision_detection", 1, true);
 
     pcSub =
@@ -112,13 +102,6 @@ public:
 
     // Publish array with detected objects
     publishVisionDetection(stamp);
-
-    /* Visualization */
-    // Publish ROS visualization
-    if (bROSVis)
-    {
-      publishROSVisualization();
-    }
   }
 
   void processingPipeline(const typename pcl::PointCloud<PointT>::ConstPtr& inputCloud)
@@ -163,71 +146,6 @@ public:
     visionDetectionPub.publish(detection);
   }
 
-  void publishROSVisualization()
-  {
-    // Clear previous markers
-    visualTools->deleteAllMarkers();
-
-    // Publish bounding boxes for detected objects
-    publishBoundingBoxArrayMarker();
-
-    if (bPublishGroundPlaneMarker)
-    {
-      publishGroundPlaneMarker();
-    }
-
-    visualTools->trigger();
-  }
-
-  void publishBoundingBoxArrayMarker()
-  {
-    BoundingBox<PointT> box;
-
-    for (std::size_t i = 0; i < detectedObjects.size(); ++i)
-    {
-      box = detectedObjects[i].getBoundingBox();
-
-      Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
-      Eigen::Vector3d minPoint(box.xMin, box.yMin, box.zMin);
-      Eigen::Vector3d maxPoint(box.xMax, box.yMax, box.zMax);
-
-      visualTools->publishWireframeCuboid(pose, minPoint, maxPoint, rviz_visual_tools::BLUE, "Obstacle");
-
-      // Translation for text alignment
-      pose.translation() = Eigen::Vector3d(box.xMax, box.yMax, box.zMax);
-
-      uint32_t id = detectedObjects[i].getId();
-      std::string stringId = "Obstacle_" + std::to_string(id);
-
-      visualTools->publishText(pose, stringId, rviz_visual_tools::WHITE, rviz_visual_tools::TEXTSIZE, false);
-    }
-  }
-
-  void publishGroundPlaneMarker()
-  {
-    // Publish ground plane
-    double A = groundPlaneCoefficients->values[0];
-    double B = groundPlaneCoefficients->values[1];
-    double C = groundPlaneCoefficients->values[2];
-    double D = groundPlaneCoefficients->values[3];
-
-    Eigen::Vector3d n(A, B, C);
-    double distance = D / n.norm();
-    Eigen::Vector3d center = -distance * n.normalized();
-
-    Eigen::Isometry3d pose;
-    pose.translation() = center;
-
-    Eigen::Vector3d z_0 = Eigen::Vector3d::UnitZ();
-    Eigen::Quaterniond q = Eigen::Quaterniond::FromTwoVectors(z_0, n);
-    pose.linear() = q.toRotationMatrix();
-
-    double height = 0.001;
-    double x_width = 15.0;
-    double y_width = 15.0;
-    visualTools->publishCuboid(pose, x_width, y_width, height, rviz_visual_tools::ORANGE);
-  }
-
   void run()
   {
     ros::spin();
@@ -264,10 +182,5 @@ public:
                     << "- Cluster Tolerance = " << clusteringClusterTolerance << std::endl
                     << "- Min Cluster Size = " << clusteringMinClusterSize << std::endl
                     << "- Max Cluster Size = " << clusteringMaxClusterSize << std::endl);
-  }
-
-  void initROSVisualization()
-  {
-    visualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, "vision_markers"));
   }
 };
