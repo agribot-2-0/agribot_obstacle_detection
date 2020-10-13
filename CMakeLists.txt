@@ -74,6 +74,14 @@ add_executable(sat_test  test/arbiter/sat_test.cpp
 target_link_libraries(sat_test ${catkin_LIBRARIES})
 add_dependencies(sat_test ${catkin_EXPORTED_TARGETS})
 
+# Obstacle visualization node
+add_executable(obstacle_visualization_node src/visualization/obstacle_visualization_node.cpp
+                                           src/visualization/ObstacleVisualizationNode.cpp
+                                           )
+target_link_libraries(obstacle_visualization_node ${catkin_LIBRARIES})
+add_dependencies(obstacle_visualization_node ${catkin_EXPORTED_TARGETS})
+
+
 #############
 ## Install ##
 #############
@@ -83,6 +91,7 @@ install(TARGETS
   sonar_obstacle_detection_node
   obstacle_arbiter_node
   sat_test
+  obstacle_visualization_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
