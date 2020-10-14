@@ -68,7 +68,7 @@ public:
     {
       seg.setMaxIterations(maxIterations);
     }
-    
+
     // Do segmentation
     seg.setInputCloud(inputCloud);
     seg.segment(*inliers, *coefficients);
