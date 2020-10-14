@@ -31,7 +31,6 @@ private:
   std::string frameId;
 
   // Node parameters
-  bool bROSVis;
   bool bPublishGroundPlaneMarker;
 
   // VoxelGrid filter parameters
@@ -154,7 +153,6 @@ public:
   void loadParameters()
   {
     // Load node parameters
-    nh->getParam("ros_vis", bROSVis);
     nh->getParam("publish_ground_plane_marker", bPublishGroundPlaneMarker);
 
     // Frame and topics parameters

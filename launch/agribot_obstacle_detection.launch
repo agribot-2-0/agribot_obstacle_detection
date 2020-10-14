@@ -13,7 +13,6 @@
 
 
   <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch">
-    <arg name="ros_vis" value="true" />
     <arg name="publish_ground_plane_marker" value="false" />
     <arg name="lidar_frame_id" value="bumper_front_lidar_link" />
     <arg name="pointcloud_topic" value="/bumper/front/lidar" />
@@ -38,6 +37,5 @@
     <arg name="vision_detection_topic" value="$(arg vision_detection_topic)" />
     <arg name="detection_path_topic" value="$(arg detection_path_topic)" />
     <arg name="obstacle_arbiter_markers_topic" value="$(arg obstacle_arbiter_markers_topic)" />
-
   </include>
 </launch>
