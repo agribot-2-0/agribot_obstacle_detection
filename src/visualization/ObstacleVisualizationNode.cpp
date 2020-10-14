@@ -7,7 +7,7 @@
 ObstacleVisualizationNode::ObstacleVisualizationNode(ros::NodeHandle* _nh) : nh(_nh), firstVisionDetectionMsg(true)
 {
   visionDetectionSub =
-      nh->subscribe("/agribot/vision_detection", 1, &ObstacleVisualizationNode::visionDetectionCallback, this);
+      nh->subscribe("vision_detection", 1, &ObstacleVisualizationNode::visionDetectionCallback, this);
 }
 
 ObstacleVisualizationNode::~ObstacleVisualizationNode()
@@ -27,7 +27,7 @@ void ObstacleVisualizationNode::visionDetectionCallback(const agribot_msgs::Visi
 
 void ObstacleVisualizationNode::initVisionVisualTools(const std::string& frameId)
 {
-  visionVisualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, "/agribot/vision_markers"));
+  visionVisualTools.reset(new rviz_visual_tools::RvizVisualTools(frameId, "vision_markers"));
 }
 
 void ObstacleVisualizationNode::publishVisionMarkers(const agribot_msgs::VisionDetection::ConstPtr& msg) const

@@ -9,7 +9,9 @@
   <arg name="sonar_detection_topic" default="/agribot/sonar_detection" />
   <arg name="vision_detection_topic" default="/agribot/vision_detection" />
   <arg name="detection_path_topic" default="/move_base/AgribotPlannerROS/local_path" />
+
   <arg name="obstacle_arbiter_markers_topic" default="/agribot/obstacle_arbiter_markers" />
+  <arg name="vision_markers_topic" default="/agribot/vision_markers" />
 
 
   <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch">
@@ -38,4 +40,10 @@
     <arg name="detection_path_topic" value="$(arg detection_path_topic)" />
     <arg name="obstacle_arbiter_markers_topic" value="$(arg obstacle_arbiter_markers_topic)" />
   </include>
+
+  <include file="$(find agribot_obstacle_detection)/launch/obstacle_visualization.launch">
+    <arg name="vision_detection_topic" default="$(arg vision_detection_topic)" />
+    <arg name="vision_markers_topic" default="$(arg vision_markers_topic)" />
+  </include>
+
 </launch>
