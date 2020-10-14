@@ -19,7 +19,6 @@
     <arg name="lidar_frame_id" value="bumper_front_lidar_link" />
     <arg name="pointcloud_topic" value="/bumper/front/lidar" />
     <arg name="vision_detection_topic" value="$(arg vision_detection_topic)" />
-    <arg name="vision_markers_topic" value="/agribot/vision_markers" />
   </include>
 
 

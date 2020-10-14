@@ -3,7 +3,6 @@
   <arg name="lidar_frame_id"                  default="bumper_front_lidar_link"/>
   <arg name="pointcloud_topic"                default="/bumper/front/lidar"/>
   <arg name="vision_detection_topic"           default="/agribot/vision_detection"/>
-  <arg name="vision_markers_topic"            default="/agribot/vision_markers"/>
 
   <!-- Obstacle detection node -->
   <node pkg="agribot_obstacle_detection" type="lidar_obstacle_detection_node" name="lidar_obstacle_detection_node" output="screen" launch-prefix="">
@@ -12,7 +11,6 @@
     <param name="lidar_frame_id"              value="$(arg lidar_frame_id)"/>
 
     <remap from="~input_cloud"                to="$(arg pointcloud_topic)"/>
-    <remap from="~vision_markers"             to="$(arg vision_markers_topic)"/>
     <remap from="~vision_detection"           to="$(arg vision_detection_topic)"/>  
   </node>
 </launch>
