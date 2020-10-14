@@ -30,9 +30,6 @@ private:
 
   std::string frameId;
 
-  // Node parameters
-  bool bPublishGroundPlaneMarker;
-
   // VoxelGrid filter parameters
   float voxelGridFilterResolution;
 
@@ -153,8 +150,6 @@ public:
   void loadParameters()
   {
     // Load node parameters
-    nh->getParam("publish_ground_plane_marker", bPublishGroundPlaneMarker);
-
     // Frame and topics parameters
     nh->getParam("lidar_frame_id", frameId);
 
