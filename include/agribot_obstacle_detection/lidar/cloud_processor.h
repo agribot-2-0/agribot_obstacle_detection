@@ -62,9 +62,13 @@ public:
     seg.setOptimizeCoefficients(true);
     seg.setModelType(pcl::SACMODEL_PLANE);
     seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setMaxIterations(maxIterations);
     seg.setDistanceThreshold(distanceThreshold);
 
+    if (maxIterations != 0)
+    {
+      seg.setMaxIterations(maxIterations);
+    }
+    
     // Do segmentation
     seg.setInputCloud(inputCloud);
     seg.segment(*inliers, *coefficients);
