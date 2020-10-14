@@ -13,12 +13,28 @@
   <arg name="obstacle_arbiter_markers_topic" default="/agribot/obstacle_arbiter_markers" />
   <arg name="vision_markers_topic" default="/agribot/vision_markers" />
 
+  <!-- Detection parameters -->
+  <arg name="voxel_grid_filter_resolution"    default="0.1"/>
+  <arg name="segmentation_max_iterations"     default="1000"/>
+  <arg name="segmentation_distance_threshold" default="0.05"/>
+  <arg name="clustering_cluster_tolerance"    default="0.2"/>
+  <arg name="clustering_min_cluster_size"     default="10"/>
+  <arg name="clustering_max_cluster_size"     default="1000"/>
+
 
   <include file="$(find agribot_obstacle_detection)/launch/lidar_detection.launch">
     <arg name="publish_ground_plane_marker" value="false" />
     <arg name="lidar_frame_id" value="bumper_front_lidar_link" />
     <arg name="pointcloud_topic" value="/bumper/front/lidar" />
     <arg name="vision_detection_topic" value="$(arg vision_detection_topic)" />
+
+    <!-- Detection parameters -->
+    <arg name="voxel_grid_filter_resolution" value="$(arg voxel_grid_filter_resolution)"/>
+    <arg name="segmentation_max_iterations" value="$(arg segmentation_max_iterations)"/>
+    <arg name="segmentation_distance_threshold" value="$(arg segmentation_distance_threshold)"/>
+    <arg name="clustering_cluster_tolerance" value="$(arg clustering_cluster_tolerance)"/>
+    <arg name="clustering_min_cluster_size" value="$(arg clustering_min_cluster_size)"/>
+    <arg name="clustering_max_cluster_size" value="$(arg clustering_max_cluster_size)"/>
   </include>
 
 

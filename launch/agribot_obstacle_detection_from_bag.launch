@@ -5,8 +5,26 @@
   <arg name="bag_name" />
   <arg name="bag_path" value="$(find agribot_obstacle_detection)/bags/$(arg bag_name).bag" />
 
+  <!-- Detection parameters -->
+  <arg name="voxel_grid_filter_resolution"    default="0.1"/>
+  <arg name="segmentation_max_iterations"     default="1000"/>
+  <arg name="segmentation_distance_threshold" default="0.05"/>
+  <arg name="clustering_cluster_tolerance"    default="0.2"/>
+  <arg name="clustering_min_cluster_size"     default="10"/>
+  <arg name="clustering_max_cluster_size"     default="1000"/>
+
   <!-- Obstacle detection -->
-  <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" />
+  <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" >
+
+    <!-- Detection parameters -->
+    <arg name="voxel_grid_filter_resolution" value="$(arg voxel_grid_filter_resolution)"/>
+    <arg name="segmentation_max_iterations" value="$(arg segmentation_max_iterations)"/>
+    <arg name="segmentation_distance_threshold" value="$(arg segmentation_distance_threshold)"/>
+    <arg name="clustering_cluster_tolerance" value="$(arg clustering_cluster_tolerance)"/>
+    <arg name="clustering_min_cluster_size" value="$(arg clustering_min_cluster_size)"/>
+    <arg name="clustering_max_cluster_size" value="$(arg clustering_max_cluster_size)"/>
+
+  </include>
 
   <!-- Bag playback -->
   <include file="$(find agribot_bringup)/launch/bringup_playback.launch">
