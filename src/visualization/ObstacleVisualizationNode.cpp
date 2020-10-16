@@ -4,10 +4,11 @@
 
 #include "agribot_obstacle_detection/visualization/ObstacleVisualizationNode.h"
 
-ObstacleVisualizationNode::ObstacleVisualizationNode(ros::NodeHandle* _nh) : nh(_nh), firstVisionDetectionMsg(true)
+ObstacleVisualizationNode::ObstacleVisualizationNode(ros::NodeHandle* _nh) : firstVisionDetectionMsg(true)
+
 {
-  visionDetectionSub =
-      nh->subscribe("vision_detection", 1, &ObstacleVisualizationNode::visionDetectionCallback, this);
+  nh.reset(_nh);
+  visionDetectionSub = nh->subscribe("vision_detection", 1, &ObstacleVisualizationNode::visionDetectionCallback, this);
 }
 
 ObstacleVisualizationNode::~ObstacleVisualizationNode()

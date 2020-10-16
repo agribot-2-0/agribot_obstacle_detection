@@ -13,11 +13,12 @@
 #include <eigen_conversions/eigen_msg.h>
 
 #include <string>
+#include <memory>
 
 class ObstacleVisualizationNode
 {
 private:
-  ros::NodeHandle* nh;
+  std::unique_ptr<ros::NodeHandle> nh;
   ros::Subscriber visionDetectionSub;
 
   bool firstVisionDetectionMsg;
