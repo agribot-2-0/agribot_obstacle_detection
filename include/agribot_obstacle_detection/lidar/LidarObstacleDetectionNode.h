@@ -28,6 +28,10 @@ private:
   ros::Subscriber pcSub;
   ros::Publisher visionDetectionPub;
 
+  // Ground and obstacles pointclouds publishers
+  ros::Publisher groundPC2Pub;
+  ros::Publisher obstaclesPC2Pub;
+
   std::string frameId;
 
   // VoxelGrid filter parameters
@@ -69,6 +73,9 @@ public:
 
     visionDetectionPub = nh->advertise<agribot_msgs::VisionDetection>("vision_detection", 1, true);
 
+    groundPC2Pub = nh->advertise<sensor_msgs::PointCloud2>("ground_cloud", 1, false);
+    obstaclesPC2Pub = nh->advertise<sensor_msgs::PointCloud2>("obstacles_cloud", 1, false);
+
     pcSub =
         nh->subscribe<pcl::PointCloud<PointT>>("input_cloud", 1, &LidarObstacleDetectionNode::pointcloudCallback, this);
   }
@@ -95,6 +102,15 @@ public:
 
     // Convert PCL timestamp to ROS timestamp
     ros::Time stamp = pcl_conversions::fromPCL(msg->header.stamp);
+
+    // Publish ground and obstacles clouds
+    sensor_msgs::PointCloud2 groundMsg;
+    pcl::toROSMsg(*planeCloud, groundMsg);
+    groundPC2Pub.publish(groundMsg);
+
+    sensor_msgs::PointCloud2 obstaclesMsg;
+    pcl::toROSMsg(*detectedObjectsCloud, obstaclesMsg);
+    obstaclesPC2Pub.publish(obstaclesMsg);
 
     // Publish array with detected objects
     publishVisionDetection(stamp);

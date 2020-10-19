@@ -19,6 +19,8 @@
     <param name="lidar_frame_id"              value="$(arg lidar_frame_id)"/>
 
     <remap from="~input_cloud"                to="$(arg pointcloud_topic)"/>
+    <remap from="~ground_cloud"               to="$(arg pointcloud_topic)/ground"/>
+    <remap from="~obstacles_cloud"            to="$(arg pointcloud_topic)/obstacles"/>
     <remap from="~vision_detection"           to="$(arg vision_detection_topic)"/>
 
     <!-- Detection parameters -->
