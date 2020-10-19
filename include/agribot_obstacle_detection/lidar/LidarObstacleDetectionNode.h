@@ -9,8 +9,12 @@
 #include <agribot_msgs/VisionDetection.h>
 
 #include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
+
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 
 #include <vector>
 #include <string>
@@ -34,12 +38,17 @@ private:
 
   std::string frameId;
 
+  // TF Buffer and listener
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener;
+
   // VoxelGrid filter parameters
   float voxelGridFilterResolution;
 
   // Segmentation parameters
   int segmentationMaxIterations;
   float segmentationDistanceThreshold;
+  bool segmentationUsePassthroughFilter;
 
   // Clustering parameters
   float clusteringClusterTolerance;
@@ -50,6 +59,7 @@ private:
   CloudProcessor<PointT> processor;
 
   // Used clouds
+  typename pcl::PointCloud<PointT>::Ptr inputCloudTransformed;
   typename pcl::PointCloud<PointT>::Ptr filteredCloud;
   typename pcl::PointCloud<PointT>::Ptr planeCloud;
   typename pcl::PointCloud<PointT>::Ptr detectedObjectsCloud;
@@ -63,6 +73,8 @@ private:
 public:
   explicit LidarObstacleDetectionNode(ros::NodeHandle* _nh)
     : nh(_nh)
+    , tfListener(tfBuffer)
+    , inputCloudTransformed(new pcl::PointCloud<PointT>)
     , filteredCloud(new pcl::PointCloud<PointT>)
     , planeCloud(new pcl::PointCloud<PointT>)
     , detectedObjectsCloud(new pcl::PointCloud<PointT>)
@@ -118,12 +130,23 @@ public:
 
   void processingPipeline(const typename pcl::PointCloud<PointT>::ConstPtr& inputCloud)
   {
+    // Transform Pointcloud to base_footprint (to allow planeSegmentationWithCutoff extract lwoer part of pointcloud)
+    pcl_ros::transformPointCloud("base_footprint", *inputCloud, *inputCloudTransformed, tfBuffer);
+
     // VoxelGrid filtering
     processor.voxelGridFilter(inputCloud, filteredCloud, voxelGridFilterResolution);
 
     // Plane segmentation
-    processor.planeSegmentation(filteredCloud, planeCloud, detectedObjectsCloud, groundPlaneCoefficients,
-                                segmentationMaxIterations, segmentationDistanceThreshold);
+    if (segmentationUsePassthroughFilter)
+    {
+      processor.planeSegmentationWithCutoff(filteredCloud, planeCloud, detectedObjectsCloud, groundPlaneCoefficients,
+                                            segmentationMaxIterations, segmentationDistanceThreshold);
+    }
+    else
+    {
+      processor.planeSegmentation(filteredCloud, planeCloud, detectedObjectsCloud, groundPlaneCoefficients,
+                                  segmentationMaxIterations, segmentationDistanceThreshold);
+    }
 
     // Clustering
     detectedObjects = processor.clustering(detectedObjectsCloud, clusteringClusterTolerance, clusteringMinClusterSize,
@@ -173,20 +196,19 @@ public:
     nh->param<float>("voxel_grid_filter_resolution", voxelGridFilterResolution, 0.1);
 
     nh->param<int>("segmentation_max_iterations", segmentationMaxIterations, 1000);
-
     nh->param<float>("segmentation_distance_threshold", segmentationDistanceThreshold, 0.05);
+    nh->param<bool>("segmentation_use_passthrough_filter", segmentationUsePassthroughFilter, false);
 
     nh->param<float>("clustering_cluster_tolerance", clusteringClusterTolerance, 0.2);
-
     nh->param<int>("clustering_min_cluster_size", clusteringMinClusterSize, 10);
-
     nh->param<int>("clustering_max_cluster_size", clusteringMaxClusterSize, 1000);
 
     ROS_INFO_STREAM("[Lidar Obstacle Detection] Starting Lidar Obstacle Detection with parameters:\n\n"
                     << "### Voxel Grid Filter ###" << std::endl
                     << "- Resolution = " << voxelGridFilterResolution << "\n\n### Segmentation ###" << std::endl
                     << "- Max Iterations = " << segmentationMaxIterations << std::endl
-                    << "- Distance Threshold = " << segmentationDistanceThreshold << "\n\n### Clustering ###"
+                    << "- Distance Threshold = " << segmentationDistanceThreshold << std::endl
+                    << "- Use Passthrough Filter = " << segmentationUsePassthroughFilter << "\n\n### Clustering ###"
                     << std::endl
                     << "- Cluster Tolerance = " << clusteringClusterTolerance << std::endl
                     << "- Min Cluster Size = " << clusteringMinClusterSize << std::endl
