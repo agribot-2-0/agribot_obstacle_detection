@@ -1,0 +1,11 @@
+<launch>
+
+  <arg name="vision_detection_topic" default="/agribot/vision_detection" />
+  <arg name="vision_markers_topic" default="/agribot/vision_markers" />
+  
+  <node pkg="agribot_obstacle_detection" type="obstacle_visualization_node" name="obstacle_visualization_node">
+    <remap from="~vision_detection" to="$(arg vision_detection_topic)"/>
+    <remap from="~vision_markers" to="$(arg vision_markers_topic)"/>
+  </node>
+
+</launch>

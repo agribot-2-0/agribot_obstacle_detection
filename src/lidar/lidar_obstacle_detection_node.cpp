@@ -7,7 +7,7 @@
 
 #include "agribot_obstacle_detection/lidar/LidarObstacleDetectionNode.h"
 
-typedef pcl::PointXYZ Point;
+typedef pcl::PointXYZI Point;
 
 int main(int argc, char** argv)
 {
