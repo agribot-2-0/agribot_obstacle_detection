@@ -1,39 +1,17 @@
 <launch>
-  <arg name="publish_ground_plane_marker"     default="false"/>
-  <arg name="lidar_frame_id"                  default="bumper_front_lidar_link"/>
   <arg name="pointcloud_topic"                default="/bumper/front/lidar"/>
   <arg name="vision_detection_topic"          default="/agribot/vision_detection"/>
   
-  <!-- Detection parameters -->
-  <arg name="voxel_grid_filter_resolution"    default="0.05"/>
-  <arg name="segmentation_max_iterations"     default="500"/>
-  <arg name="segmentation_distance_threshold" default="0.05"/>
-  <arg name="segmentation_use_passthrough_filter"     default="true"/>
-  <arg name="clustering_cluster_tolerance"    default="0.3"/>
-  <arg name="clustering_min_cluster_size"     default="30"/>
-  <arg name="clustering_max_cluster_size"     default="5000"/>
-
   <!-- Obstacle detection node -->
   <node pkg="agribot_obstacle_detection" type="lidar_obstacle_detection_node" name="lidar_obstacle_detection_node" output="screen" launch-prefix="">
+    
+    <!-- Load detection parameters -->
     <rosparam command="load" file="$(find agribot_obstacle_detection)/param/lidar_detection.yaml"/>
-    <param name="publish_ground_plane_marker" value="$(arg publish_ground_plane_marker)"/>
-    <param name="lidar_frame_id"              value="$(arg lidar_frame_id)"/>
 
     <remap from="~input_cloud"                to="$(arg pointcloud_topic)"/>
     <remap from="~ground_cloud"               to="$(arg pointcloud_topic)/ground"/>
     <remap from="~obstacles_cloud"            to="$(arg pointcloud_topic)/obstacles"/>
     <remap from="~vision_detection"           to="$(arg vision_detection_topic)"/>
-
-    <!-- Detection parameters -->
-    <param name="voxel_grid_filter_resolution" value="$(arg voxel_grid_filter_resolution)"/>
-    <param name="segmentation_max_iterations" value="$(arg segmentation_max_iterations)"/>
-    <param name="segmentation_distance_threshold" value="$(arg segmentation_distance_threshold)"/>
-    <param name="segmentation_use_passthrough_filter" value="$(arg segmentation_use_passthrough_filter)"/>
-    <param name="clustering_cluster_tolerance" value="$(arg clustering_cluster_tolerance)"/>
-    <param name="clustering_min_cluster_size" value="$(arg clustering_min_cluster_size)"/>
-    <param name="clustering_max_cluster_size" value="$(arg clustering_max_cluster_size)"/>
-
-    
 
   </node>
 </launch>

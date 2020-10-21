@@ -1,8 +1,9 @@
 <launch>
-  <arg name="sonar_detection_topic"    default="/agribot/sonar_detection"/>
+  <arg name="sonar_detection_topic"     default="/agribot/sonar_detection"/>
+  <arg name="sonar_detection_config_file"         default="sonar_detection.yaml"/>
 
   <node pkg="agribot_obstacle_detection" type="sonar_obstacle_detection_node" name="sonar_obstacle_detection_node" output="screen" launch-prefix="">
-    <rosparam command="load" file="$(find agribot_obstacle_detection)/param/sonar_detection.yaml" />
+    <rosparam command="load" file="$(find agribot_obstacle_detection)/param/$(arg sonar_detection_config_file)" />
     <remap from="~sonar_detection" to="$(arg sonar_detection_topic)"/>
   </node>
 </launch>
