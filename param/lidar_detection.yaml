@@ -1,11 +1,16 @@
+# Target frame (used to obtain cloud in the frame "parallel" to the robot) - necessary for passthrough filter)
+cloud_target_frame_id: base_footprint
+
 # Voxel grid filter resolution
+distance_filter_distance_threshold: 10.0
 voxel_grid_filter_resolution: 0.15
 
 # Plane segmentation
-segmentation_max_iterations: 1000
+segmentation_max_iterations: 300
 segmentation_distance_threshold: 0.15
+segmentation_use_passthrough_filter: true
 
 # Clustering
 clustering_cluster_tolerance: 0.2
-clustering_min_cluster_size: 20
+clustering_min_cluster_size: 30
 clustering_max_cluster_size: 10000
