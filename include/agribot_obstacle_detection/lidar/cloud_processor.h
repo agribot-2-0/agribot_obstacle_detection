@@ -10,6 +10,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/search/kdtree.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 
@@ -212,5 +213,43 @@ public:
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     ROS_DEBUG_STREAM("VoxelGridFilter took " << elapsedTime.count() << " milliseconds");
+  }
+
+  void distanceFilter(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+                              typename pcl::PointCloud<PointT>::Ptr filteredCloud, float distanceThreshold)
+  {
+    auto startTime = std::chrono::steady_clock::now();
+
+    // typename pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
+    typename pcl::KdTreeFLANN<PointT>::Ptr tree(new pcl::KdTreeFLANN<PointT>);
+    PointT searchPoint;
+    std::vector<int> pointIdxRadiusSearch;
+    std::vector<float> pointRadiusSquaredDistance;
+
+    tree->setInputCloud(inputCloud);
+    searchPoint.x = 0.0;
+    searchPoint.y = 0.0;
+    searchPoint.z = 0.0;
+
+    if (tree->radiusSearch(searchPoint, distanceThreshold, pointIdxRadiusSearch, pointRadiusSquaredDistance))
+    {
+      filteredCloud->clear();
+      for (const auto index : pointIdxRadiusSearch)
+      {
+        filteredCloud->points.push_back(inputCloud->points[index]);
+      }
+      filteredCloud->width = filteredCloud->points.size();
+      filteredCloud->height = 1;
+      filteredCloud->is_dense = true;
+    }
+    else
+    {
+      // No points to remove
+      *filteredCloud = *inputCloud;
+    }
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    ROS_DEBUG_STREAM("distanceRemovingFilter took " << elapsedTime.count() << " milliseconds");
   }
 };
