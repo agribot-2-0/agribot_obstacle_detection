@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <std_msgs/Int64.h>
 #include <agribot_msgs/ObjectClass.h>
 #include <agribot_msgs/DetectedObject.h>
 #include <agribot_msgs/VisionDetection.h>
@@ -35,6 +36,9 @@ private:
   // Ground and obstacles pointclouds publishers
   ros::Publisher groundPC2Pub;
   ros::Publisher obstaclesPC2Pub;
+
+  // Processing time publisher
+  ros::Publisher processingTimePub;
 
   std::string cloudTargetFrameId;
 
@@ -93,6 +97,8 @@ public:
     groundPC2Pub = nh->advertise<sensor_msgs::PointCloud2>("ground_cloud", 1, false);
     obstaclesPC2Pub = nh->advertise<sensor_msgs::PointCloud2>("obstacles_cloud", 1, false);
 
+    processingTimePub = nh->advertise<std_msgs::Int64>("lidar_processing_time_ms", 1, false);
+
     pcSub =
         nh->subscribe<pcl::PointCloud<PointT>>("input_cloud", 1, &LidarObstacleDetectionNode::pointcloudCallback, this);
   }
@@ -146,6 +152,9 @@ public:
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     ROS_WARN_STREAM("pointcloudCallback took " << elapsedTime.count() << " milliseconds");
+    std_msgs::Int64 proctime_msg;
+    proctime_msg.data = elapsedTime.count();
+    processingTimePub.publish(proctime_msg);
   }
 
   bool processingPipeline(const typename pcl::PointCloud<PointT>::ConstPtr& inputCloud)
