@@ -68,10 +68,10 @@ private:
 
   // Used clouds
   typename pcl::PointCloud<PointT>::Ptr transformedCloud;
-  typename pcl::PointCloud<PointT>::Ptr distantRemovedCloud;
-  typename pcl::PointCloud<PointT>::Ptr filteredCloud;
+  typename pcl::PointCloud<PointT>::Ptr shortRangeCloud;
+  typename pcl::PointCloud<PointT>::Ptr downsampledCloud;
   typename pcl::PointCloud<PointT>::Ptr planeCloud;
-  typename pcl::PointCloud<PointT>::Ptr detectedObjectsCloud;
+  typename pcl::PointCloud<PointT>::Ptr obstaclesCloud;
 
   // Plane coefficients
   pcl::ModelCoefficients::Ptr groundPlaneCoefficients;
@@ -84,10 +84,10 @@ public:
     : nh(_nh)
     , tfListener(tfBuffer)
     , transformedCloud(new pcl::PointCloud<PointT>)
-    , distantRemovedCloud(new pcl::PointCloud<PointT>)
-    , filteredCloud(new pcl::PointCloud<PointT>)
+    , shortRangeCloud(new pcl::PointCloud<PointT>)
+    , downsampledCloud(new pcl::PointCloud<PointT>)
     , planeCloud(new pcl::PointCloud<PointT>)
-    , detectedObjectsCloud(new pcl::PointCloud<PointT>)
+    , obstaclesCloud(new pcl::PointCloud<PointT>)
     , groundPlaneCoefficients(new pcl::ModelCoefficients)
   {
     // Load detection & node parameters
@@ -136,7 +136,7 @@ public:
       groundPC2Pub.publish(groundMsg);
 
       sensor_msgs::PointCloud2 obstaclesMsg;
-      pcl::toROSMsg(*detectedObjectsCloud, obstaclesMsg);
+      pcl::toROSMsg(*obstaclesCloud, obstaclesMsg);
       obstaclesPC2Pub.publish(obstaclesMsg);
 
       // Publish array with detected objects
@@ -161,11 +161,11 @@ public:
   bool processingPipeline(const typename pcl::PointCloud<PointT>::ConstPtr& inputCloud)
   {
     // Keep only points below given distance from cloud origin
-    processor.distanceFilter(inputCloud, distantRemovedCloud, distanceFilterDistanceThreshold);
-    distantRemovedCloud->header.frame_id = inputCloud->header.frame_id;
+    processor.distanceFilter(inputCloud, shortRangeCloud, distanceFilterDistanceThreshold);
+    shortRangeCloud->header.frame_id = inputCloud->header.frame_id;
 
     // Decimate points to obtain pointcloud with smaller number of points
-    processor.voxelGridFilter(distantRemovedCloud, filteredCloud, voxelGridFilterResolution);
+    processor.voxelGridFilter(shortRangeCloud, downsampledCloud, voxelGridFilterResolution);
 
     // Transform Pointcloud to base_footprint (to allow planeSegmentationWithCutoff extract lwoer part of pointcloud)
     geometry_msgs::TransformStamped transform;
@@ -187,24 +187,24 @@ public:
       return false;
     }
 
-    pcl_ros::transformPointCloud(*filteredCloud, *transformedCloud, transform.transform);
+    pcl_ros::transformPointCloud(*downsampledCloud, *transformedCloud, transform.transform);
     transformedCloud->header.frame_id = cloudTargetFrameId;
 
     // Plane segmentation
     if (segmentationUsePassthroughFilter)
     {
-      processor.planeSegmentationWithCutoff(transformedCloud, planeCloud, detectedObjectsCloud, groundPlaneCoefficients,
+      processor.planeSegmentationWithCutoff(transformedCloud, planeCloud, obstaclesCloud, groundPlaneCoefficients,
                                             segmentationMaxIterations, segmentationDistanceThreshold,
                                             segmentationPassthroughtFilterCutoffRatio);
     }
     else
     {
-      processor.planeSegmentation(transformedCloud, planeCloud, detectedObjectsCloud, groundPlaneCoefficients,
+      processor.planeSegmentation(transformedCloud, planeCloud, obstaclesCloud, groundPlaneCoefficients,
                                   segmentationMaxIterations, segmentationDistanceThreshold);
     }
 
     // Clustering
-    detectedObjects = processor.clustering(detectedObjectsCloud, clusteringClusterTolerance, clusteringMinClusterSize,
+    detectedObjects = processor.clustering(obstaclesCloud, clusteringClusterTolerance, clusteringMinClusterSize,
                                            clusteringMaxClusterSize);
 
     return true;
