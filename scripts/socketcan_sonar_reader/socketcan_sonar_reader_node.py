@@ -41,24 +41,21 @@ class SocketcanSonarReader:
                                queue_size=1),
             7: rospy.Publisher('/bumper/front/sonar/left', Range,
                                queue_size=1),
-            8: rospy.Publisher('/bumper/front/sonar/center', Range,
+            8: rospy.Publisher('/bumper/front/sonar/right', Range,
                                queue_size=1),
-            9: rospy.Publisher('/bumper/front/sonar/right', Range,
+            9: rospy.Publisher('/bumper/front/sonar/right_side/front', Range,
                                queue_size=1),
-            10: rospy.Publisher('/bumper/front/sonar/right_side/front', Range,
-                               queue_size=1)
-            11: rospy.Publisher('/bumper/front/sonar/right_side/rear', Range,
-                               queue_size=1)
+            10: rospy.Publisher('/bumper/front/sonar/right_side/rear', Range,
+                               queue_size=1),
         }
 
         self.motec_frame_ids = {
             5: 'bumper_front_sonar_left_side_rear_link',
             6: 'bumper_front_sonar_left_side_front_link',
             7: 'bumper_front_sonar_left_link',
-            8: 'bumper_front_sonar_center_link',
-            9: 'bumper_front_sonar_right_link',
-            10: 'bumper_front_sonar_right_side_front_link'
-            11: 'bumper_front_sonar_right_side_rear_link'
+            8: 'bumper_front_sonar_right_link',
+            9: 'bumper_front_sonar_right_side_front_link',
+            10: 'bumper_front_sonar_right_side_rear_link',
         }
 
     def parse_balluff_sonar_msg(self, msg):
