@@ -96,7 +96,8 @@ public:
   void planeSegmentationWithCutoff(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
                                    typename pcl::PointCloud<PointT>::Ptr planeCloud,
                                    typename pcl::PointCloud<PointT>::Ptr objectsCloud,
-                                   pcl::ModelCoefficients::Ptr coefficients, int maxIterations, float distanceThreshold)
+                                   pcl::ModelCoefficients::Ptr coefficients, int maxIterations, float distanceThreshold,
+                                   float cutoffRatio)
   {
     auto startTime = std::chrono::steady_clock::now();
 
@@ -106,12 +107,12 @@ public:
     double minZ, maxZ, diffZ;
 
     // Compute minimal and maximal Z in pointcloud
-    // Get only lower 10% of pointcloud, but at least 0.1m
+    // Get only lower (100*cutoffRatio)% of pointcloud, but at least 0.1 [m]
     pcl::getMinMax3D(*inputCloud, minPoint, maxPoint);
     minZ = minPoint.z;
     maxZ = maxPoint.z;
 
-    diffZ = 0.1 * (maxZ - minZ);
+    diffZ = cutoffRatio * (maxZ - minZ);
     if (diffZ < 0.1)
     {
       diffZ = 0.1;
@@ -195,7 +196,7 @@ public:
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     ROS_DEBUG_STREAM("Clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size()
-                                       << " clusters" << std::endl);
+                                        << " clusters" << std::endl);
 
     return clusters;
   }
@@ -216,7 +217,7 @@ public:
   }
 
   void distanceFilter(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
-                              typename pcl::PointCloud<PointT>::Ptr filteredCloud, float distanceThreshold)
+                      typename pcl::PointCloud<PointT>::Ptr filteredCloud, float distanceThreshold)
   {
     auto startTime = std::chrono::steady_clock::now();
 

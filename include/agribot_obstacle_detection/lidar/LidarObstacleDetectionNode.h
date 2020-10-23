@@ -56,6 +56,7 @@ private:
   int segmentationMaxIterations;
   float segmentationDistanceThreshold;
   bool segmentationUsePassthroughFilter;
+  float segmentationPassthroughtFilterCutoffRatio;
 
   // Clustering parameters
   float clusteringClusterTolerance;
@@ -193,7 +194,8 @@ public:
     if (segmentationUsePassthroughFilter)
     {
       processor.planeSegmentationWithCutoff(transformedCloud, planeCloud, detectedObjectsCloud, groundPlaneCoefficients,
-                                            segmentationMaxIterations, segmentationDistanceThreshold);
+                                            segmentationMaxIterations, segmentationDistanceThreshold,
+                                            segmentationPassthroughtFilterCutoffRatio);
     }
     else
     {
@@ -254,21 +256,24 @@ public:
     nh->param<int>("segmentation_max_iterations", segmentationMaxIterations, 300);
     nh->param<float>("segmentation_distance_threshold", segmentationDistanceThreshold, 0.15);
     nh->param<bool>("segmentation_use_passthrough_filter", segmentationUsePassthroughFilter, true);
+    nh->param<float>("segmentation_passthrough_filter_cutoff_ratio", segmentationPassthroughtFilterCutoffRatio, 0.1);
 
     nh->param<float>("clustering_cluster_tolerance", clusteringClusterTolerance, 0.2);
     nh->param<int>("clustering_min_cluster_size", clusteringMinClusterSize, 5);
     nh->param<int>("clustering_max_cluster_size", clusteringMaxClusterSize, 10000);
 
-    ROS_INFO_STREAM(
-        "[Lidar Obstacle Detection] Starting Lidar Obstacle Detection with parameters:\n\n"
-        << "### Distance threshold Filter ###" << std::endl
-        << "- Distance threshold = " << distanceFilterDistanceThreshold << "\n\n### Voxel Grid Filter ###" << std::endl
-        << "- Resolution = " << voxelGridFilterResolution << "\n\n### Segmentation ###" << std::endl
-        << "- Max Iterations = " << segmentationMaxIterations << std::endl
-        << "- Distance Threshold = " << segmentationDistanceThreshold << std::endl
-        << "- Use Passthrough Filter = " << segmentationUsePassthroughFilter << "\n\n### Clustering ###" << std::endl
-        << "- Cluster Tolerance = " << clusteringClusterTolerance << std::endl
-        << "- Min Cluster Size = " << clusteringMinClusterSize << std::endl
-        << "- Max Cluster Size = " << clusteringMaxClusterSize << std::endl);
+    ROS_INFO_STREAM("[Lidar Obstacle Detection] Starting Lidar Obstacle Detection with parameters:\n\n"
+                    << "### Distance threshold Filter ###" << std::endl
+                    << "- Distance threshold = " << distanceFilterDistanceThreshold << "\n\n### Voxel Grid Filter ###"
+                    << std::endl
+                    << "- Resolution = " << voxelGridFilterResolution << "\n\n### Segmentation ###" << std::endl
+                    << "- Max Iterations = " << segmentationMaxIterations << std::endl
+                    << "- Distance Threshold = " << segmentationDistanceThreshold << std::endl
+                    << "- Use Passthrough Filter = " << segmentationUsePassthroughFilter << std::endl
+                    << "- Passthrough Filter Cutoff Ratio = " << segmentationPassthroughtFilterCutoffRatio
+                    << "\n\n### Clustering ###" << std::endl
+                    << "- Cluster Tolerance = " << clusteringClusterTolerance << std::endl
+                    << "- Min Cluster Size = " << clusteringMinClusterSize << std::endl
+                    << "- Max Cluster Size = " << clusteringMaxClusterSize << std::endl);
   }
 };

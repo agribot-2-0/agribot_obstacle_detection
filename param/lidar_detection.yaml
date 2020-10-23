@@ -7,8 +7,9 @@ voxel_grid_filter_resolution: 0.15
 
 # Plane segmentation
 segmentation_max_iterations: 300
-segmentation_distance_threshold: 0.15
+segmentation_distance_threshold: 0.1
 segmentation_use_passthrough_filter: true
+segmentation_passthrough_filter_cutoff_ratio: 0.1
 
 # Clustering
 clustering_cluster_tolerance: 0.2
