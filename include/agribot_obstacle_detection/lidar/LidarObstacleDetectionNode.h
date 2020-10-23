@@ -151,7 +151,7 @@ public:
     // Inform about processing time
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    ROS_WARN_STREAM("pointcloudCallback took " << elapsedTime.count() << " milliseconds");
+    ROS_DEBUG_STREAM("pointcloudCallback took " << elapsedTime.count() << " milliseconds");
     std_msgs::Int64 proctime_msg;
     proctime_msg.data = elapsedTime.count();
     processingTimePub.publish(proctime_msg);
