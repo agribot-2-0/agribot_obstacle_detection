@@ -4,15 +4,15 @@ add_compile_options(-std=c++17)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  agribot_msgs
+  nav_msgs
+  pcl_conversions
+  pcl_ros
   roscpp
   rviz_visual_tools
-  pcl_ros
-  pcl_conversions
   sensor_msgs
-  agribot_msgs
-  tf2_ros
   tf2_geometry_msgs
-  nav_msgs
+  tf2_ros
 )
 
 find_package(Eigen3 REQUIRED)
@@ -20,7 +20,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES agribot_obstacle_detection
-#  CATKIN_DEPENDS roscpp std_msgs
+ CATKIN_DEPENDS nav_msgs roscpp
 #  DEPENDS system_lib
 )
 
@@ -30,12 +30,7 @@ catkin_package(
 
 include_directories(
   include
-  include/agribot_obstacle_detection
-  tools
   ${catkin_INCLUDE_DIRS}
-)
-
-link_directories(
 )
 
 # Lidar Obstacle Detection Node
