@@ -33,7 +33,6 @@
   <exec_depend>pcl_conversions</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>agribot_msgs</exec_depend>
-  <exec_depend>agribot_bringup</exec_depend>
 
   <export></export>
 </package>
