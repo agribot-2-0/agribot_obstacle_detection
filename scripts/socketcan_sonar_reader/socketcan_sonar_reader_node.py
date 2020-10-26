@@ -1,32 +1,32 @@
 #!/usr/bin/env python
-import can
 import rospy
-
 from sensor_msgs.msg import Range
+
+import can
 
 
 class SocketcanSonarReader:
+    # Motec CAN ids
+    motec_config_id = 0x220
+    motec_request_id = 0x240
+    motec_response_id = 0x340
+
+    # Motec CAN sub-IDs
+    motec_can_output_sub_id = 0xAF
+
+    # Balluf CAN id
+    balluff_id = 0x1000
+
+    # min/max range and field of view
+    balluf_min_range = 0.35
+    balluf_max_range = 5.0
+    balluf_fov = 0.27576
+    motec_min_range = 0.15
+    motec_max_range = 3.0
+    motec_fov = 0.523598
+
     def __init__(self, can_interface='can0'):
         self.bus = can.ThreadSafeBus(can_interface, bustype='socketcan')
-
-        # Motec CAN ids
-        self.motec_config_id = 0x220
-        self.motec_request_id = 0x240
-        self.motec_response_id = 0x340
-
-        # Motec CAN sub-IDs
-        self.motec_can_output_sub_id = 0xAF
-
-        # Balluf CAN id
-        self.balluff_id = 0x1000
-
-        # min/max range and field of view
-        self.balluf_min_range = 0.35
-        self.balluf_max_range = 5.0
-        self.balluf_fov = 0.27576
-        self.motec_min_range = 0.15
-        self.motec_max_range = 3.0
-        self.motec_fov = 0.523598
 
         # ROS publishers
         self.balluff_publisher = rospy.Publisher('/bumper/front/sonar/center',
@@ -35,18 +35,26 @@ class SocketcanSonarReader:
         self.balluff_frame_id = 'bumper_front_sonar_center_link'
 
         self.motec_publishers = {
-            5: rospy.Publisher('/bumper/front/sonar/left_side/rear', Range,
-                               queue_size=1),
-            6: rospy.Publisher('/bumper/front/sonar/left_side/front', Range,
-                               queue_size=1),
-            7: rospy.Publisher('/bumper/front/sonar/left', Range,
-                               queue_size=1),
-            8: rospy.Publisher('/bumper/front/sonar/right', Range,
-                               queue_size=1),
-            9: rospy.Publisher('/bumper/front/sonar/right_side/front', Range,
-                               queue_size=1),
-            10: rospy.Publisher('/bumper/front/sonar/right_side/rear', Range,
-                               queue_size=1),
+            5:
+            rospy.Publisher('/bumper/front/sonar/left_side/rear',
+                            Range,
+                            queue_size=1),
+            6:
+            rospy.Publisher('/bumper/front/sonar/left_side/front',
+                            Range,
+                            queue_size=1),
+            7:
+            rospy.Publisher('/bumper/front/sonar/left', Range, queue_size=1),
+            8:
+            rospy.Publisher('/bumper/front/sonar/right', Range, queue_size=1),
+            9:
+            rospy.Publisher('/bumper/front/sonar/right_side/front',
+                            Range,
+                            queue_size=1),
+            10:
+            rospy.Publisher('/bumper/front/sonar/right_side/rear',
+                            Range,
+                            queue_size=1),
         }
 
         self.motec_frame_ids = {
@@ -59,9 +67,9 @@ class SocketcanSonarReader:
         }
 
     def parse_balluff_sonar_msg(self, msg):
-        range = self.balluff_range_from_bytes(int(msg.data[0]),
-                                              int(msg.data[1]))
-        self.publish_balluff_range(0x00, range)
+        balluff_range = self.balluff_range_from_bytes(int(msg.data[0]),
+                                                      int(msg.data[1]))
+        self.publish_balluff_range(balluff_range)
 
     def parse_motec_sonar_msg(self, msg):
         sub_id = msg.data[0]
@@ -82,8 +90,9 @@ class SocketcanSonarReader:
             return
 
         sensor_id = int(msg.data[1])
-        range = self.motec_range_from_bytes(int(msg.data[2]), int(msg.data[3]), sensor_id)
-        self.publish_motec_range(sensor_id, range)
+        motec_range = self.motec_range_from_bytes(int(msg.data[2]),
+                                                  int(msg.data[3]), sensor_id)
+        self.publish_motec_range(sensor_id, motec_range)
 
     def parse_msg(self, msg):
         if msg.arbitration_id == self.balluff_id:
@@ -107,27 +116,27 @@ class SocketcanSonarReader:
 
     def balluff_range_from_bytes(self, lsb, msb):
         adc_value = lsb | msb << 8
-        range = self.balluf_min_range + (adc_value / 700.0)
-        return range
+        balluff_range = self.balluf_min_range + (adc_value / 700.0)
+        return balluff_range
 
-    def publish_motec_range(self, id, range):
-        if id in self.motec_frame_ids and id in self.motec_publishers:
+    def publish_motec_range(self, motec_id, motec_range):
+        if motec_id in self.motec_frame_ids and motec_id in self.motec_publishers:
             msg = Range()
-            msg.header.frame_id = self.motec_frame_ids[id]
+            msg.header.frame_id = self.motec_frame_ids[motec_id]
             msg.header.stamp = rospy.Time.now()
 
             msg.radiation_type = Range.ULTRASOUND
             msg.min_range = self.motec_min_range
             msg.max_range = self.motec_max_range
             msg.field_of_view = self.motec_fov
-            msg.range = range
+            msg.range = motec_range
 
-            pub = self.motec_publishers[id]
+            pub = self.motec_publishers[motec_id]
             pub.publish(msg)
         else:
-            rospy.logwarn('No motec defined for id={}'.format(id))
+            rospy.logwarn('No motec defined for id={}'.format(motec_id))
 
-    def publish_balluff_range(self, id, range):
+    def publish_balluff_range(self, balluff_range):
         msg = Range()
         msg.header.frame_id = self.balluff_frame_id
         msg.header.stamp = rospy.Time.now()
@@ -136,7 +145,7 @@ class SocketcanSonarReader:
         msg.min_range = self.balluf_min_range
         msg.max_range = self.balluf_max_range
         msg.field_of_view = self.balluf_fov
-        msg.range = range
+        msg.range = balluff_range
 
         pub = self.balluff_publisher
         pub.publish(msg)
@@ -149,5 +158,5 @@ class SocketcanSonarReader:
 
 if __name__ == '__main__':
     rospy.init_node('socketcan_sonar_reader_node')
-    ssr = SocketcanSonarReader()
-    ssr.run()
+    SSR = SocketcanSonarReader()
+    SSR.run()

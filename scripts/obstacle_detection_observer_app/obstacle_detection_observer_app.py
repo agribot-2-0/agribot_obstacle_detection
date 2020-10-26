@@ -4,14 +4,12 @@ import os
 import signal
 import sys
 
-from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import Qt, pyqtSignal
+from python_qt_binding.QtCore import Qt, pyqtSignal # pylint: disable=no-name-in-module
 from python_qt_binding.QtWidgets import QWidget, QApplication, QGraphicsScene  # pylint: disable=no-name-in-module
-from python_qt_binding.QtGui import QBrush, QPen, QColor
+from python_qt_binding.QtGui import QBrush, QPen # pylint: disable=no-name-in-module
 
-from agribot_msgs.msg import AgribotObstacleDetection
-from agribot_msgs.msg import VisionDetection
+from agribot_msgs.msg import AgribotObstacleDetection as AOD
 from agribot_msgs.msg import SonarDetection
 from agribot_msgs.msg import SonarStatus
 
@@ -19,14 +17,16 @@ import rospy
 import rospkg
 
 
+# pylint: disable=too-many-instance-attributes
 class ObstacleDetectionObserverApp(QWidget):
 
     # Signals
-    update_agribot_detection_signal = pyqtSignal(AgribotObstacleDetection)
+    update_agribot_detection_signal = pyqtSignal(AOD)
     update_sonar_detection_signal = pyqtSignal(SonarDetection)
 
     # Max number of sonars
     max_sonars_n = 16
+    sonars_n = 0
 
     def __init__(self, parent=None):
         super(ObstacleDetectionObserverApp, self).__init__(parent)
@@ -55,12 +55,11 @@ class ObstacleDetectionObserverApp(QWidget):
 
         # Prepare sonars
         self.prepare_sonar_vis_list()
-        self.sonars_n = 0
 
         # Initialize detection status
-        self.agribot_obstacle_detection_status = AgribotObstacleDetection.WAITING_FOR_FIRST_MEASUREMENT
-        self.vision_detection_status = AgribotObstacleDetection.WAITING_FOR_FIRST_MEASUREMENT
-        self.sonar_detection_status = AgribotObstacleDetection.WAITING_FOR_FIRST_MEASUREMENT
+        self.agribot_obstacle_detection_status = AOD.WAITING_FOR_FIRST_MEASUREMENT
+        self.vision_detection_status = AOD.WAITING_FOR_FIRST_MEASUREMENT
+        self.sonar_detection_status = AOD.WAITING_FOR_FIRST_MEASUREMENT
 
         self.update_detection_indicators()
 
@@ -69,15 +68,14 @@ class ObstacleDetectionObserverApp(QWidget):
             self.agribot_obstacle_detection_slot)
         self.update_sonar_detection_signal.connect(self.sonar_detection_slot)
 
-        self.agribot_obstacle_detection_sub = rospy.Subscriber(
-            '/agribot/obstacle_detected',
-            AgribotObstacleDetection,
-            self.agribot_obstacle_detection_cb,
-            queue_size=1)
-        self.sonar_detection_sub = rospy.Subscriber('/agribot/sonar_detection',
-                                                    SonarDetection,
-                                                    self.sonar_detection_cb,
-                                                    queue_size=1)
+        rospy.Subscriber('/agribot/obstacle_detected',
+                         AOD,
+                         self.agribot_obstacle_detection_cb,
+                         queue_size=1)
+        rospy.Subscriber('/agribot/sonar_detection',
+                         SonarDetection,
+                         self.sonar_detection_cb,
+                         queue_size=1)
 
     def agribot_obstacle_detection_cb(self, msg):
         self.update_agribot_detection_signal.emit(msg)
@@ -143,7 +141,7 @@ class ObstacleDetectionObserverApp(QWidget):
                                 [self.sonar16_label, self.sonar16_indicator]]
 
         for sonar_pair in self.sonars_vis_list:
-            label, indicator = sonar_pair
+            _label, indicator = sonar_pair
             scene = QGraphicsScene()
             indicator.setScene(scene)
             scene.clear()
@@ -153,7 +151,7 @@ class ObstacleDetectionObserverApp(QWidget):
         # Set visible indicators
         for i in range(0, self.sonars_n):
             sonar = msg.sonars[i]
-            label, indicator, scene = self.sonars_vis_list[i]
+            label, _indicator, scene = self.sonars_vis_list[i]
 
             # Update values
             label.setText(sonar.id)
@@ -161,27 +159,29 @@ class ObstacleDetectionObserverApp(QWidget):
 
         # Set invisible indicators
         for i in range(self.sonars_n, self.max_sonars_n):
-            label, indicator, scene = self.sonars_vis_list[i]
+            label, _indicator, scene = self.sonars_vis_list[i]
 
             label.clear()
             scene.clear()
 
-    def update_indicator(self, indicatorScene, status):
-        if status == AgribotObstacleDetection.WAITING_FOR_FIRST_MEASUREMENT:
+    @staticmethod
+    def update_indicator(indicator_scene, status):
+        if status == AOD.WAITING_FOR_FIRST_MEASUREMENT:
             brush = QBrush(Qt.yellow)
-        elif status == AgribotObstacleDetection.WAITING_FOR_PREDICTED_PATH:
+        elif status == AOD.WAITING_FOR_PREDICTED_PATH:
             brush = QBrush(Qt.magenta)
-        elif status == AgribotObstacleDetection.NO_OBSTACLE:
+        elif status == AOD.NO_OBSTACLE:
             brush = QBrush(Qt.green)
-        elif status == AgribotObstacleDetection.OBSTACLE_DETECTED:
+        elif status == AOD.OBSTACLE_DETECTED:
             brush = QBrush(Qt.red)
         else:
             brush = QBrush(Qt.gray)
 
-        indicatorScene.clear()
-        indicatorScene.addEllipse(15, 15, 30, 30, QPen(), brush)
+        indicator_scene.clear()
+        indicator_scene.addEllipse(15, 15, 30, 30, QPen(), brush)
 
-    def update_sonar_indicator(self, indicatorScene, status):
+    @staticmethod
+    def update_sonar_indicator(indicator_scene, status):
         if status == SonarStatus.WAITING_FOR_FIRST_MEASUREMENT:
             brush = QBrush(Qt.yellow)
         elif status == SonarStatus.NO_OBSTACLE:
@@ -191,8 +191,8 @@ class ObstacleDetectionObserverApp(QWidget):
         else:
             brush = QBrush(Qt.gray)
 
-        indicatorScene.clear()
-        indicatorScene.addEllipse(15, 15, 30, 30, QPen(), brush)
+        indicator_scene.clear()
+        indicator_scene.addEllipse(15, 15, 30, 30, QPen(), brush)
 
 
 def main():
