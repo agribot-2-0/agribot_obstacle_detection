@@ -5,7 +5,7 @@ from sensor_msgs.msg import Range
 import can
 
 
-class SocketcanSonarReader:
+class SocketcanSonarReader(object):
     # Motec CAN ids
     motec_config_id = 0x220
     motec_request_id = 0x240
