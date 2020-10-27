@@ -9,6 +9,8 @@
 #include <agribot_msgs/DetectedObject.h>
 #include <agribot_msgs/VisionDetection.h>
 
+#include <dynamic_reconfigure/server.h>
+
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/point_types.h>
@@ -20,6 +22,7 @@
 #include <vector>
 #include <string>
 
+#include <agribot_obstacle_detection/LidarDetectionConfig.h>
 #include "agribot_obstacle_detection/lidar/cloud_processor.h"
 #include "agribot_obstacle_detection/lidar/object.h"
 #include "agribot_obstacle_detection/lidar/bounding_box.h"
@@ -40,11 +43,17 @@ private:
   // Processing time publisher
   ros::Publisher processingTimePub;
 
-  std::string cloudTargetFrameId;
-
   // TF Buffer and listener
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener;
+
+  // Dynamic reconfigure
+  dynamic_reconfigure::Server<agribot_obstacle_detection::LidarDetectionConfig> dynamicReconfigureServer;
+  dynamic_reconfigure::Server<agribot_obstacle_detection::LidarDetectionConfig>::CallbackType
+      dynamicReconfigureFunction;
+
+  // Target frame id
+  std::string cloudTargetFrameId;
 
   // VoxelGrid filter parameters
   float voxelGridFilterResolution;
@@ -90,8 +99,9 @@ public:
     , obstaclesCloud(new pcl::PointCloud<PointT>)
     , groundPlaneCoefficients(new pcl::ModelCoefficients)
   {
-    // Load detection & node parameters
-    loadParameters();
+    // Set up dynamic reconfigure
+    dynamicReconfigureFunction = boost::bind(&LidarObstacleDetectionNode::dynamicReconfigureCallback, this, _1, _2);
+    dynamicReconfigureServer.setCallback(dynamicReconfigureFunction);
 
     visionDetectionPub = nh->advertise<agribot_msgs::VisionDetection>("vision_detection", 1, true);
 
@@ -243,37 +253,20 @@ public:
     ros::spin();
   }
 
-  void loadParameters()
+  void dynamicReconfigureCallback(agribot_obstacle_detection::LidarDetectionConfig& config, uint32_t level)
   {
-    // Load node parameters
-    // Frame and topics parameters
-    nh->getParam("cloud_target_frame_id", cloudTargetFrameId);
+    cloudTargetFrameId = config.cloud_target_frame_id;
 
-    // Obstacle detection parameters
-    nh->param<float>("distance_filter_distance_threshold", distanceFilterDistanceThreshold, 10.0);
-    nh->param<float>("voxel_grid_filter_resolution", voxelGridFilterResolution, 0.15);
+    distanceFilterDistanceThreshold = config.distance_filter_distance_threshold;
+    voxelGridFilterResolution = config.voxel_grid_filter_resolution;
 
-    nh->param<int>("segmentation_max_iterations", segmentationMaxIterations, 300);
-    nh->param<float>("segmentation_distance_threshold", segmentationDistanceThreshold, 0.15);
-    nh->param<bool>("segmentation_use_passthrough_filter", segmentationUsePassthroughFilter, true);
-    nh->param<float>("segmentation_passthrough_filter_cutoff_ratio", segmentationPassthroughtFilterCutoffRatio, 0.1);
+    segmentationMaxIterations = config.segmentation_max_iterations;
+    segmentationDistanceThreshold = config.segmentation_distance_threshold;
+    segmentationUsePassthroughFilter = config.segmentation_use_passthrough_filter;
+    segmentationPassthroughtFilterCutoffRatio = config.segmentation_passthrough_filter_cutoff_ratio;
 
-    nh->param<float>("clustering_cluster_tolerance", clusteringClusterTolerance, 0.2);
-    nh->param<int>("clustering_min_cluster_size", clusteringMinClusterSize, 5);
-    nh->param<int>("clustering_max_cluster_size", clusteringMaxClusterSize, 10000);
-
-    ROS_INFO_STREAM("[Lidar Obstacle Detection] Starting Lidar Obstacle Detection with parameters:\n\n"
-                    << "### Distance threshold Filter ###" << std::endl
-                    << "- Distance threshold = " << distanceFilterDistanceThreshold << "\n\n### Voxel Grid Filter ###"
-                    << std::endl
-                    << "- Resolution = " << voxelGridFilterResolution << "\n\n### Segmentation ###" << std::endl
-                    << "- Max Iterations = " << segmentationMaxIterations << std::endl
-                    << "- Distance Threshold = " << segmentationDistanceThreshold << std::endl
-                    << "- Use Passthrough Filter = " << segmentationUsePassthroughFilter << std::endl
-                    << "- Passthrough Filter Cutoff Ratio = " << segmentationPassthroughtFilterCutoffRatio
-                    << "\n\n### Clustering ###" << std::endl
-                    << "- Cluster Tolerance = " << clusteringClusterTolerance << std::endl
-                    << "- Min Cluster Size = " << clusteringMinClusterSize << std::endl
-                    << "- Max Cluster Size = " << clusteringMaxClusterSize << std::endl);
+    clusteringClusterTolerance = config.clustering_cluster_tolerance;
+    clusteringMinClusterSize = config.clustering_min_cluster_size;
+    clusteringMaxClusterSize = config.clustering_max_cluster_size;
   }
 };

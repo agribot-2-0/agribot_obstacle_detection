@@ -6,9 +6,6 @@
   <!-- Obstacle detection node -->
   <node pkg="agribot_obstacle_detection" type="lidar_obstacle_detection_node" name="lidar_obstacle_detection_node" output="screen" launch-prefix="">
     
-    <!-- Load detection parameters -->
-    <rosparam command="load" file="$(find agribot_obstacle_detection)/param/lidar_detection.yaml"/>
-
     <remap from="~input_cloud"                to="$(arg pointcloud_topic)"/>
     <remap from="~ground_cloud"               to="$(arg pointcloud_topic)/ground"/>
     <remap from="~obstacles_cloud"            to="$(arg pointcloud_topic)/obstacles"/>
