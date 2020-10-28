@@ -10,6 +10,7 @@
 #include <agribot_msgs/VisionDetection.h>
 
 #include <dynamic_reconfigure/server.h>
+#include <agribot_obstacle_detection/LidarDetectionConfig.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
@@ -22,7 +23,6 @@
 #include <vector>
 #include <string>
 
-#include <agribot_obstacle_detection/LidarDetectionConfig.h>
 #include "agribot_obstacle_detection/lidar/cloud_processor.h"
 #include "agribot_obstacle_detection/lidar/object.h"
 #include "agribot_obstacle_detection/lidar/bounding_box.h"
@@ -253,7 +253,7 @@ public:
     ros::spin();
   }
 
-  void dynamicReconfigureCallback(agribot_obstacle_detection::LidarDetectionConfig& config, uint32_t level)
+  void dynamicReconfigureCallback(const agribot_obstacle_detection::LidarDetectionConfig& config, uint32_t level)
   {
     cloudTargetFrameId = config.cloud_target_frame_id;
 
