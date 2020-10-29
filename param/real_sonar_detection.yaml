@@ -1,0 +1,37 @@
+# Front bumper sonars
+sonar0: bumper_front_sonar_left_side_rear
+sonar0_topic: /bumper/front/sonar/left_side/rear
+sonar0_threshold: 2.9
+sonar0_history_length: 5
+
+sonar1: bumper_front_sonar_left_side_front
+sonar1_topic: /bumper/front/sonar/left_side/front
+sonar1_threshold: 2.9
+sonar1_history_length: 5
+
+
+sonar2: bumper_front_sonar_left
+sonar2_topic: /bumper/front/sonar/left
+sonar2_threshold: 2.9
+sonar2_history_length: 5
+
+sonar3: bumper_front_sonar_center
+sonar3_topic: /bumper/front/sonar/center
+sonar3_threshold: 2.9
+sonar3_history_length: 5
+
+sonar4: bumper_front_sonar_right
+sonar4_topic: /bumper/front/sonar/right
+sonar4_threshold: 2.9
+sonar4_history_length: 5
+
+
+sonar5: bumper_front_sonar_right_side_front
+sonar5_topic: /bumper/front/sonar/right_side/front
+sonar5_threshold: 2.9
+sonar5_history_length: 5
+
+sonar6: bumper_front_sonar_right_side_rear
+sonar6_topic: /bumper/front/sonar/right_side/rear
+sonar6_threshold: 2.9
+sonar6_history_length: 5

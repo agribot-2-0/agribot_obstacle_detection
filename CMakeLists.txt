@@ -4,23 +4,28 @@ add_compile_options(-std=c++17)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  agribot_msgs
+  dynamic_reconfigure
+  nav_msgs
+  pcl_conversions
+  pcl_ros
   roscpp
   rviz_visual_tools
-  pcl_ros
-  pcl_conversions
   sensor_msgs
-  agribot_msgs
-  tf2_ros
   tf2_geometry_msgs
-  nav_msgs
+  tf2_ros
 )
 
 find_package(Eigen3 REQUIRED)
 
+generate_dynamic_reconfigure_options(
+  cfg/LidarDetection.cfg
+)
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES agribot_obstacle_detection
-#  CATKIN_DEPENDS roscpp std_msgs
+ CATKIN_DEPENDS nav_msgs roscpp
 #  DEPENDS system_lib
 )
 
@@ -30,12 +35,7 @@ catkin_package(
 
 include_directories(
   include
-  include/agribot_obstacle_detection
-  tools
   ${catkin_INCLUDE_DIRS}
-)
-
-link_directories(
 )
 
 # Lidar Obstacle Detection Node
@@ -46,7 +46,7 @@ add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection
                                               include/agribot_obstacle_detection/lidar/bounding_box.h
                                               )
 target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})
-add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 
 # Sonar Obstacle Detection Node

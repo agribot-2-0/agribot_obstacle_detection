@@ -8,7 +8,9 @@
 #include <pcl/common/common.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/passthrough.h>
 #include <pcl/search/kdtree.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 
@@ -91,6 +93,73 @@ public:
     ROS_DEBUG_STREAM("Plane segmentation took " << elapsedTime.count() << " milliseconds");
   }
 
+  void planeSegmentationWithCutoff(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+                                   typename pcl::PointCloud<PointT>::Ptr planeCloud,
+                                   typename pcl::PointCloud<PointT>::Ptr objectsCloud,
+                                   pcl::ModelCoefficients::Ptr coefficients, int maxIterations, float distanceThreshold,
+                                   float cutoffRatio)
+  {
+    auto startTime = std::chrono::steady_clock::now();
+
+    // Apply passthrough filter to cutoff lower part of cloud before ssegmentation
+    typename pcl::PointCloud<PointT>::Ptr cutoffCloud{ new pcl::PointCloud<PointT> };
+    PointT minPoint, maxPoint;
+    double minZ, maxZ, diffZ;
+
+    // Compute minimal and maximal Z in pointcloud
+    // Get only lower (100*cutoffRatio)% of pointcloud, but at least 0.1 [m]
+    pcl::getMinMax3D(*inputCloud, minPoint, maxPoint);
+    minZ = minPoint.z;
+    maxZ = maxPoint.z;
+
+    diffZ = cutoffRatio * (maxZ - minZ);
+    if (diffZ < 0.1)
+    {
+      diffZ = 0.1;
+    }
+
+    pcl::PassThrough<PointT> pass;
+    pass.setInputCloud(inputCloud);
+    pass.setFilterFieldName("z");
+    pass.setFilterLimits(minZ, minZ + diffZ);
+    pass.filter(*cutoffCloud);
+
+    // Prepare segmentation object
+    pcl::SACSegmentation<PointT> seg;
+    pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
+
+    seg.setInputCloud(cutoffCloud);
+    seg.setOptimizeCoefficients(true);
+    seg.setModelType(pcl::SACMODEL_PLANE);
+    seg.setMethodType(pcl::SAC_RANSAC);
+    seg.setDistanceThreshold(distanceThreshold);
+
+    if (maxIterations != 0)
+    {
+      seg.setMaxIterations(maxIterations);
+    }
+
+    // Do segmentation
+    seg.segment(*inliers, *coefficients);
+
+    if (inliers->indices.size() == 0)
+    {
+      // Plane not detected
+      ROS_WARN_STREAM("Could not estimate plane for given dataset.");
+      planeCloud->clear();
+      *objectsCloud = *inputCloud;
+    }
+    else
+    {
+      // Plane detected - extract (from ORIGINAL inputCloud) inliers and outliers into plane and objects
+      extractInliersOutliers(inputCloud, planeCloud, objectsCloud, inliers);
+    }
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    ROS_DEBUG_STREAM("Plane segmentation took " << elapsedTime.count() << " milliseconds");
+  }
+
   std::vector<Object<PointT>> clustering(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
                                          float clusterTolerance, int minClusterSize, int maxClusterSize)
   {
@@ -145,5 +214,43 @@ public:
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     ROS_DEBUG_STREAM("VoxelGridFilter took " << elapsedTime.count() << " milliseconds");
+  }
+
+  void distanceFilter(const typename pcl::PointCloud<PointT>::ConstPtr inputCloud,
+                      typename pcl::PointCloud<PointT>::Ptr filteredCloud, float distanceThreshold)
+  {
+    auto startTime = std::chrono::steady_clock::now();
+
+    // typename pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
+    typename pcl::KdTreeFLANN<PointT>::Ptr tree(new pcl::KdTreeFLANN<PointT>);
+    PointT searchPoint;
+    std::vector<int> pointIdxRadiusSearch;
+    std::vector<float> pointRadiusSquaredDistance;
+
+    tree->setInputCloud(inputCloud);
+    searchPoint.x = 0.0;
+    searchPoint.y = 0.0;
+    searchPoint.z = 0.0;
+
+    if (tree->radiusSearch(searchPoint, distanceThreshold, pointIdxRadiusSearch, pointRadiusSquaredDistance))
+    {
+      filteredCloud->clear();
+      for (const auto index : pointIdxRadiusSearch)
+      {
+        filteredCloud->points.push_back(inputCloud->points[index]);
+      }
+      filteredCloud->width = filteredCloud->points.size();
+      filteredCloud->height = 1;
+      filteredCloud->is_dense = true;
+    }
+    else
+    {
+      // No points to remove
+      *filteredCloud = *inputCloud;
+    }
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    ROS_DEBUG_STREAM("distanceRemovingFilter took " << elapsedTime.count() << " milliseconds");
   }
 };
