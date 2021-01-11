@@ -8,7 +8,7 @@ ObstacleArbiterNode::ObstacleArbiterNode(ros::NodeHandle* _nh)
   : nh(_nh)
   , TFListener(TFBuffer)
   , status(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
-  , sonarStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
+  , sonarStatus(agribot_msgs::AgribotObstacleDetection::NO_OBSTACLE)
   , visionStatus(agribot_msgs::AgribotObstacleDetection::WAITING_FOR_FIRST_MEASUREMENT)
   , visionMsgReceived(false)
 {
