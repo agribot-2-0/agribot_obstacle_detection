@@ -55,14 +55,9 @@ private:
   // Rviz visualization
   rviz_visual_tools::RvizVisualToolsPtr visualTools;
 
-  // Robot size parameters
-  float robotLength;
-  float robotWidth;
-
-  // Offsets increasing size of the robot when creating robot polygon (offset is added on both sides - both on
-  // left+right and front+back)
-  float lengthOffset;
-  float widthOffset;
+  // Safety zone dimensions
+  double safetyZoneLength;
+  double safetyZoneWidth;
 
   std::string pathFrameId;
   std::string visionFrameId;

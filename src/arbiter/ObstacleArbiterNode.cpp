@@ -227,29 +227,26 @@ void ObstacleArbiterNode::updateVisionPolygons(const std::vector<agribot_msgs::D
 
 agribot_msgs::PolygonStamped ObstacleArbiterNode::getRobotPolygon(geometry_msgs::Pose pose) const
 {
-  float a = robotWidth + 2 * widthOffset;
-  float b = robotLength + 2 * lengthOffset;
-
   agribot_msgs::PolygonStamped tempPolygon;
   tempPolygon.header.stamp = ros::Time::now();
   tempPolygon.header.frame_id = "temp_map_1";
 
   // Create polygon based on size constraints
   geometry_msgs::Point polygonVertex;
-  polygonVertex.x = b / 2;
-  polygonVertex.y = a / 2;
+  polygonVertex.x = safetyZoneLength / 2;
+  polygonVertex.y = safetyZoneWidth / 2;
   tempPolygon.polygon.points.push_back(polygonVertex);
 
-  polygonVertex.x = -b / 2;
-  polygonVertex.y = a / 2;
+  polygonVertex.x = -safetyZoneLength / 2;
+  polygonVertex.y = safetyZoneWidth / 2;
   tempPolygon.polygon.points.push_back(polygonVertex);
 
-  polygonVertex.x = -b / 2;
-  polygonVertex.y = -a / 2;
+  polygonVertex.x = -safetyZoneLength / 2;
+  polygonVertex.y = -safetyZoneWidth / 2;
   tempPolygon.polygon.points.push_back(polygonVertex);
 
-  polygonVertex.x = b / 2;
-  polygonVertex.y = -a / 2;
+  polygonVertex.x = safetyZoneLength / 2;
+  polygonVertex.y = -safetyZoneWidth / 2;
   tempPolygon.polygon.points.push_back(polygonVertex);
 
   // Create rotation transform
@@ -372,46 +369,24 @@ void ObstacleArbiterNode::publishDetectionStatus() const
 void ObstacleArbiterNode::loadParameters()
 {
   // Geometrical detection parameters
-  if (nh->hasParam("robot_length"))
+  if (nh->hasParam("/obstacle_arbiter/safety_zone_length"))
   {
-    nh->getParam("robot_length", robotLength);
+    nh->getParam("/obstacle_arbiter/safety_zone_length", safetyZoneLength);
   }
   else
   {
-    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing robot_length parameter. Exiting...");
+    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing /obstacle_arbiter/safety_zone_length parameter. Exiting...");
     nh->shutdown();
     exit(0);
   }
 
-  if (nh->hasParam("robot_width"))
+  if (nh->hasParam("/obstacle_arbiter/safety_zone_width"))
   {
-    nh->getParam("robot_width", robotWidth);
+    nh->getParam("/obstacle_arbiter/safety_zone_width", safetyZoneWidth);
   }
   else
   {
-    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing robot_width parameter. Exiting...");
-    nh->shutdown();
-    exit(0);
-  }
-
-  if (nh->hasParam("length_offset"))
-  {
-    nh->getParam("length_offset", lengthOffset);
-  }
-  else
-  {
-    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing length_offset parameter. Exiting...");
-    nh->shutdown();
-    exit(0);
-  }
-
-  if (nh->hasParam("width_offset"))
-  {
-    nh->getParam("width_offset", widthOffset);
-  }
-  else
-  {
-    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing width_offset parameter. Exiting...");
+    ROS_FATAL_STREAM("[Obstacle Arbiter Node] Missing /obstacle_arbiter/safety_zone_width parameter. Exiting...");
     nh->shutdown();
     exit(0);
   }
