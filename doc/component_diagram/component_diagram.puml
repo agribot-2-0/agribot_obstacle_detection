@@ -2,25 +2,25 @@
 
 ' External interfaces
 ' 3D
-() "/agribot/obstacle_detection/front/3d/lidar/point_cloud \n \
-sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud
+() "**/agribot/obstacle_detection/front/3d/lidar/point_cloud** \n \
+**sensor_msgs/Pointcloud2.msg**" as front_3d_lidar_point_cloud
 
 
-() "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud \n \
-sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud
+() "**/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud** \n \
+**sensor_msgs/Pointcloud2.msg**" as front_3d_stereo_camera_point_cloud
 
 
 ' 2D
-() "/agribot/obstacle_detection/front/2d/camera/rgb/image_rect_color \n \
-visualization_msgs/MarkerArray.msg" as front_2d_camera_rgb_image
-() "/agribot/obstacle_detection/front/2d/camera/rgb/camera_info \n \
-visualization_msgs/MarkerArray.msg" as front_2d_camera_rgb_camera_info
+() "**/agribot/obstacle_detection/front/2d/camera/rgb/image_rect_color** \n \
+**sensor_msgs/Image.msg**" as front_2d_camera_rgb_image
+() "**/agribot/obstacle_detection/front/2d/camera/rgb/camera_info** \n \
+**sensor_msgs/CameraInfo.msg**" as front_2d_camera_rgb_camera_info
 
 ' Arbiter
-() "/move_base/AgribotPlannerROS/local_path \n \
-nav_msgs/Path.msg" as local_path
-() "/agribot/obstacle_detection/front/status \n \
-agribot_msgs/ObstacleDetectionStatus.msg" as front_status
+() "**/move_base/AgribotPlannerROS/local_path** \n \
+**nav_msgs/Path.msg**" as local_path
+() "**/agribot/obstacle_detection/front/status** \n \
+**agribot_msgs/ObstacleDetectionStatus.msg**" as front_status
 
 ' Markers visualization
 () "/agribot/obstacle_detection/front/3d/lidar/objects_markers \n \
@@ -49,18 +49,18 @@ sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_ground
 () "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud/obstacles \n \
 sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_obstacles
 
-() "/agribot/obstacle_detection/front/3d/lidar/objects \n \
-agribot_msgs/Object3DArray.msg" as front_3d_lidar_objects
-() "/agribot/obstacle_detection/front/3d/stereo_camera/objects \n \
-agribot_msgs/Object3DArray.msg" as front_3d_stereo_camera_objects
-() "/agribot/obstacle_detection/front/3d/fused/objects \n \
-agribot_msgs/Object3DArray.msg" as front_3d_fused_objects
-() "/agribot/obstacle_detection/front/objects \n \
-agribot_msgs/Object3DArray.msg" as front_objects
+() "**/agribot/obstacle_detection/front/3d/lidar/objects** \n \
+**agribot_msgs/Object3DArray.msg**" as front_3d_lidar_objects
+() "**/agribot/obstacle_detection/front/3d/stereo_camera/objects** \n \
+**agribot_msgs/Object3DArray.msg**" as front_3d_stereo_camera_objects
+() "**/agribot/obstacle_detection/front/3d/fused/objects** \n \
+**agribot_msgs/Object3DArray.msg**" as front_3d_fused_objects
+() "**/agribot/obstacle_detection/front/objects** \n \
+**agribot_msgs/Object3DArray.msg**" as front_objects
 
 ' 2D
-() "/agribot/obstacle_detection/front/2d/camera/objects \n \
-agribot_msgs/Object2DArray.msg" as front_2d_camera_objects
+() "**/agribot/obstacle_detection/front/2d/camera/objects** \n \
+**agribot_msgs/Object2DArray.msg**" as front_2d_camera_objects
 
 ' Arbiter
 () "/agribot/obstacle_detection/front/polygons \n \
