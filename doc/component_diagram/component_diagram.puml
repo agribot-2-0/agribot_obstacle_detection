@@ -1,0 +1,141 @@
+@startuml agribot_obstacle_detection
+
+' External interfaces
+' 3D
+() "/agribot/obstacle_detection/front/3d/lidar/point_cloud \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud
+
+
+() "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud
+
+
+' 2D
+() "/agribot/obstacle_detection/front/2d/camera/rgb/image_rect_color \n \
+visualization_msgs/MarkerArray.msg" as front_2d_camera_rgb_image
+() "/agribot/obstacle_detection/front/2d/camera/rgb/camera_info \n \
+visualization_msgs/MarkerArray.msg" as front_2d_camera_rgb_camera_info
+
+' Arbiter
+() "/move_base/AgribotPlannerROS/local_path \n \
+nav_msgs/Path.msg" as local_path
+() "/agribot/obstacle_detection/front/status \n \
+agribot_msgs/ObstacleDetectionStatus.msg" as front_status
+
+' Markers visualization
+() "/agribot/obstacle_detection/front/3d/lidar/objects_markers \n \
+visualization_msgs/MarkerArray.msg" as front_3d_lidar_objects_markers
+() "/agribot/obstacle_detection/front/3d/stereo_camera/objects_markers \n \
+visualization_msgs/MarkerArray.msg" as front_3d_stereo_camera_objects_markers
+() "/agribot/obstacle_detection/front/3d/fused/objects_markers \n \
+visualization_msgs/MarkerArray.msg" as front_3d_fused_objects_markers
+() "/agribot/obstacle_detection/front/objects_markers \n \
+visualization_msgs/MarkerArray.msg" as front_objects_markers
+() "/agribot/obstacle_detection/front/polygons_markers \n \
+visualization_msgs/MarkerArray.msg" as front_polygons_markers
+
+
+component AgribotObstacleDetection {
+
+' Internal interfaces
+' 3D
+() "/agribot/obstacle_detection/front/3d/lidar/point_cloud/ground \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud_ground
+() "/agribot/obstacle_detection/front/3d/lidar/point_cloud/obstacles \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud_obstacles
+
+() "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud/ground \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_ground
+() "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud/obstacles \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_obstacles
+
+() "/agribot/obstacle_detection/front/3d/lidar/objects \n \
+agribot_msgs/Object3DArray.msg" as front_3d_lidar_objects
+() "/agribot/obstacle_detection/front/3d/stereo_camera/objects \n \
+agribot_msgs/Object3DArray.msg" as front_3d_stereo_camera_objects
+() "/agribot/obstacle_detection/front/3d/fused/objects \n \
+agribot_msgs/Object3DArray.msg" as front_3d_fused_objects
+() "/agribot/obstacle_detection/front/objects \n \
+agribot_msgs/Object3DArray.msg" as front_objects
+
+' 2D
+() "/agribot/obstacle_detection/front/2d/camera/objects \n \
+agribot_msgs/Object2DArray.msg" as front_2d_camera_objects
+
+' Arbiter
+() "/agribot/obstacle_detection/front/polygons \n \
+agribot_msgs/ObjectPolygonArray.msg" as front_polygons
+
+' Components
+' 3D
+[front_lidar_point_cloud_pipeline]
+[front_stereo_camera_point_cloud_pipeline]
+[point_cloud_late_fusion]
+[point_cloud_rgb_camera_fusion]
+
+' 2D
+[rgb_camera_detection]
+
+' Arbiter
+[obstacles_arbiter]
+
+' Markers visualization
+[rviz_markers_visualization]
+
+
+' "Internal" connections
+' 3D
+front_lidar_point_cloud_pipeline -down--() front_3d_lidar_objects
+front_lidar_point_cloud_pipeline -down-() front_3d_lidar_point_cloud_ground
+front_lidar_point_cloud_pipeline -down-() front_3d_lidar_point_cloud_obstacles
+
+front_stereo_camera_point_cloud_pipeline -down--() front_3d_stereo_camera_objects
+front_stereo_camera_point_cloud_pipeline -down-() front_3d_stereo_camera_point_cloud_ground
+front_stereo_camera_point_cloud_pipeline -down-() front_3d_stereo_camera_point_cloud_obstacles
+
+point_cloud_late_fusion -up-( front_3d_lidar_objects
+point_cloud_late_fusion -up-( front_3d_stereo_camera_objects
+point_cloud_late_fusion -down-() front_3d_fused_objects
+
+point_cloud_rgb_camera_fusion -up-( front_3d_fused_objects
+point_cloud_rgb_camera_fusion -up-( front_2d_camera_objects
+point_cloud_rgb_camera_fusion -down-() front_objects
+
+' 2D
+rgb_camera_detection -down-() front_2d_camera_objects
+
+' Arbiter
+obstacles_arbiter -up-( front_objects
+obstacles_arbiter -down-() front_polygons
+
+' Markers visualization
+rviz_markers_visualization -up-( front_3d_lidar_objects
+rviz_markers_visualization -up-( front_3d_stereo_camera_objects
+rviz_markers_visualization -up-( front_3d_fused_objects
+rviz_markers_visualization -up-( front_objects
+rviz_markers_visualization -up-( front_polygons
+}
+
+' "External" connections
+' 3D
+front_lidar_point_cloud_pipeline -up-( front_3d_lidar_point_cloud
+
+front_stereo_camera_point_cloud_pipeline -up-( front_3d_stereo_camera_point_cloud
+
+point_cloud_rgb_camera_fusion -up------( front_2d_camera_rgb_camera_info
+
+' 2D
+rgb_camera_detection -up----( front_2d_camera_rgb_image
+
+' Arbiter
+obstacles_arbiter -up--------( local_path
+obstacles_arbiter -down---() front_status
+
+' Markers visualization
+rviz_markers_visualization -down-() front_3d_lidar_objects_markers
+rviz_markers_visualization -down-() front_3d_stereo_camera_objects_markers
+rviz_markers_visualization -down-() front_3d_fused_objects_markers
+rviz_markers_visualization -down-() front_objects_markers
+rviz_markers_visualization -down-() front_polygons_markers
+
+@enduml
