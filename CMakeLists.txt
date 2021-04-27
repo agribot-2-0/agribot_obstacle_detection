@@ -19,7 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 
 generate_dynamic_reconfigure_options(
-  cfg/LidarDetection.cfg
+  cfg/LidarPointCloudPipeline.cfg
+  cfg/StereoCameraPointCloudPipeline.cfg
 )
 
 catkin_package(
@@ -82,6 +83,21 @@ target_link_libraries(obstacle_visualization_node ${catkin_LIBRARIES})
 add_dependencies(obstacle_visualization_node ${catkin_EXPORTED_TARGETS})
 
 
+add_executable(lidar_point_cloud_pipeline_node 
+  src/point_cloud_pipeline/lidar_point_cloud_pipeline_node.cpp
+  src/point_cloud_pipeline/PointCloudPipelineNode.cpp
+)
+target_link_libraries(lidar_point_cloud_pipeline_node ${catkin_LIBRARIES})
+add_dependencies(lidar_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
+
+add_executable(stereo_camera_point_cloud_pipeline_node 
+  src/point_cloud_pipeline/stereo_camera_point_cloud_pipeline_node.cpp
+  src/point_cloud_pipeline/PointCloudPipelineNode.cpp
+)
+target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES})
+add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
+
+
 #############
 ## Install ##
 #############
@@ -92,6 +108,8 @@ install(TARGETS
   obstacle_arbiter_node
   sat_test
   obstacle_visualization_node
+  lidar_point_cloud_pipeline_node
+  stereo_camera_point_cloud_pipeline_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

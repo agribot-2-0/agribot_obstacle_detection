@@ -10,7 +10,7 @@
 #include <agribot_msgs/VisionDetection.h>
 
 #include <dynamic_reconfigure/server.h>
-#include <agribot_obstacle_detection/LidarDetectionConfig.h>
+#include <agribot_obstacle_detection/LidarPointCloudPipelineConfig.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
@@ -29,14 +29,14 @@
 
 enum class ClusteringMethod : int
 {
-  // Must match values defined in clustering_method_enum in cfg/LidarDetection.cfg
+  // Must match values defined in clustering_method_enum in cfg/LidarPointCloudPipeline.cfg
   euclidean = 0,
   region_growing = 1
 };
 
 enum class OutlierRemovalMethod : int
 {
-  // Must match values defined in outlier_removal_method_enum in cfg/LidarDetection.cfg
+  // Must match values defined in outlier_removal_method_enum in cfg/LidarPointCloudPipeline.cfg
   none = 0,
   radius = 1,
   statistical = 2
@@ -63,8 +63,8 @@ private:
   tf2_ros::TransformListener tfListener;
 
   // Dynamic reconfigure
-  dynamic_reconfigure::Server<agribot_obstacle_detection::LidarDetectionConfig> dynamicReconfigureServer;
-  dynamic_reconfigure::Server<agribot_obstacle_detection::LidarDetectionConfig>::CallbackType
+  dynamic_reconfigure::Server<agribot_obstacle_detection::LidarPointCloudPipelineConfig> dynamicReconfigureServer;
+  dynamic_reconfigure::Server<agribot_obstacle_detection::LidarPointCloudPipelineConfig>::CallbackType
       dynamicReconfigureFunction;
 
   // Target frame id
@@ -318,7 +318,7 @@ public:
     ros::spin();
   }
 
-  void dynamicReconfigureCallback(const agribot_obstacle_detection::LidarDetectionConfig& config, uint32_t level)
+  void dynamicReconfigureCallback(const agribot_obstacle_detection::LidarPointCloudPipelineConfig& config, uint32_t level)
   {
     cloudTargetFrameId = config.cloud_target_frame_id;
 
