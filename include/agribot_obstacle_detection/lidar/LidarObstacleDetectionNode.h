@@ -318,9 +318,10 @@ public:
     ros::spin();
   }
 
-  void dynamicReconfigureCallback(const agribot_obstacle_detection::LidarPointCloudPipelineConfig& config, uint32_t level)
+  void dynamicReconfigureCallback(const agribot_obstacle_detection::LidarPointCloudPipelineConfig& config,
+                                  uint32_t level)
   {
-    cloudTargetFrameId = config.cloud_target_frame_id;
+    cloudTargetFrameId = config.objects_target_frame_id;
 
     // VoxelGrid filter
     use_vgf_ = config.use_vgf;
@@ -334,8 +335,8 @@ public:
     sor_neighbours_n_ = config.sor_neighbours_n;
     sor_stddev_mul_ = config.sor_stddev_mul;
 
-    segmentationMaxIterations = config.seg_iterations;
-    segmentationDistanceThreshold = config.seg_distance_threshold;
+    segmentationMaxIterations = config.segmentation_iterations_n;
+    segmentationDistanceThreshold = config.segmentation_distance_threshold;
 
     clusteringMethod = static_cast<ClusteringMethod>(config.clustering_method);
     clusteringMinClusterSize = config.clustering_min_cluster_size;
@@ -348,7 +349,7 @@ public:
     rgc_smoothness_angle_threshold_ = config.rgc_smoothness_angle_threshold;
     rgc_curvature_threshold_ = config.rgc_curvature_threshold;
 
-    vis_publish_ground_cloud_ = config.vis_publish_ground_cloud;
-    vis_publish_obstacles_cloud_ = config.vis_publish_obstacles_cloud;
+    vis_publish_ground_cloud_ = config.vis_publish_ground_point_cloud;
+    vis_publish_obstacles_cloud_ = config.vis_publish_objects_point_cloud;
   }
 };

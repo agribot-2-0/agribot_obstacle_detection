@@ -6,12 +6,12 @@
 
 #include <string>
 
-enum class ClusteringMethod : int
-{
-  // Must match values defined in clustering_method_enum in cfg/LidarPointCloudPipeline.cfg
-  euclidean = 0,
-  region_growing = 1
-};
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/EuclideanClusteringConfig.h"
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RadiusOutlierRemovalConfig.h"
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RansacPlaneSegmentationConfig.h"
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RegionGrowingClusteringConfig.h"
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/StatisticalOutlierRemovalConfig.h"
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/VoxelGridFilterConfig.h"
 
 enum class OutlierRemovalMethod : int
 {
@@ -21,41 +21,29 @@ enum class OutlierRemovalMethod : int
   statistical = 2
 };
 
+enum class ClusteringMethod : int
+{
+  // Must match values defined in clustering_method_enum in cfg/LidarPointCloudPipeline.cfg
+  euclidean = 0,
+  region_growing = 1
+};
+
 struct PointCloudPipelineConfig
 {
-  // frame_id to which objects are transformed before publication
-  std::string objects_target_frame_id_;
-
   // VoxelGrid filtering
   bool use_vgf_;
-  float vgf_resolution_;
-  float vgf_min_x_distance_;
-  float vgf_max_x_distance_;
+  VoxelGridFilterConfig vgf_config_;
 
   // Outlier removal filtering
   OutlierRemovalMethod outlier_removal_method_;
-  // Radius outlier removal
-  int ror_neighbours_n_;
-  float ror_radius_;
-  // Statistical outlier removal
-  int sor_neighbours_n_;
-  float sor_stddev_mul_;
+  RadiusOutlierRemovalConfig ror_config_;
+  StatisticalOutlierRemovalConfig sor_config_;
 
   // Ground segmentation
-  int segmentation_max_iterations_n_;
-  float segmentation_distance_threshold_;
+  RansacPlaneSegmentationConfig seg_config_;
 
   // Clustering parameters
   ClusteringMethod clustering_method_;
-  int clustering_min_cluster_size_;
-  int clustering_max_cluster_size_;
-  float ec_cluster_tolerance_;
-  float rgc_neighbours_n_;
-  float rgc_smoothness_angle_threshold_;
-  float rgc_curvature_threshold_;
-  float rgc_normal_estimation_neighbours_n_;
-
-  // Debug
-  bool debug_publish_ground_cloud_;
-  bool debug_publish_obstacles_cloud_;
+  EuclideanClusteringConfig ec_config_;
+  RegionGrowingClusteringConfig rgc_config_;
 };

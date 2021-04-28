@@ -8,11 +8,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
-struct StatisticalOutlierRemovalConfig
-{
-  int neighbours_n_;
-  float stddev_mul_;
-};
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/StatisticalOutlierRemovalConfig.h"
 
 template <typename PointT>
 void statisticalOutlierRemoval(const typename pcl::PointCloud<PointT>::ConstPtr input_cloud,

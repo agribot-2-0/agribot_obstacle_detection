@@ -4,20 +4,17 @@
 
 #pragma once
 
+#include <vector>
+
 #include <pcl_ros/point_cloud.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-struct EuclideanClusteringConfig
-{
-  float cluster_tolerance_;
-  int min_cluster_size_;
-  int max_cluster_size_;
-};
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/EuclideanClusteringConfig.h"
 
 template <typename PointT>
-std::vector<pcl::PointCloud<PointT>> euclideanClustering(const typename pcl::PointCloud<PointT>::ConstPtr input_cloud,
-                                                         const EuclideanClusteringConfig& config)
+std::vector<typename pcl::PointCloud<PointT>::Ptr> euclideanClustering(
+    const typename pcl::PointCloud<PointT>::ConstPtr input_cloud, const EuclideanClusteringConfig& config)
 {
   typename pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
   pcl::EuclideanClusterExtraction<PointT> ec;
@@ -34,7 +31,7 @@ std::vector<pcl::PointCloud<PointT>> euclideanClustering(const typename pcl::Poi
   pcl::ExtractIndices<PointT> extract_indices;
   extract_indices.setInputCloud(input_cloud);
 
-  std::vector<pcl::PointCloud<PointT>> clusters;
+  std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
   for (const auto& it : cluster_indices)
   {

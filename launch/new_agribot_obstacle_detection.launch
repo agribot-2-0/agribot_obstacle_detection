@@ -1,0 +1,30 @@
+<launch>
+  <!-- Lidar arguments -->
+  <arg name="lidar_point_cloud_topic"                   default="front/3d/lidar/point_cloud"/>
+  <arg name="lidar_objects_topic"                       default="front/3d/lidar/objects"/>
+  <arg name="lidar_processing_time_topic"               default="front/3d/lidar/processing_time"/>
+
+  <!-- Stereo camera arguments -->
+  <arg name="stereo_camera_point_cloud_topic"           default="front/3d/stereo_camera/point_cloud"/>
+  <arg name="stereo_camera_objects_topic"               default="front/3d/stereo_camera/objects"/>
+  <arg name="stereo_camera_processing_time_topic"       default="front/3d/stereo_camera/processing_time"/>
+
+  <!-- Lidar pipeline node -->
+  <node pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
+    <remap from="~input_point_cloud"                    to="$(arg lidar_point_cloud_topic)"/>
+    <remap from="~ground_point_cloud"                   to="$(arg lidar_point_cloud_topic)/ground"/>
+    <remap from="~objects_point_cloud"                to="$(arg lidar_point_cloud_topic)/objects"/>
+    <remap from="~objects"                              to="$(arg lidar_objects_topic)"/>
+    <remap from="~processing_time"                      to="$(arg lidar_processing_time_topic)"/>
+  </node>
+
+  <!-- Stereo camera pipeline node -->
+  <node pkg="agribot_obstacle_detection" type="stereo_camera_point_cloud_pipeline_node" name="stereo_camera_point_cloud_pipeline_node" output="screen" launch-prefix="">
+    <remap from="~input_point_cloud"                    to="$(arg stereo_camera_point_cloud_topic)"/>
+    <remap from="~ground_point_cloud"                   to="$(arg stereo_camera_point_cloud_topic)/ground"/>
+    <remap from="~objects_point_cloud"                to="$(arg stereo_camera_point_cloud_topic)/objects"/>
+    <remap from="~objects"                              to="$(arg stereo_camera_objects_topic)"/>
+    <remap from="~processing_time"                      to="$(arg stereo_camera_processing_time_topic)"/>
+  </node>
+
+</launch>

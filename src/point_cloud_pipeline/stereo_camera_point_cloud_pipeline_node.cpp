@@ -12,6 +12,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "stereo_camera_point_cloud_pipeline_node");
   ros::NodeHandle nh("~");
-  PointCloudPipelineNode<pcl::PointXYZI, agribot_obstacle_detection::StereoCameraPointCloudPipelineConfig> pcpn(&nh);
+  std::string log_tag = "[StereoCameraPointCloudPipelineNode] ";
+  PointCloudPipelineNode<pcl::PointXYZI, agribot_obstacle_detection::StereoCameraPointCloudPipelineConfig> pcpn(
+      &nh, log_tag);
   pcpn.run();
 }

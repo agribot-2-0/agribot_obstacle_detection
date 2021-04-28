@@ -41,13 +41,13 @@ component AgribotObstacleDetection {
 ' 3D
 () "/agribot/obstacle_detection/front/3d/lidar/point_cloud/ground \n \
 sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud_ground
-() "/agribot/obstacle_detection/front/3d/lidar/point_cloud/obstacles \n \
-sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud_obstacles
+() "/agribot/obstacle_detection/front/3d/lidar/point_cloud/objects \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_lidar_point_cloud_objects
 
 () "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud/ground \n \
 sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_ground
-() "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud/obstacles \n \
-sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_obstacles
+() "/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud/objects \n \
+sensor_msgs/Pointcloud2.msg" as front_3d_stereo_camera_point_cloud_objects
 
 () "**/agribot/obstacle_detection/front/3d/lidar/objects** \n \
 **agribot_msgs/Object3DArray.msg**" as front_3d_lidar_objects
@@ -89,11 +89,11 @@ agribot_msgs/ObjectPolygonArray.msg" as front_polygons
 ' 3D
 front_lidar_point_cloud_pipeline -down--() front_3d_lidar_objects
 front_lidar_point_cloud_pipeline -down-() front_3d_lidar_point_cloud_ground
-front_lidar_point_cloud_pipeline -down-() front_3d_lidar_point_cloud_obstacles
+front_lidar_point_cloud_pipeline -down-() front_3d_lidar_point_cloud_objects
 
 front_stereo_camera_point_cloud_pipeline -down--() front_3d_stereo_camera_objects
 front_stereo_camera_point_cloud_pipeline -down-() front_3d_stereo_camera_point_cloud_ground
-front_stereo_camera_point_cloud_pipeline -down-() front_3d_stereo_camera_point_cloud_obstacles
+front_stereo_camera_point_cloud_pipeline -down-() front_3d_stereo_camera_point_cloud_objects
 
 point_cloud_late_fusion -up-( front_3d_lidar_objects
 point_cloud_late_fusion -up-( front_3d_stereo_camera_objects

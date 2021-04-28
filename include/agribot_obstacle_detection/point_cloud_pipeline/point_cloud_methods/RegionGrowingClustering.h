@@ -4,23 +4,17 @@
 
 #pragma once
 
+#include <vector>
+
 #include <pcl_ros/point_cloud.h>
 #include <pcl/segmentation/region_growing.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/features/normal_3d.h>
 
-struct RegionGrowingClusteringConfig
-{
-  int normal_estimation_neighbours_n_;
-  int neighbours_n_;
-  float smoothness_angle_threshold_;
-  float curvature_threshold_;
-  int min_cluster_size_;
-  int max_cluster_size_;
-};
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RegionGrowingClusteringConfig.h"
 
 template <typename PointT>
-std::vector<pcl::PointCloud<PointT>> regionGrowingClustering(
+std::vector<typename pcl::PointCloud<PointT>::Ptr> regionGrowingClustering(
     const typename pcl::PointCloud<PointT>::ConstPtr input_cloud, const RegionGrowingClusteringConfig& config)
 {
   typename pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
@@ -55,7 +49,7 @@ std::vector<pcl::PointCloud<PointT>> regionGrowingClustering(
   pcl::ExtractIndices<PointT> extract_indices;
   extract_indices.setInputCloud(input_cloud);
 
-  std::vector<pcl::PointCloud<PointT>> clusters;
+  std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
   for (const auto& it : cluster_indices)
   {
     typename pcl::PointCloud<PointT>::Ptr cluster(new pcl::PointCloud<PointT>);

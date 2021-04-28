@@ -7,11 +7,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl/filters/radius_outlier_removal.h>
 
-struct RadiusOutlierRemovalConfig
-{
-  int neighbours_n_;
-  float radius_;
-};
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RadiusOutlierRemovalConfig.h"
 
 template <typename PointT>
 void radiusOutlierRemoval(const typename pcl::PointCloud<PointT>::ConstPtr input_cloud,

@@ -8,12 +8,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/HelperMethods.h"
-
-struct RansacPlaneSegmentationConfig
-{
-  int max_iterations_n;
-  float distance_threshold_;
-};
+#include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RansacPlaneSegmentationConfig.h"
 
 template <typename PointT>
 void ransacPlaneSegmentation(const typename pcl::PointCloud<PointT>::ConstPtr input_cloud,
@@ -49,6 +44,6 @@ void ransacPlaneSegmentation(const typename pcl::PointCloud<PointT>::ConstPtr in
   else
   {
     // Plane detected - extract inliers and outliers into clouds
-    extractInliersOutliers(input_cloud, plane_cloud, objects_cloud, inliers);
+    extractInliersOutliers<PointT>(input_cloud, plane_cloud, objects_cloud, inliers);
   }
 }

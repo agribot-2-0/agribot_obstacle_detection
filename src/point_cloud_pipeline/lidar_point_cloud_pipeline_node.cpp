@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "lidar_point_cloud_pipeline_node");
   ros::NodeHandle nh("~");
-  PointCloudPipelineNode<pcl::PointXYZI, agribot_obstacle_detection::LidarPointCloudPipelineConfig> pcpn(&nh);
+  std::string log_tag = "[LidarPointCloudPipelineNode] ";
+  PointCloudPipelineNode<pcl::PointXYZI, agribot_obstacle_detection::LidarPointCloudPipelineConfig> pcpn(&nh, log_tag);
   pcpn.run();
 }
