@@ -87,6 +87,7 @@ add_executable(lidar_point_cloud_pipeline_node
   src/point_cloud_pipeline/lidar_point_cloud_pipeline_node.cpp
   src/point_cloud_pipeline/PointCloudPipelineNode.cpp
   src/util/ProcessingTimer.cpp
+  src/util/ObjectConversions.cpp
 )
 target_link_libraries(lidar_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(lidar_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
@@ -95,6 +96,7 @@ add_executable(stereo_camera_point_cloud_pipeline_node
   src/point_cloud_pipeline/stereo_camera_point_cloud_pipeline_node.cpp
   src/point_cloud_pipeline/PointCloudPipelineNode.cpp
   src/util/ProcessingTimer.cpp
+  src/util/ObjectConversions.cpp
 )
 target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})

@@ -19,8 +19,8 @@ public:
   void start();
   // void checkpoint();
   void stop();
-  double get_final_elapsed_time_s();
-  double get_final_elapsed_time_ms();
+  double get_final_elapsed_time_s() const;
+  double get_final_elapsed_time_ms() const;
 
   static double microseconds_to_seconds(int64_t time_us);
   static double microseconds_to_miliseconds(int64_t time_us);

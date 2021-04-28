@@ -23,6 +23,7 @@
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/RegionGrowingClustering.h"
 
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
+#include "agribot_obstacle_detection/util/ObjectConversions.h"
 
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
@@ -33,7 +34,7 @@ class PointCloudPipelineNode
 private:
   PointCloudPipelineNodeConfig node_config_;
   PointCloudPipeline<PointT> pipeline_;
-  agribot_msgs::Object3DArray objects_;
+  agribot_msgs::Object3DArray object_array_;
 
   ros::NodeHandle* nh_;
 
@@ -77,8 +78,6 @@ PointCloudPipelineNode<PointT, DynamicReconfigureT>::PointCloudPipelineNode(ros:
 
   // Initialize publishers and subscribers
   objects_pub_ = nh->advertise<agribot_msgs::Object3DArray>("objects", 1, true);
-  // ground_point_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("ground_point_cloud", 1, false);
-  // objects_point_cloud_pub_ = nh->advertise<sensor_msgs::PointCloud2>("obstacles_point_cloud", 1, false);
   ground_point_cloud_pub_ = nh->advertise<pcl::PointCloud<PointT>>("ground_point_cloud", 1, false);
   objects_point_cloud_pub_ = nh->advertise<pcl::PointCloud<PointT>>("objects_point_cloud", 1, false);
 
@@ -96,21 +95,37 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
   // TODO(olek) - If config not set (nullopt?) - return and ros_warn_stream
 
   // Clear list of 3D objects
-  objects_.objects.clear();
+  object_array_.objects.clear();
 
   pipeline_.setInputCloud(msg);
   pipeline_.process();
+  // auto objects_clusters_ = pipeline_.getObjectsClusters();
   auto objects_clusters_ = pipeline_.getObjectsClusters();
 
   // Create object for each cluster and push it to Object3DArray
-  for (auto& cluster : objects_clusters_)
+  try
   {
-    // auto object = object3dFromPointCloud<PointT>(*cluster, node_config_.objects_target_frame_id_);
-    // objects_.objects.push_back(object);
+    for (const auto& cluster : objects_clusters_)
+    {
+      auto object = object3dFromPointCloud<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
+      object_array_.objects.push_back(object);
+    }
+  }
+  catch (const tf2::LookupException& e)
+  {
+    ROS_WARN_STREAM(log_tag_ << "Processing pipeline omitted: " << e.what());
+    // TODO(olek) - probably we should propagate this error to the arbiter
+    return;
+  }
+  catch (const tf2::ExtrapolationException& e)
+  {
+    ROS_WARN_STREAM(log_tag_ << "Processing pipeline omitted: " << e.what());
+    // TODO(olek) - probably we should propagate this error to the arbiter
+    return;
   }
 
   // Publish Object3DArray
-  objects_pub_.publish(objects_);
+  objects_pub_.publish(object_array_);
 
   if (node_config_.publish_ground_point_cloud_)
   {

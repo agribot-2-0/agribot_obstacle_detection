@@ -14,13 +14,13 @@ void ProcessingTimer::stop()
   end_time_ = std::chrono::steady_clock::now();
 }
 
-double ProcessingTimer::get_final_elapsed_time_s()
+double ProcessingTimer::get_final_elapsed_time_s() const
 {
   int64_t time_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time_ - start_time_).count();
   return microseconds_to_seconds(time_us);
 }
 
-double ProcessingTimer::get_final_elapsed_time_ms()
+double ProcessingTimer::get_final_elapsed_time_ms() const
 {
   int64_t time_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time_ - start_time_).count();
   return microseconds_to_miliseconds(time_us);
