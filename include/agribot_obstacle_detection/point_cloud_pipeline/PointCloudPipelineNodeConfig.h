@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "agribot_obstacle_detection/point_cloud_pipeline/PointCloudPipelineConfig.h"
 
 struct PointCloudPipelineNodeConfig

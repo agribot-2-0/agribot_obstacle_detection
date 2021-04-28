@@ -8,6 +8,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <pcl_ros/point_cloud.h>
 
+#include <vector>
+
 #include "agribot_obstacle_detection/point_cloud_pipeline/PointCloudPipelineConfig.h"
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/VoxelGridFilter.h"
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/RadiusOutlierRemoval.h"

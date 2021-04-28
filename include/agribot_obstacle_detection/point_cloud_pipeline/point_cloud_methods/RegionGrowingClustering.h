@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include <vector>
-
 #include <pcl_ros/point_cloud.h>
 #include <pcl/segmentation/region_growing.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/features/normal_3d.h>
+
+#include <vector>
 
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RegionGrowingClusteringConfig.h"
 

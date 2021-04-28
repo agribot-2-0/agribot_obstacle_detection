@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <chrono>
+#include <chrono>  // NOLINT [build/c++11]
 
 class ProcessingTimer
 {
@@ -24,5 +24,4 @@ public:
 
   static double microseconds_to_seconds(int64_t time_us);
   static double microseconds_to_miliseconds(int64_t time_us);
-
 };
