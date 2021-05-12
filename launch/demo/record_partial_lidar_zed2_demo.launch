@@ -1,0 +1,12 @@
+<launch>
+	<!-- Record rosbag -->
+	<node pkg="rosbag" type="record" name="demo_rosbag_record" args="record /zed2/zed_node/obj_det/objects /zed2/zed_node/point_cloud/cloud_registered /zed2/zed_node/rgb/image_rect_color /tf /tf_static /bumper/front/lidar -o /home/agribot/demo_bags/bag"/>
+
+	<!-- Launch Lidar and ZED2 camera -->
+	<include file="$(find hal_lidar)/launch/hal_lidar.launch" />
+	<include file="$(find hal_zed2)/launch/zed2.launch" />
+
+	<!-- Static tf publishers -->
+	<node pkg="tf" type="static_transform_publisher" name="ground_lidar_broadcaster" args="0 0 0.748 0 0.122173048 0 base_footprint bumper_front_lidar_link 100" />
+	<node pkg="tf" type="static_transform_publisher" name="ground_zed_broadcaster" args="-0.05 0 0.8071 0 0.122173048 0 base_footprint zed2_camera_base_link 100" />
+</launch>
