@@ -25,4 +25,9 @@
     <arg name="vision_markers_topic" default="$(arg vision_markers_topic)" />
   </include>
 
+  <include file="$(find agribot_obstacle_detection)/launch/obstacle_visualization.launch">
+    <arg name="vision_detection_topic" default="/agribot/vision_detection/zed" />
+    <arg name="vision_markers_topic" default="/agribot/vision_markers/zed" />
+  </include>
+
 </launch>

@@ -27,6 +27,13 @@
 #include "agribot_obstacle_detection/lidar/object.h"
 #include "agribot_obstacle_detection/lidar/bounding_box.h"
 
+enum class ClusteringType : int
+{
+  // Must match values defined in cfg/LidarDetection.cfg
+  euclidean = 0,
+  region_growing = 1
+};
+
 template <typename PointT>
 class LidarObstacleDetectionNode
 {
@@ -59,18 +66,18 @@ private:
   float voxelGridFilterResolution;
 
   // Distance threshold filtering
-  float distanceFilterDistanceThreshold;
+  float distanceFilterMinX;
+  float distanceFilterMaxX;
 
   // Segmentation parameters
   int segmentationMaxIterations;
   float segmentationDistanceThreshold;
-  bool segmentationUsePassthroughFilter;
-  float segmentationPassthroughtFilterCutoffRatio;
 
   // Clustering parameters
   float clusteringClusterTolerance;
   int clusteringMinClusterSize;
   int clusteringMaxClusterSize;
+  ClusteringType clusteringMethod;
 
   // Cloud processor
   CloudProcessor<PointT> processor;
@@ -162,7 +169,8 @@ public:
     // Inform about processing time
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    ROS_DEBUG_STREAM("pointcloudCallback took " << elapsedTime.count() << " milliseconds");
+    ROS_INFO_STREAM("pointcloudCallback took " << elapsedTime.count() << " milliseconds");
+    ROS_INFO_STREAM("");
     std_msgs::Int64 proctime_msg;
     proctime_msg.data = elapsedTime.count();
     processingTimePub.publish(proctime_msg);
@@ -170,12 +178,8 @@ public:
 
   bool processingPipeline(const typename pcl::PointCloud<PointT>::ConstPtr& inputCloud)
   {
-    // Keep only points below given distance from cloud origin
-    processor.distanceFilter(inputCloud, shortRangeCloud, distanceFilterDistanceThreshold);
-    shortRangeCloud->header.frame_id = inputCloud->header.frame_id;
-
-    // Decimate points to obtain pointcloud with smaller number of points
-    processor.voxelGridFilter(shortRangeCloud, downsampledCloud, voxelGridFilterResolution);
+    // Decimate points and cutoff too close or too far points to obtain pointcloud with smaller number of points
+    processor.voxelGridFilter(inputCloud, downsampledCloud, voxelGridFilterResolution, distanceFilterMinX, distanceFilterMaxX);
 
     // Transform Pointcloud to base_footprint (to allow planeSegmentationWithCutoff extract lwoer part of pointcloud)
     geometry_msgs::TransformStamped transform;
@@ -201,21 +205,22 @@ public:
     transformedCloud->header.frame_id = cloudTargetFrameId;
 
     // Plane segmentation
-    if (segmentationUsePassthroughFilter)
-    {
-      processor.planeSegmentationWithCutoff(transformedCloud, planeCloud, obstaclesCloud, groundPlaneCoefficients,
-                                            segmentationMaxIterations, segmentationDistanceThreshold,
-                                            segmentationPassthroughtFilterCutoffRatio);
-    }
-    else
-    {
-      processor.planeSegmentation(transformedCloud, planeCloud, obstaclesCloud, groundPlaneCoefficients,
-                                  segmentationMaxIterations, segmentationDistanceThreshold);
-    }
+    processor.planeSegmentation(transformedCloud, planeCloud, obstaclesCloud, groundPlaneCoefficients,
+                                segmentationMaxIterations, segmentationDistanceThreshold);
 
     // Clustering
-    detectedObjects = processor.clustering(obstaclesCloud, clusteringClusterTolerance, clusteringMinClusterSize,
-                                           clusteringMaxClusterSize);
+    switch(clusteringMethod)
+    {
+      case ClusteringType::euclidean:
+        detectedObjects = processor.euclideanClustering(obstaclesCloud, clusteringClusterTolerance, clusteringMinClusterSize,
+                                                        clusteringMaxClusterSize);
+      break;
+
+      case ClusteringType::region_growing:
+        detectedObjects = processor.regionGrowingClustering(obstaclesCloud, clusteringClusterTolerance, clusteringMinClusterSize,
+                                                            clusteringMaxClusterSize);
+      break;
+    }
 
     return true;
   }
@@ -257,16 +262,18 @@ public:
   {
     cloudTargetFrameId = config.cloud_target_frame_id;
 
-    distanceFilterDistanceThreshold = config.distance_filter_distance_threshold;
+    distanceFilterMinX = config.distance_filter_min_x;
+    distanceFilterMaxX = config.distance_filter_max_x;
     voxelGridFilterResolution = config.voxel_grid_filter_resolution;
 
     segmentationMaxIterations = config.segmentation_max_iterations;
     segmentationDistanceThreshold = config.segmentation_distance_threshold;
-    segmentationUsePassthroughFilter = config.segmentation_use_passthrough_filter;
-    segmentationPassthroughtFilterCutoffRatio = config.segmentation_passthrough_filter_cutoff_ratio;
 
-    clusteringClusterTolerance = config.clustering_cluster_tolerance;
+    clusteringMethod = static_cast<ClusteringType>(config.clustering_method);
+
+    clusteringClusterTolerance = config.ec_cluster_tolerance;
     clusteringMinClusterSize = config.clustering_min_cluster_size;
     clusteringMaxClusterSize = config.clustering_max_cluster_size;
+
   }
 };
