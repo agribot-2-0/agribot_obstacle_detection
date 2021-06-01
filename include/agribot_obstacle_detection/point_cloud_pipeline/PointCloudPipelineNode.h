@@ -160,6 +160,8 @@ template <typename PointT, typename DynamicReconfigureT>
 void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamic_reconfigure_callback(
     const DynamicReconfigureT& dynamic_config, uint32_t level)
 {
+  static_cast<void>(level);  // Suppress unused variable warning
+
   // Get node config
   node_config_.objects_target_frame_id_ = dynamic_config.objects_target_frame_id;
   node_config_.publish_ground_point_cloud_ = dynamic_config.vis_publish_ground_point_cloud;
