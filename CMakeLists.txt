@@ -41,50 +41,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-# Lidar Obstacle Detection Node
-add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection_node.cpp
-                                              include/agribot_obstacle_detection/lidar/LidarObstacleDetectionNode.h
-                                              include/agribot_obstacle_detection/lidar/cloud_processor.h
-                                              include/agribot_obstacle_detection/lidar/object.h
-                                              include/agribot_obstacle_detection/lidar/bounding_box.h
-                                              )
-target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})
-add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-
-
-# Sonar Obstacle Detection Node
-add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection_node.cpp
-                                              src/sonar/SonarObstacleDetectionNode.cpp
-                                              src/sonar/sonar.cpp
-                                              )
-target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
-add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
-
-# Obstacle Arbiter Node
-add_executable(obstacle_arbiter_node  src/arbiter/obstacle_arbiter_node.cpp
-                                      src/arbiter/ObstacleArbiterNode.cpp
-                                      src/arbiter/sat_collision_detection/sat.cpp
-                                      src/arbiter/sat_collision_detection/Projection.cpp
-                                      )
-target_link_libraries(obstacle_arbiter_node ${catkin_LIBRARIES})
-add_dependencies(obstacle_arbiter_node ${catkin_EXPORTED_TARGETS})
-
-# SAT test
-add_executable(sat_test  test/arbiter/sat_test.cpp
-                         src/arbiter/sat_collision_detection/sat.cpp
-                         src/arbiter/sat_collision_detection/Projection.cpp
-                         )
-target_link_libraries(sat_test ${catkin_LIBRARIES})
-add_dependencies(sat_test ${catkin_EXPORTED_TARGETS})
-
-# Obstacle visualization node
-add_executable(obstacle_visualization_node src/visualization/obstacle_visualization_node.cpp
-                                           src/visualization/ObstacleVisualizationNode.cpp
-                                           )
-target_link_libraries(obstacle_visualization_node ${catkin_LIBRARIES})
-add_dependencies(obstacle_visualization_node ${catkin_EXPORTED_TARGETS})
-
-
 add_executable(lidar_point_cloud_pipeline_node 
   src/point_cloud_pipeline/lidar_point_cloud_pipeline_node.cpp
   src/point_cloud_pipeline/PointCloudPipelineNode.cpp
@@ -116,11 +72,6 @@ add_dependencies(object3d_array_visualization_node ${catkin_EXPORTED_TARGETS})
 #############
 
 install(TARGETS
-  lidar_obstacle_detection_node
-  sonar_obstacle_detection_node
-  obstacle_arbiter_node
-  sat_test
-  obstacle_visualization_node
   lidar_point_cloud_pipeline_node
   stereo_camera_point_cloud_pipeline_node
   object3d_array_visualization_node
