@@ -27,6 +27,7 @@ geometry_msgs::Point toGeometryMsgsPoint(PointT p)
   point.x = p.x;
   point.y = p.y;
   point.z = p.z;
+  return point;
 }
 
 template <typename PointT>
