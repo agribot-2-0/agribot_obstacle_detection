@@ -4,6 +4,7 @@ add_compile_options(-std=c++17)
 
 
 find_package(catkin REQUIRED COMPONENTS
+  agribot_common
   agribot_msgs
   dynamic_reconfigure
   nav_msgs
@@ -14,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf2_geometry_msgs
   tf2_ros
+  eigen_conversions
 )
 
 find_package(Eigen3 REQUIRED)
@@ -101,6 +103,13 @@ add_executable(stereo_camera_point_cloud_pipeline_node
 target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
 
+add_executable(object3d_array_visualization_node
+  src/rviz_markers_visualization/object3d_array_visualization_node.cpp
+  src/rviz_markers_visualization/Object3DArrayVisualizationNode.cpp
+)
+target_link_libraries(object3d_array_visualization_node ${catkin_LIBRARIES})
+add_dependencies(object3d_array_visualization_node ${catkin_EXPORTED_TARGETS})
+
 
 #############
 ## Install ##
@@ -114,6 +123,7 @@ install(TARGETS
   obstacle_visualization_node
   lidar_point_cloud_pipeline_node
   stereo_camera_point_cloud_pipeline_node
+  object3d_array_visualization_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
