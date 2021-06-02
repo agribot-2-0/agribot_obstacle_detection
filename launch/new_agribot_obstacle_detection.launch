@@ -37,4 +37,14 @@
     <remap from="~processing_time"                      to="$(arg stereo_camera_processing_time_topic)"/>
   </node>
 
+
+  <!-- rviz_markers_visualization -->
+  <node pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
+    <param name="color"                   value="2"/>
+    <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
+    <param name="marker_namespace"        value="front_lidar"/>
+    <remap from="~object3d_array"         to="$(arg lidar_objects_topic)"/>
+    <remap from="~vision_markers"         to="$(arg lidar_objects_markers_topic)"/>
+  </node>
+
 </launch>
