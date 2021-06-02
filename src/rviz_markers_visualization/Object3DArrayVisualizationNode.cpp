@@ -4,13 +4,11 @@
 
 #include "agribot_obstacle_detection/rviz_markers_visualization/Object3DArrayVisualizationNode.h"
 
-Object3DArrayVisualizationNode::Object3DArrayVisualizationNode(ros::NodeHandle* nh) : nh_(nh)
+Object3DArrayVisualizationNode::Object3DArrayVisualizationNode(ros::NodeHandle* nh)
+  : nh_(nh), target_frame_id_(std::nullopt)
 {
-  target_frame_id_ = ros_common_functions::getRosParam<std::string>("~target_frame_id");
   marker_color_ = static_cast<rviz_visual_tools::colors>(ros_common_functions::getRosParam<int>("~color"));
-  // marker_color_ = ros_common_functions::getRosParam<std::uint8_t>("~color");
   marker_namespace_ = ros_common_functions::getRosParam<std::string>("~marker_namespace");
-  rviz_visual_tools_.reset(new rviz_visual_tools::RvizVisualTools(target_frame_id_, "vision_markers"));
 
   object3d_array_sub_ =
       nh->subscribe("object3d_array", 1, &Object3DArrayVisualizationNode::object3DArrayCallback, this);
@@ -20,17 +18,26 @@ Object3DArrayVisualizationNode::~Object3DArrayVisualizationNode()
 {
 }
 
+void Object3DArrayVisualizationNode::initRvizVisualTools()
+{
+  rviz_visual_tools_.reset(new rviz_visual_tools::RvizVisualTools(*target_frame_id_, "vision_markers"));
+}
+
 void Object3DArrayVisualizationNode::object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
 {
-  if (msg->objects.size() > 0)
+  if (!target_frame_id_)
   {
-    if (msg->objects[0].header.frame_id != target_frame_id_)
+    if (msg->objects.size() > 0)
+    {
+      target_frame_id_ = msg->objects[0].header.frame_id;
+      initRvizVisualTools();
+      ROS_WARN_STREAM("[Object3DArrayVisualizationNode] target_frame_id_ " << *target_frame_id_ << " set");
+    }
+    else
     {
       ROS_WARN_STREAM_THROTTLE(
-          5.0,
-          "[Object3DArrayVisualizationNode] Objects frame id does not match target_frame_id_, transforming objects...");
-
-      // TODO(olek) - transform objects to the target_frame_id_
+          5.0, "[Object3DArrayVisualizationNode] Message contains no objects, target_frame_id_ not set");
+      return;
     }
   }
 
@@ -46,9 +53,18 @@ void Object3DArrayVisualizationNode::updateMarkers(const agribot_msgs::Object3DA
 
   for (const auto& object : msg->objects)
   {
+    // Publish wireframe
     auto pose = getObjectEigenPose(object);
     rviz_visual_tools_->publishWireframeCuboid(pose, object.bbox.size.x, object.bbox.size.y, object.bbox.size.z,
                                                marker_color_, marker_namespace_);
+
+    // Publish text in the "upper left" corner of the wireframe
+    auto text_pose = pose;
+    text_pose.translation()[0] -= object.bbox.size.x / 2.0;
+    text_pose.translation()[1] += object.bbox.size.y / 2.0;
+    text_pose.translation()[2] += object.bbox.size.z / 2.0;
+    auto text = marker_namespace_ + "_" + std::to_string(object.id);
+    rviz_visual_tools_->publishText(text_pose, text, rviz_visual_tools::WHITE, rviz_visual_tools::TEXTSIZE, false);
   }
 
   rviz_visual_tools_->trigger();

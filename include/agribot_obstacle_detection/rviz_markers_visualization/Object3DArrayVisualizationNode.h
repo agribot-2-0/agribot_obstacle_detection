@@ -9,6 +9,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 #include <string>
+#include <optional>
 
 #include "agribot_common/CommonFunctions/ros_common_functions.h"
 #include "agribot_msgs/Object3D.h"
@@ -19,12 +20,12 @@ class Object3DArrayVisualizationNode
 private:
   ros::NodeHandle* nh_;
   ros::Subscriber object3d_array_sub_;
-
-  std::string target_frame_id_;
   std::string marker_namespace_;
   rviz_visual_tools::colors marker_color_;
+  std::optional<std::string> target_frame_id_;
 
   rviz_visual_tools::RvizVisualToolsPtr rviz_visual_tools_;
+  void initRvizVisualTools();
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void updateMarkers(const agribot_msgs::Object3DArray::ConstPtr& msg);
   Eigen::Isometry3d getObjectEigenPose(const agribot_msgs::Object3D& object) const;
@@ -32,5 +33,5 @@ private:
 public:
   explicit Object3DArrayVisualizationNode(ros::NodeHandle* nh);
   ~Object3DArrayVisualizationNode();
-  void run(void) const;
+  void run() const;
 };

@@ -105,9 +105,11 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
   // Create object for each cluster and push it to Object3DArray
   try
   {
+    int id = 0;
     for (const auto& cluster : objects_clusters_)
     {
       auto object = object3dFromPointCloud<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
+      object.id = id++;
       object_array_.objects.push_back(object);
     }
   }
