@@ -1,13 +1,23 @@
 <launch>
   <!-- Lidar arguments -->
-  <arg name="lidar_point_cloud_topic"                   default="front/3d/lidar/point_cloud"/>
-  <arg name="lidar_objects_topic"                       default="front/3d/lidar/objects"/>
-  <arg name="lidar_processing_time_topic"               default="front/3d/lidar/processing_time"/>
+  <arg name="lidar_namespace"                           default="front/3d/lidar"/>
+  <arg name="lidar_point_cloud_topic"                   value="$(arg lidar_namespace)/point_cloud"/>
+  <arg name="lidar_objects_topic"                       value="$(arg lidar_namespace)/objects"/>
+  <arg name="lidar_objects_markers_topic"               value="$(arg lidar_namespace)/objects_markers"/>
+  <arg name="lidar_processing_time_topic"               value="$(arg lidar_namespace)/processing_time"/>
 
   <!-- Stereo camera arguments -->
-  <arg name="stereo_camera_point_cloud_topic"           default="front/3d/stereo_camera/point_cloud"/>
-  <arg name="stereo_camera_objects_topic"               default="front/3d/stereo_camera/objects"/>
-  <arg name="stereo_camera_processing_time_topic"       default="front/3d/stereo_camera/processing_time"/>
+  <arg name="stereo_camera_namespace"                   default="front/3d/stereo_camera"/>
+  <arg name="stereo_camera_point_cloud_topic"           value="$(arg stereo_camera_namespace)/point_cloud"/>
+  <arg name="stereo_camera_objects_topic"               value="$(arg stereo_camera_namespace)/objects"/>
+  <arg name="stereo_camera_objects_markers_topic"       value="$(arg stereo_camera_namespace)/objects_markers"/>
+  <arg name="stereo_camera_processing_time_topic"       value="$(arg stereo_camera_namespace)/processing_time"/>
+
+  <!-- Fused data arguments -->
+  <arg name="3d_fused_namespace"                        default="front/3d/fused"/>
+  <arg name="3d_fused_objects_topic"                    value="$(arg 3d_fused_namespace)/objects"/>
+  <arg name="3d_fused_objects_markers_topic"            value="$(arg 3d_fused_namespace)/objects_markers"/>
+
 
   <!-- Lidar pipeline node -->
   <node pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
