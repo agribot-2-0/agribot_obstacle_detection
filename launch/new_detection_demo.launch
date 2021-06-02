@@ -1,4 +1,10 @@
 <launch>
+  <arg name="zed" default="false" />
+
+  <!-- Launch zed2 if enabled -->
+  <include if="$(arg zed)" file="$(find hal_zed2)/launch/zed2.launch">
+    <remap from="/zed2/zed_node/point_cloud/cloud_registered" to="front/3d/stereo_camera/point_cloud"/>
+  </include>
 
   <!-- Launch Lidar -->
   <include file="$(find hal_lidar)/launch/hal_lidar.launch" />
