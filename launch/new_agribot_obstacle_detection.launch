@@ -1,4 +1,6 @@
 <launch>
+  <arg name="detection_namespace"                       default="agribot/obstacle_detection"/>
+
   <!-- Lidar arguments -->
   <arg name="lidar_namespace"                           default="front/3d/lidar"/>
   <arg name="lidar_point_cloud_topic"                   value="$(arg lidar_namespace)/point_cloud"/>
@@ -20,7 +22,7 @@
 
 
   <!-- Lidar pipeline node -->
-  <node pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
     <remap from="~input_point_cloud"                    to="$(arg lidar_point_cloud_topic)"/>
     <remap from="~ground_point_cloud"                   to="$(arg lidar_point_cloud_topic)/ground"/>
     <remap from="~objects_point_cloud"                  to="$(arg lidar_point_cloud_topic)/objects"/>
@@ -29,7 +31,7 @@
   </node>
 
   <!-- Stereo camera pipeline node -->
-  <node pkg="agribot_obstacle_detection" type="stereo_camera_point_cloud_pipeline_node" name="stereo_camera_point_cloud_pipeline_node" output="screen" launch-prefix="">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="stereo_camera_point_cloud_pipeline_node" name="stereo_camera_point_cloud_pipeline_node" output="screen" launch-prefix="">
     <remap from="~input_point_cloud"                    to="$(arg stereo_camera_point_cloud_topic)"/>
     <remap from="~ground_point_cloud"                   to="$(arg stereo_camera_point_cloud_topic)/ground"/>
     <remap from="~objects_point_cloud"                  to="$(arg stereo_camera_point_cloud_topic)/objects"/>
@@ -39,7 +41,7 @@
 
 
   <!-- rviz_markers_visualization -->
-  <node pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
     <param name="color"                   value="2"/>
     <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
     <param name="marker_namespace"        value="front_lidar"/>
@@ -47,7 +49,7 @@
     <remap from="~vision_markers"         to="$(arg lidar_objects_markers_topic)"/>
   </node>
 
-  <node pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
     <param name="color"                   value="6"/>
     <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
     <param name="marker_namespace"        value="front_stereo_camera"/>
