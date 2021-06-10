@@ -1,6 +1,6 @@
 <launch>
   <!-- Launch new obstacle detection -->
-  <include file="$(find agribot_obstacle_detection)/launch/new_agribot_obstacle_detection.launch" />
+  <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" />
 
   <!-- Launch additional nodes (normally launched by agribot_bringup / hal_bringup -->
   <arg name="zed" default="false" />
