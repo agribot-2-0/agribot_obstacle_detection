@@ -19,6 +19,7 @@
   <arg name="3d_fused_namespace"                        default="front/3d/fused"/>
   <arg name="3d_fused_objects_topic"                    value="$(arg 3d_fused_namespace)/objects"/>
   <arg name="3d_fused_objects_markers_topic"            value="$(arg 3d_fused_namespace)/objects_markers"/>
+  <arg name="3d_fused_processing_time_topic"            value="$(arg stereo_camera_namespace)/processing_time"/>
 
 
   <!-- Lidar pipeline node -->
@@ -40,6 +41,15 @@
   </node>
 
 
+  <!-- Point cloud late fusion node -->
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="point_cloud_late_fusion_node" name="point_cloud_late_fusion_node" output="screen" launch-prefix="">
+    <remap from="~in_1_objects"                         to="$(arg lidar_objects_topic)"/>
+    <remap from="~in_2_objects"                         to="$(arg stereo_camera_objects_topic)"/>
+    <remap from="~out_objects"                          to="$(arg 3d_fused_objects_topic)"/>
+    <remap from="~processing_time"                      to="$(arg 3d_fused_processing_time_topic)"/>
+  </node>
+
+
   <!-- rviz_markers_visualization -->
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
     <param name="color"                   value="2"/>
@@ -56,5 +66,14 @@
     <remap from="~object3d_array"         to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg stereo_camera_objects_markers_topic)"/>
   </node>
+
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
+    <param name="color"                   value="11"/>
+    <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
+    <param name="marker_namespace"        value="front_fused"/>
+    <remap from="~object3d_array"         to="$(arg 3d_fused_objects_topic)"/>
+    <remap from="~vision_markers"         to="$(arg 3d_fused_objects_markers_topic)"/>
+  </node>
+
 
 </launch>
