@@ -3,7 +3,7 @@
   <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" />
 
   <!-- Launch ZED2 -->
-  <remap from="/zed2/zed_node/point_cloud/cloud_registered" to="/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud" />
+  <remap from="/zed2_node/point_cloud/cloud_registered" to="/agribot/obstacle_detection/front/3d/stereo_camera/point_cloud" />
   <include file="$(find hal_zed2)/launch/zed2.launch" />
 
   <!-- Launch Lidar -->
