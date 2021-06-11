@@ -53,7 +53,6 @@
   <!-- rviz_markers_visualization -->
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
     <param name="color"                   value="2"/>
-    <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
     <param name="marker_namespace"        value="front_lidar"/>
     <remap from="~object3d_array"         to="$(arg lidar_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg lidar_objects_markers_topic)"/>
@@ -61,7 +60,6 @@
 
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
     <param name="color"                   value="6"/>
-    <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
     <param name="marker_namespace"        value="front_stereo_camera"/>
     <remap from="~object3d_array"         to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg stereo_camera_objects_markers_topic)"/>
@@ -69,11 +67,9 @@
 
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
     <param name="color"                   value="11"/>
-    <!-- <param name="marker_namespace"        value="front_3d_lidar_objects"/> -->
     <param name="marker_namespace"        value="front_fused"/>
     <remap from="~object3d_array"         to="$(arg 3d_fused_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg 3d_fused_objects_markers_topic)"/>
   </node>
-
 
 </launch>
