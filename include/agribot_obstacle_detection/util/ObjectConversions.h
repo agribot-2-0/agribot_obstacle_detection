@@ -82,7 +82,8 @@ agribot_msgs::Object3D object3dFromPointCloud(typename pcl::PointCloud<PointT>::
   {
     // Transform point_cloud to target frame
     pcl::PointCloud<PointT> temp_cloud;
-    pcl_ros::transformPointCloud(target_frame_id, *point_cloud, temp_cloud, tf_buffer);
+    auto transform = tf_buffer.lookupTransform(target_frame_id, point_cloud->header.frame_id, ros::Time::now());
+    pcl_ros::transformPointCloud(*point_cloud, temp_cloud, transform.transform);
     pcl::toROSMsg(temp_cloud, object.point_cloud);
     object.bbox = boundingBox3dFromPointCloud(temp_cloud);
   }
