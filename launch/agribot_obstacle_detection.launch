@@ -86,7 +86,7 @@
     <remap from="~vision_markers"         to="$(arg 3d_fused_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_final_objects_visualization_node" output="screen">
     <param name="color"                   value="13"/>
     <param name="marker_namespace"        value="front_fused"/>
     <remap from="~object3d_array"         to="$(arg final_objects_topic)"/>
