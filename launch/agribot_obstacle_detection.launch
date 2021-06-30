@@ -21,6 +21,12 @@
   <arg name="3d_fused_objects_markers_topic"            value="$(arg 3d_fused_namespace)/objects_markers"/>
   <arg name="3d_fused_processing_time_topic"            value="$(arg 3d_fused_namespace)/processing_time"/>
 
+  <!-- Fused data arguments -->
+  <arg name="final_namespace"                           default="front"/>
+  <arg name="final_objects_topic"                       value="$(arg final_namespace)/objects"/>
+  <arg name="final_objects_markers_topic"               value="$(arg final_namespace)/objects_markers"/>
+  <arg name="final_processing_time_topic"               value="$(arg final_namespace)/processing_time"/>
+  
 
   <!-- Lidar pipeline node -->
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
@@ -50,6 +56,14 @@
   </node>
 
 
+  <!-- Point cloud RGB camera fusion node -->
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="point_cloud_rgb_camera_fusion_node" name="point_cloud_rgb_camera_fusion_node" output="screen" launch-prefix="">
+    <remap from="~in_3d_objects"                        to="$(arg 3d_fused_objects_topic)"/>
+    <remap from="~out_objects"                          to="$(arg final_objects_topic)"/>
+    <remap from="~processing_time"                      to="$(arg final_processing_time_topic)"/>
+  </node>
+
+
   <!-- rviz_markers_visualization -->
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
     <param name="color"                   value="2"/>
@@ -70,6 +84,13 @@
     <param name="marker_namespace"        value="front_fused"/>
     <remap from="~object3d_array"         to="$(arg 3d_fused_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg 3d_fused_objects_markers_topic)"/>
+  </node>
+
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
+    <param name="color"                   value="13"/>
+    <param name="marker_namespace"        value="front_fused"/>
+    <remap from="~object3d_array"         to="$(arg final_objects_topic)"/>
+    <remap from="~vision_markers"         to="$(arg final_objects_markers_topic)"/>
   </node>
 
 </launch>

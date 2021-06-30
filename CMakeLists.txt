@@ -75,6 +75,14 @@ add_executable(point_cloud_late_fusion_node
 target_link_libraries(point_cloud_late_fusion_node ${catkin_LIBRARIES})
 add_dependencies(point_cloud_late_fusion_node ${catkin_EXPORTED_TARGETS})
 
+add_executable(point_cloud_rgb_camera_fusion_node
+  src/point_cloud_rgb_camera_fusion/point_cloud_rgb_camera_fusion_node.cpp
+  src/point_cloud_rgb_camera_fusion/PointCloudRgbCameraFusionNode.cpp
+  src/util/ProcessingTimer.cpp
+)
+target_link_libraries(point_cloud_rgb_camera_fusion_node ${catkin_LIBRARIES})
+add_dependencies(point_cloud_rgb_camera_fusion_node ${catkin_EXPORTED_TARGETS})
+
 
 #############
 ## Install ##
@@ -85,6 +93,7 @@ install(TARGETS
   stereo_camera_point_cloud_pipeline_node
   object3d_array_visualization_node
   point_cloud_late_fusion_node
+  point_cloud_rgb_camera_fusion_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

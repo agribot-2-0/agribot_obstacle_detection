@@ -7,7 +7,7 @@
 
   <maintainer email="a.bojda@agribot.eu">Aleksander Bojda</maintainer>
   <author email="a.bojda@agribot.eu">Aleksander Bojda</author>
-  <license>TODO</license>
+  <license>Proprietary</license>
 
 
   <buildtool_depend>catkin</buildtool_depend>
