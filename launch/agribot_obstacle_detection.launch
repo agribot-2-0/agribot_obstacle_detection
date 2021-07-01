@@ -26,7 +26,15 @@
   <arg name="final_objects_topic"                       value="$(arg final_namespace)/objects"/>
   <arg name="final_objects_markers_topic"               value="$(arg final_namespace)/objects_markers"/>
   <arg name="final_processing_time_topic"               value="$(arg final_namespace)/processing_time"/>
-  
+
+  <!-- Arbiter data arguments -->
+  <arg name="arbiter_namespace"                         default="front"/>
+  <arg name="path_topic"                                value="/move_base/AgribotPlannerROS/local_path"/>
+  <arg name="arbiter_polygons_topic"                    value="$(arg arbiter_namespace)/polygons"/>
+  <arg name="path_polygons_topic"                       value="$(arg arbiter_namespace)/path_polygons"/>
+  <arg name="objects_polygons_topic"                    value="$(arg arbiter_namespace)/objects_polygons"/>
+  <arg name="arbiter_processing_time_topic"             value="$(arg arbiter_namespace)/processing_time"/>
+
 
   <!-- Lidar pipeline node -->
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
@@ -62,6 +70,18 @@
     <remap from="~out_objects"                          to="$(arg final_objects_topic)"/>
     <remap from="~processing_time"                      to="$(arg final_processing_time_topic)"/>
   </node>
+
+
+  <!-- Obstacles arbiter node -->
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="obstacles_arbiter_node" name="obstacles_arbiter_node" output="screen" launch-prefix="">
+    <remap from="~in_objects"                           to="$(arg final_objects_topic)"/>
+    <remap from="~path"                                 to="$(arg path_topic)"/>
+    <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>
+    <remap from="~path_polygons"                        to="$(arg path_polygons_topic)"/>
+    <remap from="~objects_polygons"                     to="$(arg objects_polygons_topic)"/>
+    <remap from="~processing_time"                      to="$(arg arbiter_processing_time_topic)"/>
+  </node>
+
 
 
   <!-- rviz_markers_visualization -->

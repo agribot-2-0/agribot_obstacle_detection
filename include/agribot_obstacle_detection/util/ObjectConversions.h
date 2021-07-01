@@ -9,19 +9,23 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/common.h>
 
+#include <ros/ros.h>
 #include <tf2_ros/buffer.h>
-#include <vision_msgs/BoundingBox3D.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <nav_msgs/Path.h>
 
 #include <string>
 
 #include "agribot_msgs/Object3D.h"
+#include "agribot_msgs/Object3DArray.h"
 
 template <typename PointT>
-geometry_msgs::Point toGeometryMsgsPoint(PointT p)
+geometry_msgs::Point pclPointToGeometryMsgsPoint(PointT p)
 {
   geometry_msgs::Point point;
   point.x = p.x;
@@ -51,15 +55,15 @@ geometry_msgs::Vector3 sizeFromMinMaxPoints(const PointT& min_point, const Point
 }
 
 template <typename PointT>
-vision_msgs::BoundingBox3D boundingBox3dFromPointCloud(const pcl::PointCloud<PointT>& point_cloud)
+agribot_msgs::BoundingBox3D boundingBox3dFromPointCloud(const pcl::PointCloud<PointT>& point_cloud)
 {
   PointT min_point, max_point;
-  vision_msgs::BoundingBox3D bbox;
+  agribot_msgs::BoundingBox3D bbox;
 
   pcl::getMinMax3D(point_cloud, min_point, max_point);
-  bbox.center.position = toGeometryMsgsPoint(centerPointFromMinMaxPoints(min_point, max_point));
+  bbox.center.pose.position = pclPointToGeometryMsgsPoint(centerPointFromMinMaxPoints(min_point, max_point));
   // TODO(olek) - calculate bbox orientation
-  bbox.center.orientation.w = 1;  // (For now take identity quaternion)
+  bbox.center.pose.orientation.w = 1;  // (For now take identity quaternion)
   bbox.size = sizeFromMinMaxPoints(min_point, max_point);
 
   return bbox;
@@ -92,3 +96,11 @@ agribot_msgs::Object3D object3dFromPointCloud(typename pcl::PointCloud<PointT>::
 
   return object;
 }
+
+nav_msgs::Path transform(const nav_msgs::Path& in_msg, std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer);
+agribot_msgs::Object3DArray transform(const agribot_msgs::Object3DArray& in_msg, std::string& target_frame_id,
+                                      const tf2_ros::Buffer& tf_buffer);
+agribot_msgs::Object3D transform(const agribot_msgs::Object3D& in_msg, std::string& target_frame_id,
+                                 const tf2_ros::Buffer& tf_buffer);
+agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg, std::string& target_frame_id,
+                                      const tf2_ros::Buffer& tf_buffer);

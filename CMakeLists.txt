@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8.3)
 project(agribot_obstacle_detection)
 add_compile_options(-std=c++17)
 
-
 find_package(catkin REQUIRED COMPONENTS
   agribot_common
   agribot_msgs
@@ -13,7 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rviz_visual_tools
   sensor_msgs
+  tf2
   tf2_geometry_msgs
+  tf2_sensor_msgs
   tf2_ros
   eigen_conversions
 )
@@ -51,6 +52,7 @@ add_executable(lidar_point_cloud_pipeline_node
 target_link_libraries(lidar_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(lidar_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
 
+
 add_executable(stereo_camera_point_cloud_pipeline_node 
   src/point_cloud_pipeline/stereo_camera_point_cloud_pipeline_node.cpp
   src/point_cloud_pipeline/PointCloudPipelineNode.cpp
@@ -60,12 +62,14 @@ add_executable(stereo_camera_point_cloud_pipeline_node
 target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
 
+
 add_executable(object3d_array_visualization_node
   src/rviz_markers_visualization/object3d_array_visualization_node.cpp
   src/rviz_markers_visualization/Object3DArrayVisualizationNode.cpp
 )
 target_link_libraries(object3d_array_visualization_node ${catkin_LIBRARIES})
 add_dependencies(object3d_array_visualization_node ${catkin_EXPORTED_TARGETS})
+
 
 add_executable(point_cloud_late_fusion_node
   src/point_cloud_late_fusion/point_cloud_late_fusion_node.cpp
@@ -75,6 +79,7 @@ add_executable(point_cloud_late_fusion_node
 target_link_libraries(point_cloud_late_fusion_node ${catkin_LIBRARIES})
 add_dependencies(point_cloud_late_fusion_node ${catkin_EXPORTED_TARGETS})
 
+
 add_executable(point_cloud_rgb_camera_fusion_node
   src/point_cloud_rgb_camera_fusion/point_cloud_rgb_camera_fusion_node.cpp
   src/point_cloud_rgb_camera_fusion/PointCloudRgbCameraFusionNode.cpp
@@ -82,6 +87,16 @@ add_executable(point_cloud_rgb_camera_fusion_node
 )
 target_link_libraries(point_cloud_rgb_camera_fusion_node ${catkin_LIBRARIES})
 add_dependencies(point_cloud_rgb_camera_fusion_node ${catkin_EXPORTED_TARGETS})
+
+
+add_executable(obstacles_arbiter_node
+  src/obstacles_arbiter/obstacles_arbiter_node.cpp
+  src/obstacles_arbiter/ObstaclesArbiterNode.cpp
+  src/util/ProcessingTimer.cpp
+  src/util/ObjectConversions.cpp
+)
+target_link_libraries(obstacles_arbiter_node ${catkin_LIBRARIES})
+add_dependencies(obstacles_arbiter_node ${catkin_EXPORTED_TARGETS})
 
 
 #############
@@ -94,6 +109,7 @@ install(TARGETS
   object3d_array_visualization_node
   point_cloud_late_fusion_node
   point_cloud_rgb_camera_fusion_node
+  obstacles_arbiter_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

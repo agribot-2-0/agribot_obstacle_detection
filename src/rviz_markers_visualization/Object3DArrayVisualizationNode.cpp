@@ -73,7 +73,7 @@ void Object3DArrayVisualizationNode::updateMarkers(const agribot_msgs::Object3DA
 Eigen::Isometry3d Object3DArrayVisualizationNode::getObjectEigenPose(const agribot_msgs::Object3D& object) const
 {
   Eigen::Isometry3d eigen_pose;
-  tf::poseMsgToEigen(object.bbox.center, eigen_pose);
+  tf::poseMsgToEigen(object.bbox.center.pose, eigen_pose);
   return eigen_pose;
 }
 
