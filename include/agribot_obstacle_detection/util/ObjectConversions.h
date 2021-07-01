@@ -60,6 +60,8 @@ agribot_msgs::BoundingBox3D boundingBox3dFromPointCloud(const pcl::PointCloud<Po
   PointT min_point, max_point;
   agribot_msgs::BoundingBox3D bbox;
 
+  bbox.center.header = pcl_conversions::fromPCL(point_cloud.header);
+
   pcl::getMinMax3D(point_cloud, min_point, max_point);
   bbox.center.pose.position = pclPointToGeometryMsgsPoint(centerPointFromMinMaxPoints(min_point, max_point));
   // TODO(olek) - calculate bbox orientation
