@@ -24,6 +24,8 @@
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
 
+namespace ObjectConversions
+{
 template <typename PointT>
 geometry_msgs::Point pclPointToGeometryMsgsPoint(PointT p)
 {
@@ -99,10 +101,13 @@ agribot_msgs::Object3D object3dFromPointCloud(typename pcl::PointCloud<PointT>::
   return object;
 }
 
-nav_msgs::Path transform(const nav_msgs::Path& in_msg, std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer);
-agribot_msgs::Object3DArray transform(const agribot_msgs::Object3DArray& in_msg, std::string& target_frame_id,
+nav_msgs::Path transform(const nav_msgs::Path& in_msg, const std::string& target_frame_id,
+                         const tf2_ros::Buffer& tf_buffer);
+agribot_msgs::Object3DArray transform(const agribot_msgs::Object3DArray& in_msg, const std::string& target_frame_id,
                                       const tf2_ros::Buffer& tf_buffer);
-agribot_msgs::Object3D transform(const agribot_msgs::Object3D& in_msg, std::string& target_frame_id,
+agribot_msgs::Object3D transform(const agribot_msgs::Object3D& in_msg, const std::string& target_frame_id,
                                  const tf2_ros::Buffer& tf_buffer);
-agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg, std::string& target_frame_id,
-                                      const tf2_ros::Buffer& tf_buffer);
+agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,  // NOLINT [build/include_what_you_use]
+                                      const std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer);
+
+}  // namespace ObjectConversions

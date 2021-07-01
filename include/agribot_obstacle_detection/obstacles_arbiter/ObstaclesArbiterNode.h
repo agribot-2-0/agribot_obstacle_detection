@@ -27,7 +27,8 @@ private:
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> output_polygons_;
 
-  std::string objects_target_frame_id_;
+  // TODO(olek) - move this to arguments or dynamic reconfigure
+  std::string objects_target_frame_id_ = {"base_footprint"};
   bool publish_processing_time_;
   bool print_processing_time_;
 
