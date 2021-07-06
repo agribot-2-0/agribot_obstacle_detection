@@ -63,12 +63,19 @@ target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES
 add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(object3d_array_visualization_node
-  src/rviz_markers_visualization/object3d_array_visualization_node.cpp
+add_executable(object_3d_array_visualization_node
+  src/rviz_markers_visualization/object_3d_array_visualization_node.cpp
   src/rviz_markers_visualization/Object3DArrayVisualizationNode.cpp
 )
-target_link_libraries(object3d_array_visualization_node ${catkin_LIBRARIES})
-add_dependencies(object3d_array_visualization_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(object_3d_array_visualization_node ${catkin_LIBRARIES})
+add_dependencies(object_3d_array_visualization_node ${catkin_EXPORTED_TARGETS})
+
+add_executable(object_polygon_array_visualization_node
+  src/rviz_markers_visualization/object_polygon_array_visualization_node.cpp
+  src/rviz_markers_visualization/ObjectPolygonArrayVisualizationNode.cpp
+)
+target_link_libraries(object_polygon_array_visualization_node ${catkin_LIBRARIES})
+add_dependencies(object_polygon_array_visualization_node ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(point_cloud_late_fusion_node
@@ -92,6 +99,7 @@ add_dependencies(point_cloud_rgb_camera_fusion_node ${catkin_EXPORTED_TARGETS})
 add_executable(obstacles_arbiter_node
   src/obstacles_arbiter/obstacles_arbiter_node.cpp
   src/obstacles_arbiter/ObstaclesArbiterNode.cpp
+  src/obstacles_arbiter/SatPolygonCollisionDetection.cpp
   src/util/ProcessingTimer.cpp
   src/util/ObjectConversions.cpp
 )
@@ -106,7 +114,8 @@ add_dependencies(obstacles_arbiter_node ${catkin_EXPORTED_TARGETS})
 install(TARGETS
   lidar_point_cloud_pipeline_node
   stereo_camera_point_cloud_pipeline_node
-  object3d_array_visualization_node
+  object_3d_array_visualization_node
+  object_polygon_array_visualization_node
   point_cloud_late_fusion_node
   point_cloud_rgb_camera_fusion_node
   obstacles_arbiter_node

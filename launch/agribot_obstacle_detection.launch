@@ -33,6 +33,9 @@
   <arg name="arbiter_polygons_topic"                    value="$(arg arbiter_namespace)/polygons"/>
   <arg name="path_polygons_topic"                       value="$(arg arbiter_namespace)/path_polygons"/>
   <arg name="objects_polygons_topic"                    value="$(arg arbiter_namespace)/objects_polygons"/>
+  <arg name="arbiter_polygons_markers_topic"            value="$(arg arbiter_namespace)/polygons_markers"/>
+  <arg name="path_polygons_markers_topic"               value="$(arg arbiter_namespace)/path_polygons_markers"/>
+  <arg name="objects_polygons_markers_topic"            value="$(arg arbiter_namespace)/objects_polygons_markers"/>
   <arg name="arbiter_processing_time_topic"             value="$(arg arbiter_namespace)/processing_time"/>
 
 
@@ -85,32 +88,68 @@
 
 
   <!-- rviz_markers_visualization -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
     <param name="color"                   value="2"/>
     <param name="marker_namespace"        value="front_lidar"/>
-    <remap from="~object3d_array"         to="$(arg lidar_objects_topic)"/>
+    <remap from="~object_3d_array"        to="$(arg lidar_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg lidar_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
     <param name="color"                   value="6"/>
     <param name="marker_namespace"        value="front_stereo_camera"/>
-    <remap from="~object3d_array"         to="$(arg stereo_camera_objects_topic)"/>
+    <remap from="~object_3d_array"        to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg stereo_camera_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
     <param name="color"                   value="11"/>
     <param name="marker_namespace"        value="front_fused"/>
-    <remap from="~object3d_array"         to="$(arg 3d_fused_objects_topic)"/>
+    <remap from="~object_3d_array"        to="$(arg 3d_fused_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg 3d_fused_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object3d_array_visualization_node" name="front_final_objects_visualization_node" output="screen">
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_final_objects_visualization_node" output="screen">
     <param name="color"                   value="13"/>
-    <param name="marker_namespace"        value="front_fused"/>
-    <remap from="~object3d_array"         to="$(arg final_objects_topic)"/>
+    <param name="marker_namespace"        value="front_final"/>
+    <remap from="~object_3d_array"        to="$(arg final_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg final_objects_markers_topic)"/>
   </node>
 
+
+  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_polygon_array_visualization_node" name="arbiter_polygons_visualization_node" output="screen">
+    <param name="unknown_marker_color"              value="4"/>
+    <param name="obstacle_clear_marker_color_"      value="6"/>
+    <param name="obstacle_colliding_marker_color"   value="11"/>
+    <param name="path_clear_marker_color"           value="7"/>
+    <param name="path_colliding_marker_color"       value="9"/>
+    <param name="marker_namespace"                  value="front_arbiter_polygons"/>
+    <remap from="~object_polygon_array"             to="$(arg arbiter_polygons_topic)"/>
+    <remap from="~vision_markers"                   to="$(arg arbiter_polygons_markers_topic)"/>
+  </node>
+
 </launch>
+
+<!-- rviz colors table
+  BLACK = 0,
+  BROWN = 1,
+  BLUE = 2,
+  CYAN = 3,
+  GREY = 4,
+  DARK_GREY = 5,
+  GREEN = 6,
+  LIME_GREEN = 7,
+  MAGENTA = 8,
+  ORANGE = 9,
+  PURPLE = 10,
+  RED = 11,
+  PINK = 12,
+  WHITE = 13,
+  YELLOW = 14,
+  TRANSLUCENT = 15,
+  TRANSLUCENT_LIGHT = 16,
+  TRANSLUCENT_DARK = 17,
+  RAND = 18,
+  CLEAR = 19,
+  DEFAULT = 20
+ -->
