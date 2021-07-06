@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "object3d_array_visualization_node");
+  ros::init(argc, argv, "object_3d_array_visualization_node");
   ros::NodeHandle nh("~");
   Object3DArrayVisualizationNode visualization_node(&nh);
   visualization_node.run();

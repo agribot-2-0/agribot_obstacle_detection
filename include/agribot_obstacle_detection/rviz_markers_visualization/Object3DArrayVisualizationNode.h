@@ -19,7 +19,7 @@ class Object3DArrayVisualizationNode
 {
 private:
   ros::NodeHandle* nh_;
-  ros::Subscriber object3d_array_sub_;
+  ros::Subscriber object_3d_array_sub_;
   std::string marker_namespace_;
   rviz_visual_tools::colors marker_color_;
   std::optional<std::string> target_frame_id_;
@@ -32,6 +32,5 @@ private:
 
 public:
   explicit Object3DArrayVisualizationNode(ros::NodeHandle* nh);
-  ~Object3DArrayVisualizationNode();
   void run() const;
 };

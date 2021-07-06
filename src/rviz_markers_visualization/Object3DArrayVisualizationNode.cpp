@@ -10,12 +10,8 @@ Object3DArrayVisualizationNode::Object3DArrayVisualizationNode(ros::NodeHandle* 
   marker_color_ = static_cast<rviz_visual_tools::colors>(ros_common_functions::getRosParam<int>("~color"));
   marker_namespace_ = ros_common_functions::getRosParam<std::string>("~marker_namespace");
 
-  object3d_array_sub_ =
-      nh->subscribe("object3d_array", 1, &Object3DArrayVisualizationNode::object3DArrayCallback, this);
-}
-
-Object3DArrayVisualizationNode::~Object3DArrayVisualizationNode()
-{
+  object_3d_array_sub_ =
+      nh->subscribe("object_3d_array", 1, &Object3DArrayVisualizationNode::object3DArrayCallback, this);
 }
 
 void Object3DArrayVisualizationNode::initRvizVisualTools()
