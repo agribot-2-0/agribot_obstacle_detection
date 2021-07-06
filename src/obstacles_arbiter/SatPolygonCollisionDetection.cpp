@@ -7,6 +7,6 @@
 bool SatPolygonCollisionDetection::areColliding(const agribot_msgs::ObjectPolygon& p1,
                                                 const agribot_msgs::ObjectPolygon& p2)
 {
-  // TODO - implement collision checking
+  // TODO(olek) - implement collision checking
   return true;
 }

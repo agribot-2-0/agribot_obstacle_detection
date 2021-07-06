@@ -108,7 +108,7 @@ agribot_msgs::ObjectPolygon object3dToObjectPolygon(const agribot_msgs::Object3D
 
   for (auto& vertex : msg.polygon.points)
   {
-    // TODO - better transform...
+    // TODO(olek) - better transform...
     tf::Quaternion q(object.bbox.center.pose.orientation.x, object.bbox.center.pose.orientation.y,
                      object.bbox.center.pose.orientation.z, object.bbox.center.pose.orientation.w);
     tf::Matrix3x3 m(q);
@@ -179,7 +179,7 @@ agribot_msgs::ObjectPolygon poseStampedToObjectPolygon(const geometry_msgs::Pose
 
   for (auto& vertex : msg.polygon.points)
   {
-    // TODO - better transform...
+    // TODO(olek) - better transform...
     tf::Quaternion q(pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z,
                      pose.pose.orientation.w);
     tf::Matrix3x3 m(q);
