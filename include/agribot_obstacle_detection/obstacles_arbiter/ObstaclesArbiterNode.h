@@ -13,22 +13,27 @@
 #include <optional>
 #include <string>
 
+#include "agribot_obstacle_detection/obstacles_arbiter/SatPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
 #include "agribot_obstacle_detection/util/ObjectConversions.h"
 
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
 #include "agribot_msgs/ObjectPolygonArray.h"
+#include "agribot_msgs/ObstacleDetectionStatus.h"
 
 class ObstaclesArbiterNode
 {
 private:
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
-  std::optional<agribot_msgs::ObjectPolygonArray> output_polygons_;
+  agribot_msgs::ObjectPolygonArray output_polygons_;
+  agribot_msgs::ObstacleDetectionStatus detection_status_;
+
+  SatPolygonCollisionDetection collision_detection_;
 
   // TODO(olek) - move this to arguments or dynamic reconfigure
-  std::string objects_target_frame_id_ = {"base_footprint"};
+  std::string objects_target_frame_id_{ "base_footprint" };
   bool publish_processing_time_;
   bool print_processing_time_;
 
@@ -40,6 +45,7 @@ private:
   ros::Publisher out_polygons_pub_;
   ros::Publisher path_polygons_pub_;
   ros::Publisher objects_polygons_pub_;
+  ros::Publisher detection_status_pub_;
 
   // Processing time publisher
   ros::Publisher processing_time_pub_;
@@ -52,9 +58,6 @@ private:
   std::string log_tag_;
   ProcessingTimer timer;
 
-  agribot_msgs::ObjectPolygonArray object3dArrayToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
-  agribot_msgs::ObjectPolygonArray pathToObjectPolygonArray(const nav_msgs::Path& path);
-
 public:
   ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag);
   ~ObstaclesArbiterNode() = default;
@@ -63,5 +66,6 @@ public:
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void calculateOutputPolygons();
   void publishOutputPolygons();
+  void publishDetectionStatus();
   void run() const;
 };

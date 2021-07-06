@@ -14,7 +14,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Path.h>
@@ -23,6 +24,8 @@
 
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
+#include "agribot_msgs/ObjectPolygon.h"
+#include "agribot_msgs/ObjectPolygonArray.h"
 
 namespace ObjectConversions
 {
@@ -109,5 +112,10 @@ agribot_msgs::Object3D transform(const agribot_msgs::Object3D& in_msg, const std
                                  const tf2_ros::Buffer& tf_buffer);
 agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,  // NOLINT [build/include_what_you_use]
                                       const std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer);
+
+agribot_msgs::ObjectPolygonArray object3dArrayToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
+agribot_msgs::ObjectPolygon object3dToObjectPolygon(const agribot_msgs::Object3D& object);
+agribot_msgs::ObjectPolygonArray pathToObjectPolygonArray(const nav_msgs::Path& path);
+agribot_msgs::ObjectPolygon poseStampedToObjectPolygon(const geometry_msgs::PoseStamped& pose);
 
 }  // namespace ObjectConversions
