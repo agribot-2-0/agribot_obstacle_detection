@@ -17,7 +17,7 @@
 **sensor_msgs/CameraInfo.msg**" as front_2d_camera_rgb_camera_info
 
 ' Arbiter
-() "**/move_base/AgribotPlannerROS/local_path** \n \
+() "**/move_base/AgribotLocalPlanner/local_path** \n \
 **nav_msgs/Path.msg**" as local_path
 () "**/agribot/obstacle_detection/front/status** \n \
 **agribot_msgs/ObstacleDetectionStatus.msg**" as front_status
