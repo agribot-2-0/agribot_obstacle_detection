@@ -2,7 +2,7 @@
  * Copyright (C) 2021 Agribot. All rights reserved.
  */
 
-#include "agribot_obstacle_detection/obstacles_arbiter/Projection.h"
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/Projection.h"
 
 Projection::Projection(float min, float max) : min_{ min }, max_{ max }
 {

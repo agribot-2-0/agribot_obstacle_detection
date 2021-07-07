@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "agribot_obstacle_detection/obstacles_arbiter/Projection.h"
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/Projection.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 
 // Inspired by http://www.dyn4j.org/2010/01/sat

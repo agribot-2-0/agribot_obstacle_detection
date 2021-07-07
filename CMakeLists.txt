@@ -99,8 +99,8 @@ add_dependencies(point_cloud_rgb_camera_fusion_node ${catkin_EXPORTED_TARGETS})
 add_executable(obstacles_arbiter_node
   src/obstacles_arbiter/obstacles_arbiter_node.cpp
   src/obstacles_arbiter/ObstaclesArbiterNode.cpp
-  src/obstacles_arbiter/SatPolygonCollisionDetection.cpp
-  src/obstacles_arbiter/Projection.cpp
+  src/obstacles_arbiter/collision_detection/SatPolygonCollisionDetection.cpp
+  src/obstacles_arbiter/collision_detection/Projection.cpp
   src/util/ProcessingTimer.cpp
   src/util/Conversions.cpp
 )

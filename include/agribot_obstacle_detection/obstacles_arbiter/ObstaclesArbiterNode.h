@@ -13,7 +13,7 @@
 #include <optional>
 #include <string>
 
-#include "agribot_obstacle_detection/obstacles_arbiter/SatPolygonCollisionDetection.h"
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/SatPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 
