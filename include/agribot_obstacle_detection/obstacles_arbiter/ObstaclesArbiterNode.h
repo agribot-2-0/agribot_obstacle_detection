@@ -15,7 +15,7 @@
 
 #include "agribot_obstacle_detection/obstacles_arbiter/SatPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
-#include "agribot_obstacle_detection/util/ObjectConversions.h"
+#include "agribot_obstacle_detection/util/Conversions.h"
 
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"

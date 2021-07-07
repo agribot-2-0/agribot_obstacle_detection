@@ -23,7 +23,7 @@
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/RegionGrowingClustering.h"
 
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
-#include "agribot_obstacle_detection/util/ObjectConversions.h"
+#include "agribot_obstacle_detection/util/Conversions.h"
 
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
@@ -109,7 +109,7 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
     for (const auto& cluster : objects_clusters_)
     {
       auto object =
-          ObjectConversions::object3dFromPointCloud<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
+          Conversions::convertToObject3D<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
       object.id = id++;
       object_array_.objects.push_back(object);
     }

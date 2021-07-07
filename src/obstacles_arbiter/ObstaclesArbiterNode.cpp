@@ -33,12 +33,12 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
     {
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
-        objects_polygons_ = ObjectConversions::object3dArrayToObjectPolygonArray(
-            ObjectConversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
+        objects_polygons_ = Conversions::convertToObjectPolygonArray(
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
       }
       else
       {
-        objects_polygons_ = ObjectConversions::object3dArrayToObjectPolygonArray(*msg);
+        objects_polygons_ = Conversions::convertToObjectPolygonArray(*msg);
       }
     }
 
@@ -63,12 +63,12 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
     {
       if (msg->header.frame_id != objects_target_frame_id_)
       {
-        path_polygons_ = ObjectConversions::pathToObjectPolygonArray(
-            ObjectConversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
+        path_polygons_ = Conversions::convertToObjectPolygonArray(
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
       }
       else
       {
-        path_polygons_ = ObjectConversions::pathToObjectPolygonArray(*msg);
+        path_polygons_ = Conversions::convertToObjectPolygonArray(*msg);
       }
     }
 

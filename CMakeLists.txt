@@ -47,7 +47,7 @@ add_executable(lidar_point_cloud_pipeline_node
   src/point_cloud_pipeline/lidar_point_cloud_pipeline_node.cpp
   src/point_cloud_pipeline/PointCloudPipelineNode.cpp
   src/util/ProcessingTimer.cpp
-  src/util/ObjectConversions.cpp
+  src/util/Conversions.cpp
 )
 target_link_libraries(lidar_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(lidar_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
@@ -57,7 +57,7 @@ add_executable(stereo_camera_point_cloud_pipeline_node
   src/point_cloud_pipeline/stereo_camera_point_cloud_pipeline_node.cpp
   src/point_cloud_pipeline/PointCloudPipelineNode.cpp
   src/util/ProcessingTimer.cpp
-  src/util/ObjectConversions.cpp
+  src/util/Conversions.cpp
 )
 target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES})
 add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
@@ -101,7 +101,7 @@ add_executable(obstacles_arbiter_node
   src/obstacles_arbiter/ObstaclesArbiterNode.cpp
   src/obstacles_arbiter/SatPolygonCollisionDetection.cpp
   src/util/ProcessingTimer.cpp
-  src/util/ObjectConversions.cpp
+  src/util/Conversions.cpp
 )
 target_link_libraries(obstacles_arbiter_node ${catkin_LIBRARIES})
 add_dependencies(obstacles_arbiter_node ${catkin_EXPORTED_TARGETS})
