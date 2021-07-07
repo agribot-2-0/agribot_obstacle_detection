@@ -100,6 +100,7 @@ add_executable(obstacles_arbiter_node
   src/obstacles_arbiter/obstacles_arbiter_node.cpp
   src/obstacles_arbiter/ObstaclesArbiterNode.cpp
   src/obstacles_arbiter/SatPolygonCollisionDetection.cpp
+  src/obstacles_arbiter/Projection.cpp
   src/util/ProcessingTimer.cpp
   src/util/Conversions.cpp
 )

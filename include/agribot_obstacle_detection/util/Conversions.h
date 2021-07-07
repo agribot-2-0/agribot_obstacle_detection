@@ -14,6 +14,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
@@ -62,6 +63,7 @@ agribot_msgs::Object3D convertToObject3D(typename pcl::PointCloud<PointT>::Ptr p
 // Eigen conversions  //
 // ================== //
 Eigen::Vector2f convertToEigenVector2f(const geometry_msgs::Point& point);
+Eigen::Vector2f convertToEigenVector2f(const geometry_msgs::Point32& point);
 geometry_msgs::Point convertToPointMsg(const Eigen::Vector2f& point_vector);
 
 // ========================== //

@@ -156,6 +156,11 @@ Eigen::Vector2f convertToEigenVector2f(const geometry_msgs::Point& point)
   return Eigen::Vector2f(point.x, point.y);
 }
 
+Eigen::Vector2f convertToEigenVector2f(const geometry_msgs::Point32& point)
+{
+  return Eigen::Vector2f(point.x, point.y);
+}
+
 geometry_msgs::Point convertToPointMsg(const Eigen::Vector2f& point_vector)
 {
   geometry_msgs::Point point;
