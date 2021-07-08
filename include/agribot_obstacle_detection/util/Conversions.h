@@ -37,8 +37,8 @@ namespace Conversions
 // ==================== //
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
-agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path);
-agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose);
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, float x_size, float y_size);
+agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, float x_size, float y_size);
 
 // ================ //
 // PCL conversions  //

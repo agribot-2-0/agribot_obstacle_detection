@@ -28,6 +28,9 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
   msg.header = object.header;
   msg.type = msg.UNKNOWN;
 
+  float half_x_size = object.bbox.size.x / 2.0;
+  float half_y_size = object.bbox.size.y / 2.0;
+
   // TODO(olek) - Improve object to polygon casting
 
   // Create polygon of a proper size at 0,0
@@ -35,20 +38,20 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
   polygon_vertex.z = 0.0;
 
   // First vertex
-  polygon_vertex.x = +object.bbox.size.x / 2;
-  polygon_vertex.y = +object.bbox.size.y / 2;
+  polygon_vertex.x = +half_x_size;
+  polygon_vertex.y = +half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
   // Seoond vertex
-  polygon_vertex.x = +object.bbox.size.x / 2;
-  polygon_vertex.y = -object.bbox.size.y / 2;
+  polygon_vertex.x = +half_x_size;
+  polygon_vertex.y = -half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
   // Third vertex
-  polygon_vertex.x = -object.bbox.size.x / 2;
-  polygon_vertex.y = -object.bbox.size.y / 2;
+  polygon_vertex.x = -half_x_size;
+  polygon_vertex.y = -half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
   // Fourth vertex
-  polygon_vertex.x = -object.bbox.size.x / 2;
-  polygon_vertex.y = +object.bbox.size.y / 2;
+  polygon_vertex.x = -half_x_size;
+  polygon_vertex.y = +half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
 
   for (auto& vertex : msg.polygon.points)
@@ -77,23 +80,26 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
   return msg;
 }
 
-agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path)
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, float x_size, float y_size)
 {
   agribot_msgs::ObjectPolygonArray msg;
   for (const auto& pose : path.poses)
   {
-    auto polygon = convertToObjectPolygon(pose);
+    auto polygon = convertToObjectPolygon(pose, x_size, y_size);
     polygon.type = polygon.PATH_CLEAR;
     msg.polygons.push_back(polygon);
   }
   return msg;
 }
 
-agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose)
+agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, float x_size, float y_size)
 {
   agribot_msgs::ObjectPolygon msg;
   msg.header = pose.header;
   msg.type = msg.UNKNOWN;
+
+  float half_x_size = x_size / 2.0;
+  float half_y_size = y_size / 2.0;
 
   // TODO(olek) - Improve pose to polygon casting
 
@@ -101,25 +107,21 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
   geometry_msgs::Point32 polygon_vertex;
   polygon_vertex.z = 0.0;
 
-  // TODO(olek) - Move size to dynam,ic reconfigure
-  float x_size = 3.3;
-  float y_size = 1.3;
-
   // First vertex
-  polygon_vertex.x = x_size / 2.0;
-  polygon_vertex.y = y_size / 2.0;
+  polygon_vertex.x = half_x_size;
+  polygon_vertex.y = half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
   // Seoond vertex
-  polygon_vertex.x = +x_size / 2.0;
-  polygon_vertex.y = -y_size / 2.0;
+  polygon_vertex.x = +half_x_size;
+  polygon_vertex.y = -half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
   // Third vertex
-  polygon_vertex.x = -x_size / 2.0;
-  polygon_vertex.y = -y_size / 2.0;
+  polygon_vertex.x = -half_x_size;
+  polygon_vertex.y = -half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
   // Fourth vertex
-  polygon_vertex.x = -x_size / 2.0;
-  polygon_vertex.y = +y_size / 2.0;
+  polygon_vertex.x = -half_x_size;
+  polygon_vertex.y = +half_y_size;
   msg.polygon.points.push_back(polygon_vertex);
 
   for (auto& vertex : msg.polygon.points)

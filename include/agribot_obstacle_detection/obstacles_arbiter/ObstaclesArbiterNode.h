@@ -25,6 +25,9 @@
 class ObstaclesArbiterNode
 {
 private:
+  float robot_x_size = 4.2;
+  float robot_y_size = 2.2;
+
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
   agribot_msgs::ObjectPolygonArray output_polygons_;
@@ -64,7 +67,7 @@ public:
 
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
-  void calculateOutputPolygons();
+  void checkCollisions();
   void publishOutputPolygons();
   void publishDetectionStatus();
   void run() const;

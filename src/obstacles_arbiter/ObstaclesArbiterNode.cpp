@@ -42,8 +42,7 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
       }
     }
 
-    calculateOutputPolygons();
-    publishOutputPolygons();
+    checkCollisions();
   }
   catch (const std::exception& e)
   {
@@ -64,16 +63,15 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
       if (msg->header.frame_id != objects_target_frame_id_)
       {
         path_polygons_ = Conversions::convertToObjectPolygonArray(
-            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), robot_x_size, robot_y_size);
       }
       else
       {
-        path_polygons_ = Conversions::convertToObjectPolygonArray(*msg);
+        path_polygons_ = Conversions::convertToObjectPolygonArray(*msg, robot_x_size, robot_y_size);
       }
     }
 
-    calculateOutputPolygons();
-    publishOutputPolygons();
+    checkCollisions();
   }
   catch (const std::exception& e)
   {
@@ -81,10 +79,13 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
   }
 }
 
-void ObstaclesArbiterNode::calculateOutputPolygons()
+void ObstaclesArbiterNode::checkCollisions()
 {
   if (path_polygons_ == std::nullopt)
   {
+    detection_status_.status = detection_status_.WAITING_FOR_PATH;
+    publishDetectionStatus();
+
     // TODO(olek) - change "[ObstaclesArbiterNode] " to use log tag instead
     ROS_WARN_STREAM_THROTTLE(5.0,
                              "[ObstaclesArbiterNode] Missing path info. Skipping calculation of output polygons...");
@@ -93,6 +94,9 @@ void ObstaclesArbiterNode::calculateOutputPolygons()
 
   if (objects_polygons_ == std::nullopt)
   {
+    detection_status_.status = detection_status_.WAITING_FOR_OBJECTS;
+    publishDetectionStatus();
+
     ROS_WARN_STREAM_THROTTLE(5.0,
                              "[ObstaclesArbiterNode] Missing objects info. Skipping calculation of output polygons...");
     return;
@@ -111,7 +115,7 @@ void ObstaclesArbiterNode::calculateOutputPolygons()
         detection_status_.status = detection_status_.OBSTACLE_DETECTED;
         publishDetectionStatus();
 
-        // Mark path and objects polygons woth _COLLIDING type
+        // Mark path and objects polygons with _COLLIDING type
         object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
         path_polygon.type = object_polygon.PATH_COLLIDING;
       }
