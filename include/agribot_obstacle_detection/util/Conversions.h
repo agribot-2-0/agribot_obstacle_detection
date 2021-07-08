@@ -147,6 +147,7 @@ agribot_msgs::Object3D convertToObject3D(typename pcl::PointCloud<PointT>::Ptr p
     pcl::PointCloud<PointT> temp_cloud;
     auto transform = tf_buffer.lookupTransform(target_frame_id, point_cloud->header.frame_id, ros::Time::now());
     pcl_ros::transformPointCloud(*point_cloud, temp_cloud, transform.transform);
+    temp_cloud.header.frame_id = target_frame_id;
     pcl::toROSMsg(temp_cloud, object.point_cloud);
     object.bbox = convertToBoundingBox3D(temp_cloud);
   }
