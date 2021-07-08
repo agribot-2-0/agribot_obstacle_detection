@@ -29,6 +29,9 @@ class ObstaclesArbiterNode
 private:
   float safety_zone_length_;
   float safety_zone_width_;
+  std::string objects_target_frame_id_;
+  bool publish_processing_time_;
+  bool print_processing_time_;
 
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
@@ -36,11 +39,6 @@ private:
   agribot_msgs::ObstacleDetectionStatus detection_status_;
 
   SatPolygonCollisionDetection collision_detection_;
-
-  // TODO(olek) - move this to arguments or dynamic reconfigure
-  std::string objects_target_frame_id_{ "base_footprint" };
-  bool publish_processing_time_;
-  bool print_processing_time_;
 
   ros::NodeHandle* nh_;
 
@@ -63,14 +61,14 @@ private:
   std::string log_tag_;
   ProcessingTimer timer;
 
+    void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
+    void pathCallback(const nav_msgs::Path::ConstPtr& msg);
+    void checkCollisions();
+    void publishOutputPolygons();
+    void publishDetectionStatus();
+    void sendProcessingTimeInfo(double time_ms);
+
 public:
   ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag);
-  ~ObstaclesArbiterNode() = default;
-
-  void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
-  void pathCallback(const nav_msgs::Path::ConstPtr& msg);
-  void checkCollisions();
-  void publishOutputPolygons();
-  void publishDetectionStatus();
   void run() const;
 };

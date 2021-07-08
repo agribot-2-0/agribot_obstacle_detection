@@ -12,6 +12,10 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   safety_zone_length_ = ros_common_functions::getRosParam<float>("~obstacles_arbiter/safety_zone_length");
   safety_zone_width_ = ros_common_functions::getRosParam<float>("~obstacles_arbiter/safety_zone_width");
 
+  objects_target_frame_id_ = ros_common_functions::getRosParam<std::string>("~objects_target_frame_id");
+  publish_processing_time_ = ros_common_functions::getRosParam<bool>("~publish_processing_time");
+  print_processing_time_ = ros_common_functions::getRosParam<bool>("~print_processing_time");
+
   // Initialize publishers and subscribers
   out_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("out_polygons", 1, true);
   path_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("path_polygons", 1, true);
@@ -28,6 +32,8 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
 {
   try
   {
+    timer.start();
+
     if (msg->objects.size() == 0)
     {
       objects_polygons_->polygons.clear();
@@ -46,6 +52,9 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
     }
 
     checkCollisions();
+
+    timer.stop();
+    sendProcessingTimeInfo(timer.get_final_elapsed_time_ms());
   }
   catch (const std::exception& e)
   {
@@ -57,25 +66,22 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
 {
   try
   {
-    if (msg->poses.size() == 0)
+    timer.start();
+
+    if (msg->header.frame_id != objects_target_frame_id_)
     {
-      path_polygons_->polygons.clear();
+      path_polygons_ = Conversions::convertToObjectPolygonArray(
+          Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), safety_zone_length_, safety_zone_width_);
     }
     else
     {
-      if (msg->header.frame_id != objects_target_frame_id_)
-      {
-        path_polygons_ =
-            Conversions::convertToObjectPolygonArray(Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_),
-                                                     safety_zone_length_, safety_zone_width_);
-      }
-      else
-      {
-        path_polygons_ = Conversions::convertToObjectPolygonArray(*msg, safety_zone_length_, safety_zone_width_);
-      }
+      path_polygons_ = Conversions::convertToObjectPolygonArray(*msg, safety_zone_length_, safety_zone_width_);
     }
 
     checkCollisions();
+
+    timer.stop();
+    sendProcessingTimeInfo(timer.get_final_elapsed_time_ms());
   }
   catch (const std::exception& e)
   {
@@ -146,6 +152,21 @@ void ObstaclesArbiterNode::publishOutputPolygons()
 void ObstaclesArbiterNode::publishDetectionStatus()
 {
   detection_status_pub_.publish(detection_status_);
+}
+
+void ObstaclesArbiterNode::sendProcessingTimeInfo(double time_ms)
+{
+  if (publish_processing_time_)
+  {
+    std_msgs::Float64 processing_time_msg;
+    processing_time_msg.data = time_ms;
+    processing_time_pub_.publish(processing_time_msg);
+  }
+
+  if (print_processing_time_)
+  {
+    ROS_INFO_STREAM(log_tag_ << "Full processing took:\t" << std::setprecision(2) << time_ms << " [ms]");
+  }
 }
 
 void ObstaclesArbiterNode::run() const

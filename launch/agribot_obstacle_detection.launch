@@ -80,6 +80,10 @@
 
     <rosparam command="load" file="$(env AGRIBOT_HOME)/agribot/configs/base/obstacle_detection/obstacles_arbiter.yaml" />
 
+    <param name="objects_target_frame_id"               value="base_footprint"/>
+    <param name="publish_processing_time"               value="true"/>
+    <param name="print_processing_time"                 value="true"/>
+
     <remap from="~in_objects"                           to="$(arg final_objects_topic)"/>
     <remap from="~path"                                 to="$(arg path_topic)"/>
     <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>

@@ -19,7 +19,7 @@ int main(int argc, char** argv)
   }
   catch (const std::exception& e)
   {
-    ROS_FATAL_STREAM(e.what());
+    ROS_FATAL_STREAM(log_tag << e.what());
     ros::shutdown();
     exit(-1);
   }
