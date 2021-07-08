@@ -1,5 +1,9 @@
 image: docker:18-git
 
+options:
+  docker: true
+  size: 2x
+
 pipelines:
   default:
      - step:
@@ -36,4 +40,4 @@ pipelines:
 definitions:
   services:
     docker:
-      memory: 7128
+      memory: 7168
