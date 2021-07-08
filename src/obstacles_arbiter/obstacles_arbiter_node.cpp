@@ -11,6 +11,16 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "obstacles_arbiter_node");
   ros::NodeHandle nh("~");
   std::string log_tag = "[ObstaclesArbiterNode] ";
-  ObstaclesArbiterNode oan(&nh, log_tag);
-  oan.run();
+
+  try
+  {
+    ObstaclesArbiterNode oan(&nh, log_tag);
+    oan.run();
+  }
+  catch (const std::exception& e)
+  {
+    ROS_FATAL_STREAM(e.what());
+    ros::shutdown();
+    exit(-1);
+  }
 }

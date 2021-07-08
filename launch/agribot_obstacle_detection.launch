@@ -77,6 +77,9 @@
 
   <!-- Obstacles arbiter node -->
   <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="obstacles_arbiter_node" name="obstacles_arbiter_node" output="screen" launch-prefix="">
+
+    <rosparam command="load" file="$(env AGRIBOT_HOME)/agribot/configs/base/obstacle_detection/obstacles_arbiter.yaml" />
+
     <remap from="~in_objects"                           to="$(arg final_objects_topic)"/>
     <remap from="~path"                                 to="$(arg path_topic)"/>
     <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>

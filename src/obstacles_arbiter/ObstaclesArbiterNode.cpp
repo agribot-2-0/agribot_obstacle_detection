@@ -9,6 +9,9 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
 {
   detection_status_.status = detection_status_.UNKNOWN;
 
+  safety_zone_length_ = ros_common_functions::getRosParam<float>("~obstacles_arbiter/safety_zone_length");
+  safety_zone_width_ = ros_common_functions::getRosParam<float>("~obstacles_arbiter/safety_zone_width");
+
   // Initialize publishers and subscribers
   out_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("out_polygons", 1, true);
   path_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("path_polygons", 1, true);
@@ -46,7 +49,7 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
   }
   catch (const std::exception& e)
   {
-    ROS_WARN_STREAM("[ObstaclesArbiterNode] " << e.what());
+    ROS_WARN_STREAM(log_tag_ << e.what());
   }
 }
 
@@ -62,12 +65,13 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
     {
       if (msg->header.frame_id != objects_target_frame_id_)
       {
-        path_polygons_ = Conversions::convertToObjectPolygonArray(
-            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), robot_x_size, robot_y_size);
+        path_polygons_ =
+            Conversions::convertToObjectPolygonArray(Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_),
+                                                     safety_zone_length_, safety_zone_width_);
       }
       else
       {
-        path_polygons_ = Conversions::convertToObjectPolygonArray(*msg, robot_x_size, robot_y_size);
+        path_polygons_ = Conversions::convertToObjectPolygonArray(*msg, safety_zone_length_, safety_zone_width_);
       }
     }
 
@@ -75,7 +79,7 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
   }
   catch (const std::exception& e)
   {
-    ROS_WARN_STREAM("[ObstaclesArbiterNode] " << e.what());
+    ROS_WARN_STREAM(log_tag_ << e.what());
   }
 }
 
@@ -86,9 +90,7 @@ void ObstaclesArbiterNode::checkCollisions()
     detection_status_.status = detection_status_.WAITING_FOR_PATH;
     publishDetectionStatus();
 
-    // TODO(olek) - change "[ObstaclesArbiterNode] " to use log tag instead
-    ROS_WARN_STREAM_THROTTLE(5.0,
-                             "[ObstaclesArbiterNode] Missing path info. Skipping calculation of output polygons...");
+    ROS_WARN_STREAM_THROTTLE(5.0, log_tag_ << "Missing path info. Skipping calculation of output polygons...");
     return;
   }
 
@@ -97,8 +99,7 @@ void ObstaclesArbiterNode::checkCollisions()
     detection_status_.status = detection_status_.WAITING_FOR_OBJECTS;
     publishDetectionStatus();
 
-    ROS_WARN_STREAM_THROTTLE(5.0,
-                             "[ObstaclesArbiterNode] Missing objects info. Skipping calculation of output polygons...");
+    ROS_WARN_STREAM_THROTTLE(5.0, log_tag_ << "Missing objects info. Skipping calculation of output polygons...");
     return;
   }
 

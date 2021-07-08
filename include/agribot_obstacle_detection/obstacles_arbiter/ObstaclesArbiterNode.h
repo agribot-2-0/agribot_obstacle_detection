@@ -13,6 +13,8 @@
 #include <optional>
 #include <string>
 
+#include "agribot_common/CommonFunctions/ros_common_functions.h"
+
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/SatPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
@@ -25,8 +27,8 @@
 class ObstaclesArbiterNode
 {
 private:
-  float robot_x_size = 4.2;
-  float robot_y_size = 2.2;
+  float safety_zone_length_;
+  float safety_zone_width_;
 
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
