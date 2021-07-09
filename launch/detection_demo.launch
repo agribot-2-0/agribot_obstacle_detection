@@ -1,4 +1,6 @@
 <launch>
+  <arg name="load_description" default="false" />
+
   <!-- Launch new obstacle detection -->
   <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" />
 
@@ -10,6 +12,6 @@
   <include file="$(find hal_lidar)/launch/hal_lidar.launch" />
 
   <!-- Load description with tf frames -->
-  <include file="$(find agribot_description)/launch/agribot_description.launch" />
+  <include if="${arg load_description}" file="$(find agribot_description)/launch/agribot_description.launch" />
 
 </launch>
