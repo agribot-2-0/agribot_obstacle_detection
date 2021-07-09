@@ -19,8 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
 )
 
-find_package(Eigen3 REQUIRED)
-
 generate_dynamic_reconfigure_options(
   cfg/LidarPointCloudPipeline.cfg
   cfg/StereoCameraPointCloudPipeline.cfg

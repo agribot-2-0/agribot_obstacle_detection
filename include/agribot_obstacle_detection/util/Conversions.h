@@ -21,8 +21,6 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Path.h>
 
-#include <eigen3/Eigen/Core>
-
 #include <string>
 
 #include "agribot_msgs/Object3D.h"

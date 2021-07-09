@@ -6,7 +6,6 @@
 
 #include <agribot_msgs/ObjectPolygon.h>
 
-#include <eigen3/Eigen/Core>
 #include <algorithm>
 #include <vector>
 
