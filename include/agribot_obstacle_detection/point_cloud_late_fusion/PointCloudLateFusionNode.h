@@ -51,15 +51,15 @@ private:
   std::string log_tag_;
   ProcessingTimer timer;
 
-public:
-  PointCloudLateFusionNode(ros::NodeHandle* nh, const std::string& log_tag);
-  ~PointCloudLateFusionNode() = default;
-
   void objectArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg, int id);
   agribot_msgs::Object3DArray objectArrayFusion();
   agribot_msgs::Object3DArray iouFusion();
   void publishOutObjectArrary(const agribot_msgs::Object3DArray& msg);
   void dynamicReconfigureCallback(const agribot_obstacle_detection::PointCloudLateFusionConfig& dynamic_config,
                                   uint32_t level);
+
+public:
+  PointCloudLateFusionNode(ros::NodeHandle* nh, const std::string& log_tag);
+  ~PointCloudLateFusionNode() = default;
   void run() const;
 };
