@@ -16,12 +16,16 @@
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
 #include "agribot_obstacle_detection/PointCloudLateFusionConfig.h"
+#include "agribot_obstacle_detection/point_cloud_late_fusion/PointCloudLateFusionNodeConfig.h"
 
 class PointCloudLateFusionNode
 {
 private:
   std::optional<agribot_msgs::Object3DArray> in_1_object_array_;
   std::optional<agribot_msgs::Object3DArray> in_2_object_array_;
+
+  LateFusionMethod fusion_method_ = LateFusionMethod::rewrite_both;
+  double iou_threshold_ = 0.0;
 
   std::string objects_target_frame_id_;
   bool publish_processing_time_;
@@ -53,6 +57,7 @@ public:
 
   void objectArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg, int id);
   agribot_msgs::Object3DArray objectArrayFusion();
+  agribot_msgs::Object3DArray iouFusion();
   void publishOutObjectArrary(const agribot_msgs::Object3DArray& msg);
   void dynamicReconfigureCallback(const agribot_obstacle_detection::PointCloudLateFusionConfig& dynamic_config,
                                   uint32_t level);

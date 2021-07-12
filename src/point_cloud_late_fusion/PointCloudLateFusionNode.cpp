@@ -39,21 +39,43 @@ void PointCloudLateFusionNode::objectArrayCallback(const agribot_msgs::Object3DA
   {
     publishOutObjectArrary(objectArrayFusion());
   }
+  else
+  {
+    ROS_WARN_STREAM(log_tag_ << "Missing object array from one of the inputs. Skipping output array publication...");
+  }
 }
 
 agribot_msgs::Object3DArray PointCloudLateFusionNode::objectArrayFusion()
 {
   // TODO(olek) - prepare better fusion rule
   // For now just copy from both vectors
-  agribot_msgs::Object3DArray out_object_array_;
+  switch (fusion_method_)
+  {
+    case LateFusionMethod::rewrite_lidar:
+      return *in_1_object_array_;
 
-  out_object_array_.objects.reserve(in_1_object_array_->objects.size() + in_2_object_array_->objects.size());
-  out_object_array_.objects.insert(out_object_array_.objects.end(), in_1_object_array_->objects.begin(),
-                                   in_1_object_array_->objects.end());
-  out_object_array_.objects.insert(out_object_array_.objects.end(), in_2_object_array_->objects.begin(),
-                                   in_2_object_array_->objects.end());
+    case LateFusionMethod::rewrite_stereo_camera:
+      return *in_2_object_array_;
 
-  return out_object_array_;
+    case LateFusionMethod::intersection_over_union:
+      return iouFusion();
+
+    case LateFusionMethod::rewrite_both:
+    default:
+      agribot_msgs::Object3DArray out_object_array_;
+      out_object_array_.objects.reserve(in_1_object_array_->objects.size() + in_2_object_array_->objects.size());
+      out_object_array_.objects.insert(out_object_array_.objects.end(), in_1_object_array_->objects.begin(),
+                                       in_1_object_array_->objects.end());
+      out_object_array_.objects.insert(out_object_array_.objects.end(), in_2_object_array_->objects.begin(),
+                                       in_2_object_array_->objects.end());
+      return out_object_array_;
+  }
+}
+
+agribot_msgs::Object3DArray PointCloudLateFusionNode::iouFusion()
+{
+  // TODO(olek) - implement IoU fusion. For now, just return lidar
+  return *in_1_object_array_;
 }
 
 void PointCloudLateFusionNode::publishOutObjectArrary(const agribot_msgs::Object3DArray& msg)
@@ -67,6 +89,8 @@ void PointCloudLateFusionNode::dynamicReconfigureCallback(
   static_cast<void>(level);  // Suppress unused variable warning
 
   // Get node config
+  fusion_method_ = static_cast<LateFusionMethod>(dynamic_config.fusion_method);
+  iou_threshold_ = dynamic_config.iou_threshold;
   objects_target_frame_id_ = dynamic_config.objects_target_frame_id;
   publish_processing_time_ = dynamic_config.debug_publish_processing_time;
   print_processing_time_ = dynamic_config.debug_print_processing_time;
