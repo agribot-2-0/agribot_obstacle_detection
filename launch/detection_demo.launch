@@ -12,6 +12,6 @@
   <include file="$(find hal_lidar)/launch/hal_lidar.launch" />
 
   <!-- Load description with tf frames -->
-  <include if="${arg load_description}" file="$(find agribot_description)/launch/agribot_description.launch" />
+  <include if="$(arg load_description)" file="$(find agribot_description)/launch/agribot_description.launch" />
 
 </launch>
