@@ -24,55 +24,17 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs:
 
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object)
 {
-  agribot_msgs::ObjectPolygon msg;
+  auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
+  auto msg = getObjectPolygon(object.bbox.center.pose.position.x, object.bbox.center.pose.position.y,
+                              object.bbox.size.x, object.bbox.size.y, yaw);
+
   msg.header = object.header;
   msg.type = msg.UNKNOWN;
-
-  float half_x_size = object.bbox.size.x / 2.0;
-  float half_y_size = object.bbox.size.y / 2.0;
-
-  // Create polygon of a proper size at 0,0
-  geometry_msgs::Point32 polygon_vertex;
-  polygon_vertex.z = 0.0;
-
-  // First vertex
-  polygon_vertex.x = +half_x_size;
-  polygon_vertex.y = +half_y_size;
-  msg.polygon.points.push_back(polygon_vertex);
-  // Seoond vertex
-  polygon_vertex.x = +half_x_size;
-  polygon_vertex.y = -half_y_size;
-  msg.polygon.points.push_back(polygon_vertex);
-  // Third vertex
-  polygon_vertex.x = -half_x_size;
-  polygon_vertex.y = -half_y_size;
-  msg.polygon.points.push_back(polygon_vertex);
-  // Fourth vertex
-  polygon_vertex.x = -half_x_size;
-  polygon_vertex.y = +half_y_size;
-  msg.polygon.points.push_back(polygon_vertex);
-
-  for (auto& vertex : msg.polygon.points)
-  {
-    auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
-    auto c = cos(yaw);
-    auto s = sin(yaw);
-    auto x = vertex.x;
-    auto y = vertex.y;
-
-    // Rotate polygon around z axis
-    vertex.x = x * c - y * s;
-    vertex.y = x * s + y * c;
-
-    // Translate polygon to match bbox center
-    vertex.x += object.bbox.center.pose.position.x;
-    vertex.y += object.bbox.center.pose.position.y;
-  }
 
   return msg;
 }
 
-agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, float x_size, float y_size)
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double x_size, double y_size)
 {
   agribot_msgs::ObjectPolygonArray msg;
   for (const auto& pose : path.poses)
@@ -84,52 +46,59 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Pat
   return msg;
 }
 
-agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, float x_size, float y_size)
+agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, double x_size, double y_size)
 {
-  agribot_msgs::ObjectPolygon msg;
+  auto yaw = tf::getYaw(pose.pose.orientation);
+  auto msg = getObjectPolygon(pose.pose.position.x, pose.pose.position.y, x_size, y_size, yaw);
+
   msg.header = pose.header;
   msg.type = msg.UNKNOWN;
 
-  float half_x_size = x_size / 2.0;
-  float half_y_size = y_size / 2.0;
+  return msg;
+}
 
-  // Create polygon of a proper size at 0,0
+agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, double x_size, double y_size, double yaw)
+{
+  agribot_msgs::ObjectPolygon msg;
+
   geometry_msgs::Point32 polygon_vertex;
-  polygon_vertex.z = 0.0;
+  auto c = cos(yaw);
+  auto s = sin(yaw);
+  double half_x_size = x_size / 2.0;
+  double half_y_size = y_size / 2.0;
+  double x, y;
 
   // First vertex
-  polygon_vertex.x = half_x_size;
-  polygon_vertex.y = half_y_size;
+  x = half_x_size;
+  y = half_y_size;
+  polygon_vertex.x = c * x - s * y + center_x;
+  polygon_vertex.y = s * x + c * y + center_y;
+  polygon_vertex.z = 0.0;
   msg.polygon.points.push_back(polygon_vertex);
+
   // Seoond vertex
-  polygon_vertex.x = +half_x_size;
-  polygon_vertex.y = -half_y_size;
+  x = half_x_size;
+  y = -half_y_size;
+  polygon_vertex.x = c * x - s * y + center_x;
+  polygon_vertex.y = s * x + c * y + center_y;
+  polygon_vertex.z = 0.0;
   msg.polygon.points.push_back(polygon_vertex);
+
   // Third vertex
-  polygon_vertex.x = -half_x_size;
-  polygon_vertex.y = -half_y_size;
+  x = -half_x_size;
+  y = -half_y_size;
+  polygon_vertex.x = c * x - s * y + center_x;
+  polygon_vertex.y = s * x + c * y + center_y;
+  polygon_vertex.z = 0.0;
   msg.polygon.points.push_back(polygon_vertex);
+
   // Fourth vertex
-  polygon_vertex.x = -half_x_size;
-  polygon_vertex.y = +half_y_size;
+  x = -half_x_size;
+  y = half_y_size;
+  polygon_vertex.x = c * x - s * y + center_x;
+  polygon_vertex.y = s * x + c * y + center_y;
+  polygon_vertex.z = 0.0;
   msg.polygon.points.push_back(polygon_vertex);
-
-  for (auto& vertex : msg.polygon.points)
-  {
-    auto yaw = tf::getYaw(pose.pose.orientation);
-    auto c = cos(yaw);
-    auto s = sin(yaw);
-    auto x = vertex.x;
-    auto y = vertex.y;
-
-    // Rotate polygon around z axis
-    vertex.x = x * c - y * s;
-    vertex.y = x * s + y * c;
-
-    // Translate polygon to match bbox center
-    vertex.x += pose.pose.position.x;
-    vertex.y += pose.pose.position.y;
-  }
 
   return msg;
 }
