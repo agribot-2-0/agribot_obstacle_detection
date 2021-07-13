@@ -37,6 +37,8 @@
   <arg name="path_polygons_markers_topic"               value="$(arg arbiter_namespace)/path_polygons_markers"/>
   <arg name="objects_polygons_markers_topic"            value="$(arg arbiter_namespace)/objects_polygons_markers"/>
   <arg name="arbiter_processing_time_topic"             value="$(arg arbiter_namespace)/processing_time"/>
+  <arg name="detection_status_topic"                    value="/agribot/obstacle_detection/front/status"/>
+
 
 
   <!-- Lidar pipeline node -->
@@ -89,6 +91,7 @@
     <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>
     <remap from="~path_polygons"                        to="$(arg path_polygons_topic)"/>
     <remap from="~objects_polygons"                     to="$(arg objects_polygons_topic)"/>
+    <remap from="~detection_status"                     to="$(arg detection_status_topic)"/>
     <remap from="~processing_time"                      to="$(arg arbiter_processing_time_topic)"/>
   </node>
 
