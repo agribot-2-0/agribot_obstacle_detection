@@ -61,8 +61,8 @@ public:
   PointCloudPipelineNode(ros::NodeHandle* nh, const std::string& log_tag);
   ~PointCloudPipelineNode() = default;
 
-  void input_point_cloud_cb(const typename pcl::PointCloud<PointT>::ConstPtr& msg);
-  void dynamic_reconfigure_callback(const DynamicReconfigureT& dynamic_config, uint32_t level);
+  void inputPointCloudCb(const typename pcl::PointCloud<PointT>::ConstPtr& msg);
+  void dynamicReconfigureCallback(const DynamicReconfigureT& dynamic_config, uint32_t level);
   void run() const;
 };
 
@@ -73,7 +73,7 @@ PointCloudPipelineNode<PointT, DynamicReconfigureT>::PointCloudPipelineNode(ros:
 {
   // Setup dynamic reconfigure server
   typename dynamic_reconfigure::Server<DynamicReconfigureT>::CallbackType dynamic_reconfigure_function =
-      boost::bind(&PointCloudPipelineNode::dynamic_reconfigure_callback, this, _1, _2);
+      boost::bind(&PointCloudPipelineNode::dynamicReconfigureCallback, this, _1, _2);
   dynamic_reconfigure_server_.setCallback(dynamic_reconfigure_function);
 
   // Initialize publishers and subscribers
@@ -83,12 +83,12 @@ PointCloudPipelineNode<PointT, DynamicReconfigureT>::PointCloudPipelineNode(ros:
 
   processing_time_pub_ = nh->advertise<std_msgs::Float64>("processing_time", 1, false);
 
-  input_point_cloud_sub_ = nh->subscribe<pcl::PointCloud<PointT>>("input_point_cloud", 1,
-                                                                  &PointCloudPipelineNode::input_point_cloud_cb, this);
+  input_point_cloud_sub_ =
+      nh->subscribe<pcl::PointCloud<PointT>>("input_point_cloud", 1, &PointCloudPipelineNode::inputPointCloudCb, this);
 }
 
 template <typename PointT, typename DynamicReconfigureT>
-void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
+void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
     const typename pcl::PointCloud<PointT>::ConstPtr& msg)
 {
   timer.start();
@@ -107,8 +107,7 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
     int id = 0;
     for (const auto& cluster : objects_clusters_)
     {
-      auto object =
-          Conversions::convertToObject3D<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
+      auto object = Conversions::convertToObject3D<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
       object.id = id++;
       object_array_.objects.push_back(object);
     }
@@ -157,7 +156,7 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
 }
 
 template <typename PointT, typename DynamicReconfigureT>
-void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamic_reconfigure_callback(
+void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamicReconfigureCallback(
     const DynamicReconfigureT& dynamic_config, uint32_t level)
 {
   static_cast<void>(level);  // Suppress unused variable warning
