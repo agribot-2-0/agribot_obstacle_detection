@@ -17,6 +17,7 @@
 #include "agribot_msgs/Object3DArray.h"
 #include "agribot_obstacle_detection/PointCloudLateFusionConfig.h"
 #include "agribot_obstacle_detection/point_cloud_late_fusion/PointCloudLateFusionNodeConfig.h"
+#include "agribot_obstacle_detection/point_cloud_late_fusion/iou.h"
 
 class PointCloudLateFusionNode
 {

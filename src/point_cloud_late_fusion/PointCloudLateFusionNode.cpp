@@ -35,14 +35,12 @@ void PointCloudLateFusionNode::objectArrayCallback(const agribot_msgs::Object3DA
       break;
   }
 
-  if (in_1_object_array_ != std::nullopt && in_2_object_array_ != std::nullopt)
-  {
-    publishOutObjectArrary(objectArrayFusion());
-  }
-  else
+  if (in_1_object_array_ == std::nullopt || in_2_object_array_ == std::nullopt)
   {
     ROS_WARN_STREAM(log_tag_ << "Missing object array from one of the inputs. Skipping output array publication...");
+    return;
   }
+  publishOutObjectArrary(objectArrayFusion());
 }
 
 agribot_msgs::Object3DArray PointCloudLateFusionNode::objectArrayFusion()
@@ -74,8 +72,21 @@ agribot_msgs::Object3DArray PointCloudLateFusionNode::objectArrayFusion()
 
 agribot_msgs::Object3DArray PointCloudLateFusionNode::iouFusion()
 {
-  // TODO(olek) - implement IoU fusion. For now, just return lidar
-  return *in_1_object_array_;
+  agribot_msgs::Object3DArray out_object_array_;
+
+  // We trust lidar more, so we rewrite lidar's object if iou_threshold_ is reached
+  for (const auto& lidar_object : in_1_object_array_->objects)
+  {
+    for (const auto& stereo_camera_object : in_2_object_array_->objects)
+    {
+      if (iou(lidar_object, stereo_camera_object) >= iou_threshold_)
+      {
+        out_object_array_.objects.push_back(lidar_object);
+      }
+    }
+  }
+
+  return out_object_array_;
 }
 
 void PointCloudLateFusionNode::publishOutObjectArrary(const agribot_msgs::Object3DArray& msg)

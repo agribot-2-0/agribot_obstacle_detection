@@ -79,6 +79,7 @@ add_dependencies(object_polygon_array_visualization_node ${catkin_EXPORTED_TARGE
 add_executable(point_cloud_late_fusion_node
   src/point_cloud_late_fusion/point_cloud_late_fusion_node.cpp
   src/point_cloud_late_fusion/PointCloudLateFusionNode.cpp
+  src/point_cloud_late_fusion/iou.cpp
   src/util/ProcessingTimer.cpp
 )
 target_link_libraries(point_cloud_late_fusion_node ${catkin_LIBRARIES})
