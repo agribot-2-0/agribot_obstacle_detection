@@ -36,7 +36,7 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
 
     if (msg->objects.size() == 0)
     {
-      objects_polygons_->polygons.clear();
+      objects_polygons_ = agribot_msgs::ObjectPolygonArray();
     }
     else
     {
