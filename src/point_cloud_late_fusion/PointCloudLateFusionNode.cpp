@@ -45,7 +45,6 @@ void PointCloudLateFusionNode::objectArrayCallback(const agribot_msgs::Object3DA
 
 agribot_msgs::Object3DArray PointCloudLateFusionNode::objectArrayFusion()
 {
-  // TODO(olek) - prepare better fusion rule
   // For now just copy from both vectors
   switch (fusion_method_)
   {

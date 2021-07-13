@@ -92,7 +92,6 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
     const typename pcl::PointCloud<PointT>::ConstPtr& msg)
 {
   timer.start();
-  // TODO(olek) - If config not set (nullopt?) - return and ros_warn_stream
 
   // Clear list of 3D objects
   object_array_.objects.clear();
@@ -117,13 +116,11 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::input_point_cloud_cb(
   catch (const tf2::LookupException& e)
   {
     ROS_WARN_STREAM(log_tag_ << "Processing pipeline omitted: " << e.what());
-    // TODO(olek) - probably we should propagate this error to the arbiter
     return;
   }
   catch (const tf2::ExtrapolationException& e)
   {
     ROS_WARN_STREAM(log_tag_ << "Processing pipeline omitted: " << e.what());
-    // TODO(olek) - probably we should propagate this error to the arbiter
     return;
   }
 
@@ -205,5 +202,3 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::run() const
 {
   ros::spin();
 }
-
-// TODO(olek) - add namespaces!!!

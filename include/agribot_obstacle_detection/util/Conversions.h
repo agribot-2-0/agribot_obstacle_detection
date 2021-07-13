@@ -13,6 +13,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_sensor_msgs/tf2_sensor_msgs.h>
+#include <tf/transform_datatypes.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Point32.h>
@@ -119,8 +120,8 @@ agribot_msgs::BoundingBox3D convertToBoundingBox3D(const pcl::PointCloud<PointT>
 
   pcl::getMinMax3D(point_cloud, min_point, max_point);
   bbox.center.pose.position = convertToPointMsg(getCenterPoint(min_point, max_point));
-  // TODO(olek) - calculate bbox orientation
-  bbox.center.pose.orientation.w = 1;  // (For now take identity quaternion)
+  // TODO(olek) - calculate bbox orientation (for now just take identity quaternion)
+  bbox.center.pose.orientation.w = 1;
   bbox.size = getSizeVector(min_point, max_point);
 
   return bbox;

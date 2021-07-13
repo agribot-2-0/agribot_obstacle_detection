@@ -31,8 +31,6 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
   float half_x_size = object.bbox.size.x / 2.0;
   float half_y_size = object.bbox.size.y / 2.0;
 
-  // TODO(olek) - Improve object to polygon casting
-
   // Create polygon of a proper size at 0,0
   geometry_msgs::Point32 polygon_vertex;
   polygon_vertex.z = 0.0;
@@ -56,17 +54,11 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
 
   for (auto& vertex : msg.polygon.points)
   {
-    // TODO(olek) - better transform...
-    tf::Quaternion q(object.bbox.center.pose.orientation.x, object.bbox.center.pose.orientation.y,
-                     object.bbox.center.pose.orientation.z, object.bbox.center.pose.orientation.w);
-    tf::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    float c = cos(yaw);
-    float s = sin(yaw);
-    float x = vertex.x;
-    float y = vertex.y;
+    auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
+    auto c = cos(yaw);
+    auto s = sin(yaw);
+    auto x = vertex.x;
+    auto y = vertex.y;
 
     // Rotate polygon around z axis
     vertex.x = x * c - y * s;
@@ -101,8 +93,6 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
   float half_x_size = x_size / 2.0;
   float half_y_size = y_size / 2.0;
 
-  // TODO(olek) - Improve pose to polygon casting
-
   // Create polygon of a proper size at 0,0
   geometry_msgs::Point32 polygon_vertex;
   polygon_vertex.z = 0.0;
@@ -126,17 +116,11 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
 
   for (auto& vertex : msg.polygon.points)
   {
-    // TODO(olek) - better transform...
-    tf::Quaternion q(pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z,
-                     pose.pose.orientation.w);
-    tf::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    float c = cos(yaw);
-    float s = sin(yaw);
-    float x = vertex.x;
-    float y = vertex.y;
+    auto yaw = tf::getYaw(pose.pose.orientation);
+    auto c = cos(yaw);
+    auto s = sin(yaw);
+    auto x = vertex.x;
+    auto y = vertex.y;
 
     // Rotate polygon around z axis
     vertex.x = x * c - y * s;

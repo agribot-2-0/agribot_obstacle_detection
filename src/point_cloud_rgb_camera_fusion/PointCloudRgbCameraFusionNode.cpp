@@ -12,14 +12,12 @@ PointCloudRgbCameraFusionNode::PointCloudRgbCameraFusionNode(ros::NodeHandle* nh
 
   processing_time_pub_ = nh->advertise<std_msgs::Float64>("processing_time", 1, false);
 
-  in_object_array_sub_ =
-      nh->subscribe("in_3d_objects", 1, &PointCloudRgbCameraFusionNode::object3DArrayCallback, this);
+  in_object_array_sub_ = nh->subscribe("in_3d_objects", 1, &PointCloudRgbCameraFusionNode::object3DArrayCallback, this);
 }
 
 void PointCloudRgbCameraFusionNode::object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
 {
-  // TODO(olek) - add fusion
-  // For now, just rewrite objects
+  // TODO(olek) - add fusion (for now just rewrite objects)
   out_object_array_pub_.publish(msg);
 }
 

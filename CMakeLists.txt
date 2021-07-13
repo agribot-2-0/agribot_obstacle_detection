@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rviz_visual_tools
   sensor_msgs
+  tf
   tf2
   tf2_geometry_msgs
   tf2_sensor_msgs
