@@ -19,7 +19,7 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> regionGrowingClustering(
 {
   typename pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>);
 
-  // Stroing intermediate results
+  // Storing intermediate results
   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
 
   // Prepare search method

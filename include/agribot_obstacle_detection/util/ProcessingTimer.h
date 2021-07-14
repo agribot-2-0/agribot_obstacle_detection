@@ -10,14 +10,12 @@ class ProcessingTimer
 {
 private:
   std::chrono::time_point<std::chrono::steady_clock> start_time_;
-  // std::chrono::time_point checkpoint_time_;
   std::chrono::time_point<std::chrono::steady_clock> end_time_;
 
 public:
   ProcessingTimer() = default;
   ~ProcessingTimer() = default;
   void start();
-  // void checkpoint();
   void stop();
   double get_final_elapsed_time_s() const;
   double get_final_elapsed_time_ms() const;
