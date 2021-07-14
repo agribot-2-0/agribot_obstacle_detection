@@ -98,7 +98,6 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
 
   pipeline_.setInputCloud(msg);
   pipeline_.process();
-  // auto objects_clusters_ = pipeline_.getObjectsClusters();
   auto objects_clusters_ = pipeline_.getObjectsClusters();
 
   // Create object for each cluster and push it to Object3DArray
