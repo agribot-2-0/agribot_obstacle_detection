@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(agribot_obstacle_detection)
 add_compile_options(-std=c++17)
 
-
 find_package(catkin REQUIRED COMPONENTS
+  agribot_common
   agribot_msgs
   dynamic_reconfigure
   nav_msgs
@@ -12,14 +12,18 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rviz_visual_tools
   sensor_msgs
+  tf
+  tf2
   tf2_geometry_msgs
+  tf2_sensor_msgs
   tf2_ros
+  eigen_conversions
 )
 
-find_package(Eigen3 REQUIRED)
-
 generate_dynamic_reconfigure_options(
-  cfg/LidarDetection.cfg
+  cfg/LidarPointCloudPipeline.cfg
+  cfg/StereoCameraPointCloudPipeline.cfg
+  cfg/PointCloudLateFusion.cfg
 )
 
 catkin_package(
@@ -38,48 +42,68 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-# Lidar Obstacle Detection Node
-add_executable(lidar_obstacle_detection_node  src/lidar/lidar_obstacle_detection_node.cpp
-                                              include/agribot_obstacle_detection/lidar/LidarObstacleDetectionNode.h
-                                              include/agribot_obstacle_detection/lidar/cloud_processor.h
-                                              include/agribot_obstacle_detection/lidar/object.h
-                                              include/agribot_obstacle_detection/lidar/bounding_box.h
-                                              )
-target_link_libraries(lidar_obstacle_detection_node ${catkin_LIBRARIES})
-add_dependencies(lidar_obstacle_detection_node ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(lidar_point_cloud_pipeline_node 
+  src/point_cloud_pipeline/lidar_point_cloud_pipeline_node.cpp
+  src/util/ProcessingTimer.cpp
+  src/util/Conversions.cpp
+)
+target_link_libraries(lidar_point_cloud_pipeline_node ${catkin_LIBRARIES})
+add_dependencies(lidar_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
 
 
-# Sonar Obstacle Detection Node
-add_executable(sonar_obstacle_detection_node  src/sonar/sonar_obstacle_detection_node.cpp
-                                              src/sonar/SonarObstacleDetectionNode.cpp
-                                              src/sonar/sonar.cpp
-                                              )
-target_link_libraries(sonar_obstacle_detection_node ${catkin_LIBRARIES})
-add_dependencies(sonar_obstacle_detection_node ${catkin_EXPORTED_TARGETS})
+add_executable(stereo_camera_point_cloud_pipeline_node 
+  src/point_cloud_pipeline/stereo_camera_point_cloud_pipeline_node.cpp
+  src/util/ProcessingTimer.cpp
+  src/util/Conversions.cpp
+)
+target_link_libraries(stereo_camera_point_cloud_pipeline_node ${catkin_LIBRARIES})
+add_dependencies(stereo_camera_point_cloud_pipeline_node ${catkin_EXPORTED_TARGETS})
 
-# Obstacle Arbiter Node
-add_executable(obstacle_arbiter_node  src/arbiter/obstacle_arbiter_node.cpp
-                                      src/arbiter/ObstacleArbiterNode.cpp
-                                      src/arbiter/sat_collision_detection/sat.cpp
-                                      src/arbiter/sat_collision_detection/Projection.cpp
-                                      )
-target_link_libraries(obstacle_arbiter_node ${catkin_LIBRARIES})
-add_dependencies(obstacle_arbiter_node ${catkin_EXPORTED_TARGETS})
 
-# SAT test
-add_executable(sat_test  test/arbiter/sat_test.cpp
-                         src/arbiter/sat_collision_detection/sat.cpp
-                         src/arbiter/sat_collision_detection/Projection.cpp
-                         )
-target_link_libraries(sat_test ${catkin_LIBRARIES})
-add_dependencies(sat_test ${catkin_EXPORTED_TARGETS})
+add_executable(object_3d_array_visualization_node
+  src/rviz_markers_visualization/object_3d_array_visualization_node.cpp
+  src/rviz_markers_visualization/Object3DArrayVisualizationNode.cpp
+)
+target_link_libraries(object_3d_array_visualization_node ${catkin_LIBRARIES})
+add_dependencies(object_3d_array_visualization_node ${catkin_EXPORTED_TARGETS})
 
-# Obstacle visualization node
-add_executable(obstacle_visualization_node src/visualization/obstacle_visualization_node.cpp
-                                           src/visualization/ObstacleVisualizationNode.cpp
-                                           )
-target_link_libraries(obstacle_visualization_node ${catkin_LIBRARIES})
-add_dependencies(obstacle_visualization_node ${catkin_EXPORTED_TARGETS})
+add_executable(object_polygon_array_visualization_node
+  src/rviz_markers_visualization/object_polygon_array_visualization_node.cpp
+  src/rviz_markers_visualization/ObjectPolygonArrayVisualizationNode.cpp
+)
+target_link_libraries(object_polygon_array_visualization_node ${catkin_LIBRARIES})
+add_dependencies(object_polygon_array_visualization_node ${catkin_EXPORTED_TARGETS})
+
+
+add_executable(point_cloud_late_fusion_node
+  src/point_cloud_late_fusion/point_cloud_late_fusion_node.cpp
+  src/point_cloud_late_fusion/PointCloudLateFusionNode.cpp
+  src/point_cloud_late_fusion/IntersectionOverUnion.cpp
+  src/util/ProcessingTimer.cpp
+)
+target_link_libraries(point_cloud_late_fusion_node ${catkin_LIBRARIES})
+add_dependencies(point_cloud_late_fusion_node ${catkin_EXPORTED_TARGETS})
+
+
+add_executable(point_cloud_rgb_camera_fusion_node
+  src/point_cloud_rgb_camera_fusion/point_cloud_rgb_camera_fusion_node.cpp
+  src/point_cloud_rgb_camera_fusion/PointCloudRgbCameraFusionNode.cpp
+  src/util/ProcessingTimer.cpp
+)
+target_link_libraries(point_cloud_rgb_camera_fusion_node ${catkin_LIBRARIES})
+add_dependencies(point_cloud_rgb_camera_fusion_node ${catkin_EXPORTED_TARGETS})
+
+
+add_executable(obstacles_arbiter_node
+  src/obstacles_arbiter/obstacles_arbiter_node.cpp
+  src/obstacles_arbiter/ObstaclesArbiterNode.cpp
+  src/obstacles_arbiter/collision_detection/SatPolygonCollisionDetection.cpp
+  src/obstacles_arbiter/collision_detection/Projection.cpp
+  src/util/ProcessingTimer.cpp
+  src/util/Conversions.cpp
+)
+target_link_libraries(obstacles_arbiter_node ${catkin_LIBRARIES})
+add_dependencies(obstacles_arbiter_node ${catkin_EXPORTED_TARGETS})
 
 
 #############
@@ -87,23 +111,24 @@ add_dependencies(obstacle_visualization_node ${catkin_EXPORTED_TARGETS})
 #############
 
 install(TARGETS
-  lidar_obstacle_detection_node
-  sonar_obstacle_detection_node
-  obstacle_arbiter_node
-  sat_test
-  obstacle_visualization_node
+  lidar_point_cloud_pipeline_node
+  stereo_camera_point_cloud_pipeline_node
+  object_3d_array_visualization_node
+  object_polygon_array_visualization_node
+  point_cloud_late_fusion_node
+  point_cloud_rgb_camera_fusion_node
+  obstacles_arbiter_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(DIRECTORY launch param bags scripts
+install(DIRECTORY launch bags scripts
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   PATTERN ".svn" EXCLUDE
 )
 
 catkin_install_python(PROGRAMS
    scripts/obstacle_detection_observer_app/obstacle_detection_observer_app.py
-   scripts/socketcan_sonar_reader/socketcan_sonar_reader_node.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
