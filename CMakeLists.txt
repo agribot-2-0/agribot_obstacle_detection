@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(agribot_obstacle_detection)
-add_compile_options(-std=c++17)
+add_compile_options(-std=c++17 -Wall -Wextra -pedantic -Werror)
 
 find_package(catkin REQUIRED COMPONENTS
   agribot_common
