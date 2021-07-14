@@ -27,8 +27,8 @@
 class ObstaclesArbiterNode
 {
 private:
-  float safety_zone_length_;
-  float safety_zone_width_;
+  double safety_zone_length_;
+  double safety_zone_width_;
   std::string objects_target_frame_id_;
   bool publish_processing_time_;
   bool print_processing_time_;
@@ -61,12 +61,12 @@ private:
   std::string log_tag_;
   ProcessingTimer timer;
 
-    void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
-    void pathCallback(const nav_msgs::Path::ConstPtr& msg);
-    void checkCollisions();
-    void publishOutputPolygons();
-    void publishDetectionStatus();
-    void sendProcessingTimeInfo(double time_ms);
+  void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
+  void pathCallback(const nav_msgs::Path::ConstPtr& msg);
+  void checkCollisions();
+  void publishOutputPolygons();
+  void publishDetectionStatus();
+  void sendProcessingTimeInfo(double time_ms);
 
 public:
   ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag);

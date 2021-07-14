@@ -9,8 +9,8 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
 {
   detection_status_.status = detection_status_.UNKNOWN;
 
-  safety_zone_length_ = ros_common_functions::getRosParam<float>("~obstacles_arbiter/safety_zone_length");
-  safety_zone_width_ = ros_common_functions::getRosParam<float>("~obstacles_arbiter/safety_zone_width");
+  safety_zone_length_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/safety_zone_length");
+  safety_zone_width_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/safety_zone_width");
 
   objects_target_frame_id_ = ros_common_functions::getRosParam<std::string>("~objects_target_frame_id");
   publish_processing_time_ = ros_common_functions::getRosParam<bool>("~publish_processing_time");
