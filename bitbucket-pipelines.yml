@@ -32,7 +32,7 @@ pipelines:
          script:
            - apk add --update bash coreutils tar
            - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci .industrial_ci -b master
-           - if [ -z "$(git ls-remote --heads https://github.com/panpawelchmiel/agribot_common.git $(git rev-parse --abbrev-ref HEAD))" ]; then git clone https://github.com/panpawelchmiel/agribot_common.git; else git clone https://github.com/panpawelchmiel/agribot_msgs.git -b $(git rev-parse --abbrev-ref HEAD); fi
+           - if [ -z "$(git ls-remote --heads https://github.com/panpawelchmiel/agribot_common.git $(git rev-parse --abbrev-ref HEAD))" ]; then git clone https://github.com/panpawelchmiel/agribot_common.git; else git clone https://github.com/panpawelchmiel/agribot_common.git -b $(git rev-parse --abbrev-ref HEAD); fi
            - if [ -z "$(git ls-remote --heads https://github.com/panpawelchmiel/agribot_msgs.git $(git rev-parse --abbrev-ref HEAD))" ]; then git clone https://github.com/panpawelchmiel/agribot_msgs.git; else git clone https://github.com/panpawelchmiel/agribot_msgs.git -b $(git rev-parse --abbrev-ref HEAD); fi
            - if [ -z "$(git ls-remote --heads https://github.com/panpawelchmiel/rviz_visual_tools.git $(git rev-parse --abbrev-ref HEAD))" ]; then git clone https://github.com/panpawelchmiel/rviz_visual_tools.git; else git clone https://github.com/panpawelchmiel/rviz_visual_tools.git -b $(git rev-parse --abbrev-ref HEAD); fi
            - .industrial_ci/bitbucket.sh BUILDER="colcon" ROS_DISTRO="melodic" UPSTREAM_WORKSPACE="rviz_visual_tools agribot_msgs agribot_common" PARALLEL_BUILDS="2"
