@@ -4,8 +4,11 @@
 
 #pragma once
 
-#include <pcl_ros/point_cloud.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl_ros/point_cloud.h>
+#pragma GCC diagnostic pop
 
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/HelperMethods.h"
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RansacPlaneSegmentationConfig.h"

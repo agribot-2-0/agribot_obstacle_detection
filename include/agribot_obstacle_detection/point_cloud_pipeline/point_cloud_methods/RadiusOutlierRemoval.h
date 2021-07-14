@@ -4,8 +4,11 @@
 
 #pragma once
 
-#include <pcl_ros/point_cloud.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <pcl/filters/radius_outlier_removal.h>
+#include <pcl_ros/point_cloud.h>
+#pragma GCC diagnostic pop
 
 #include "agribot_obstacle_detection/point_cloud_pipeline/point_cloud_methods/config/RadiusOutlierRemovalConfig.h"
 
