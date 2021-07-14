@@ -7,10 +7,11 @@
 class Projection
 {
 private:
-  float min_;
-  float max_;
+  double min_;
+  double max_;
 
 public:
-  Projection(float min, float max);
+  Projection(double min, double max);
+  Projection() = delete;
   bool overlap(const Projection& other) const;
 };

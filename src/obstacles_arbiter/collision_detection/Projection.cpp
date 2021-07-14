@@ -4,7 +4,7 @@
 
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/Projection.h"
 
-Projection::Projection(float min, float max) : min_{ min }, max_{ max }
+Projection::Projection(double min, double max) : min_{ min }, max_{ max }
 {
 }
 
