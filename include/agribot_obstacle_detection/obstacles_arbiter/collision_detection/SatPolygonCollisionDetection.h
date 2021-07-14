@@ -13,6 +13,7 @@
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/Projection.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 
+// Polygon collision detection based on SAT (Separating Axis Theorem)
 // Inspired by http://www.dyn4j.org/2010/01/sat
 
 class SatPolygonCollisionDetection : public IPolygonCollisionDetection
