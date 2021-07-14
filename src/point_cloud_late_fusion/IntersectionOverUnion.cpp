@@ -2,14 +2,14 @@
  * Copyright (C) 2021 Agribot. All rights reserved.
  */
 
-#include "agribot_obstacle_detection/point_cloud_late_fusion/iou.h"
+#include "agribot_obstacle_detection/point_cloud_late_fusion/IntersectionOverUnion.h"
 
-double iou(const agribot_msgs::Object3D& object_1, const agribot_msgs::Object3D& object_2)
+double intersectionOverUnion(const agribot_msgs::Object3D& object_1, const agribot_msgs::Object3D& object_2)
 {
-  return iou(object_1.bbox, object_2.bbox);
+  return intersectionOverUnion(object_1.bbox, object_2.bbox);
 }
 
-double iou(const agribot_msgs::BoundingBox3D& box_1, const agribot_msgs::BoundingBox3D& box_2)
+double intersectionOverUnion(const agribot_msgs::BoundingBox3D& box_1, const agribot_msgs::BoundingBox3D& box_2)
 {
   auto box_1_volume = box_1.size.x * box_1.size.y * box_1.size.z;
   auto box_2_volume = box_2.size.x * box_2.size.y * box_2.size.z;

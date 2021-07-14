@@ -17,7 +17,7 @@
 #include "agribot_msgs/Object3DArray.h"
 #include "agribot_obstacle_detection/PointCloudLateFusionConfig.h"
 #include "agribot_obstacle_detection/point_cloud_late_fusion/PointCloudLateFusionNodeConfig.h"
-#include "agribot_obstacle_detection/point_cloud_late_fusion/iou.h"
+#include "agribot_obstacle_detection/point_cloud_late_fusion/IntersectionOverUnion.h"
 
 class PointCloudLateFusionNode
 {
@@ -54,7 +54,7 @@ private:
 
   void objectArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg, int id);
   agribot_msgs::Object3DArray objectArrayFusion();
-  agribot_msgs::Object3DArray iouFusion();
+  agribot_msgs::Object3DArray intersectionOverUnionFusion();
   void publishOutObjectArrary(const agribot_msgs::Object3DArray& msg);
   void dynamicReconfigureCallback(const agribot_obstacle_detection::PointCloudLateFusionConfig& dynamic_config,
                                   uint32_t level);

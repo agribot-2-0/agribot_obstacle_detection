@@ -55,7 +55,7 @@ agribot_msgs::Object3DArray PointCloudLateFusionNode::objectArrayFusion()
       return *in_2_object_array_;
 
     case LateFusionMethod::intersection_over_union:
-      return iouFusion();
+      return intersectionOverUnionFusion();
 
     case LateFusionMethod::rewrite_both:
     default:
@@ -69,7 +69,7 @@ agribot_msgs::Object3DArray PointCloudLateFusionNode::objectArrayFusion()
   }
 }
 
-agribot_msgs::Object3DArray PointCloudLateFusionNode::iouFusion()
+agribot_msgs::Object3DArray PointCloudLateFusionNode::intersectionOverUnionFusion()
 {
   agribot_msgs::Object3DArray out_object_array_;
 
@@ -78,7 +78,7 @@ agribot_msgs::Object3DArray PointCloudLateFusionNode::iouFusion()
   {
     for (const auto& stereo_camera_object : in_2_object_array_->objects)
     {
-      if (iou(lidar_object, stereo_camera_object) >= iou_threshold_)
+      if (intersectionOverUnion(lidar_object, stereo_camera_object) >= iou_threshold_)
       {
         out_object_array_.objects.push_back(lidar_object);
       }
