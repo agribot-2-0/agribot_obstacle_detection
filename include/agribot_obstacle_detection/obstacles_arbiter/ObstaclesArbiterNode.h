@@ -4,26 +4,24 @@
 
 #pragma once
 
-#include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include <tf2_ros/transform_listener.h>
-#include <std_msgs/Float64.h>
 #include <nav_msgs/Path.h>
+#include <ros/ros.h>
+#include <std_msgs/Float64.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <memory>
 #include <optional>
 #include <string>
 
 #include "agribot_common/CommonFunctions/ros_common_functions.h"
-
-#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
-#include "agribot_obstacle_detection/util/ProcessingTimer.h"
-#include "agribot_obstacle_detection/util/Conversions.h"
-
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
 #include "agribot_msgs/ObjectPolygonArray.h"
 #include "agribot_msgs/ObstacleDetectionStatus.h"
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
+#include "agribot_obstacle_detection/util/Conversions.h"
+#include "agribot_obstacle_detection/util/ProcessingTimer.h"
 
 class ObstaclesArbiterNode
 {
@@ -38,8 +36,6 @@ private:
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
   agribot_msgs::ObjectPolygonArray output_polygons_;
   agribot_msgs::ObstacleDetectionStatus detection_status_;
-
-  std::unique_ptr<IPolygonCollisionDetection> collision_detection_;
 
   ros::NodeHandle* nh_;
 
@@ -61,6 +57,8 @@ private:
   // Logging and debug
   std::string log_tag_;
   ProcessingTimer timer;
+
+  std::unique_ptr<IPolygonCollisionDetection> collision_detection_;
 
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
