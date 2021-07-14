@@ -37,7 +37,7 @@ void ransacPlaneSegmentation(const typename pcl::PointCloud<PointT>::ConstPtr in
   if (inliers->indices.size() == 0)
   {
     // Plane not detected
-    ROS_WARN_STREAM("Could not estimate plane for given dataset.");
+    ROS_WARN_STREAM("[RansacPlaneSegmentation] Could not estimate plane for given dataset.");
     plane_cloud->clear();
     *objects_cloud = *input_cloud;
   }
