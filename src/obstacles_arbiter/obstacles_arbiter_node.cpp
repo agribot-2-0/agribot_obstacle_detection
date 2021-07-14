@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 
 #include "agribot_obstacle_detection/obstacles_arbiter/ObstaclesArbiterNode.h"
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/SatPolygonCollisionDetection.h"
 
 int main(int argc, char** argv)
 {
@@ -12,9 +13,11 @@ int main(int argc, char** argv)
   ros::NodeHandle nh("~");
   std::string log_tag = "[ObstaclesArbiterNode] ";
 
+  std::unique_ptr<IPolygonCollisionDetection> collision_detection = std::make_unique<SatPolygonCollisionDetection>();
+
   try
   {
-    ObstaclesArbiterNode oan(&nh, log_tag);
+    ObstaclesArbiterNode oan(&nh, log_tag, std::move(collision_detection));
     oan.run();
   }
   catch (const std::exception& e)

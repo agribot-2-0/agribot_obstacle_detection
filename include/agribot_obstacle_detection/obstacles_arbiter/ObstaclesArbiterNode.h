@@ -10,12 +10,13 @@
 #include <std_msgs/Float64.h>
 #include <nav_msgs/Path.h>
 
+#include <memory>
 #include <optional>
 #include <string>
 
 #include "agribot_common/CommonFunctions/ros_common_functions.h"
 
-#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/SatPolygonCollisionDetection.h"
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 
@@ -38,7 +39,7 @@ private:
   agribot_msgs::ObjectPolygonArray output_polygons_;
   agribot_msgs::ObstacleDetectionStatus detection_status_;
 
-  SatPolygonCollisionDetection collision_detection_;
+  std::unique_ptr<IPolygonCollisionDetection> collision_detection_;
 
   ros::NodeHandle* nh_;
 
@@ -69,6 +70,7 @@ private:
   void sendProcessingTimeInfo(double time_ms);
 
 public:
-  ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag);
+  ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag,
+                       std::unique_ptr<IPolygonCollisionDetection> collision_detection);
   void run() const;
 };

@@ -9,15 +9,16 @@
 #include <algorithm>
 #include <vector>
 
+#include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/Projection.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 
 // Inspired by http://www.dyn4j.org/2010/01/sat
 
-class SatPolygonCollisionDetection
+class SatPolygonCollisionDetection : public IPolygonCollisionDetection
 {
 public:
-  bool areColliding(const agribot_msgs::ObjectPolygon& p1, const agribot_msgs::ObjectPolygon& p2) const;
+  bool areColliding(const agribot_msgs::ObjectPolygon& p1, const agribot_msgs::ObjectPolygon& p2) const override;
 
 private:
   std::vector<Eigen::Vector2f> getNormalAxes(const agribot_msgs::ObjectPolygon& p) const;

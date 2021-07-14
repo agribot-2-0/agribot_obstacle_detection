@@ -4,8 +4,9 @@
 
 #include "agribot_obstacle_detection/obstacles_arbiter/ObstaclesArbiterNode.h"
 
-ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag)
-  : nh_{ nh }, tf_listener_{ tf_buffer_ }, log_tag_{ log_tag }
+ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag,
+                                           std::unique_ptr<IPolygonCollisionDetection> collision_detection)
+  : nh_{ nh }, tf_listener_{ tf_buffer_ }, log_tag_{ log_tag }, collision_detection_{ std::move(collision_detection) }
 {
   detection_status_.status = detection_status_.UNKNOWN;
 
@@ -117,7 +118,7 @@ void ObstaclesArbiterNode::checkCollisions()
   {
     for (auto& object_polygon : objects_polygons_->polygons)
     {
-      if (collision_detection_.areColliding(object_polygon, path_polygon))
+      if (collision_detection_->areColliding(object_polygon, path_polygon))
       {
         detection_status_.status = detection_status_.OBSTACLE_DETECTED;
         publishDetectionStatus();
