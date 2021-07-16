@@ -14,4 +14,6 @@
   <!-- Load description with tf frames -->
   <include if="$(arg load_description)" file="$(find agribot_description)/launch/agribot_description.launch" />
 
+  <node pkg="agribot_obstacle_detection" type="agri_transform_broadcaster.py" name="agri_transform_broadcaster" />
+
 </launch>

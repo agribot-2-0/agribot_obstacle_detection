@@ -129,6 +129,7 @@ install(DIRECTORY launch bags scripts
 
 catkin_install_python(PROGRAMS
    scripts/obstacle_detection_observer_app/obstacle_detection_observer_app.py
+   scripts/agri_transform_broadcaster.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -15,4 +15,6 @@
   <!-- Load description param -->
   <include file="$(find agribot_description)/launch/robot_description.xml" />
 
+  <node pkg="agribot_obstacle_detection" type="agri_transform_broadcaster.py" name="agri_transform_broadcaster" />
+
 </launch>

@@ -104,9 +104,40 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
   try
   {
     int id = 0;
+
+    std::vector<std::string> target_frame_id_vector = {
+      "base_footprint",
+      "base_footprint_rot_plus_5",
+      "base_footprint_rot_plus_10",
+      "base_footprint_rot_plus_15",
+      "base_footprint_rot_minus_5",
+      "base_footprint_rot_minus_10",
+      "base_footprint_rot_minus_15",
+    };
+
     for (const auto& cluster : objects_clusters_)
     {
-      auto object = Conversions::convertToObject3D<PointT>(cluster, node_config_.objects_target_frame_id_, tf_buffer_);
+      std::vector<double> volumes{};
+      for (const auto& target_frame_id : target_frame_id_vector)
+      {
+        auto transform = tf_buffer_.lookupTransform(target_frame_id, cluster->header.frame_id, ros::Time::now());
+        pcl::PointCloud<PointT> cluster_transformed;
+        pcl_ros::transformPointCloud(*cluster, cluster_transformed, transform.transform);
+        auto object = Conversions::convertToObject3D<PointT>(cluster_transformed, target_frame_id, tf_buffer_);
+        volumes.push_back(object.bbox.size.x * object.bbox.size.y * object.bbox.size.z);
+      }
+
+      auto min_volume_index = std::distance(volumes.begin(), std::min_element(volumes.begin(), volumes.end()));
+      auto min_volume_target_frame_id = target_frame_id_vector[min_volume_index];
+      auto transform =
+          tf_buffer_.lookupTransform(min_volume_target_frame_id, cluster->header.frame_id, ros::Time::now());
+
+      pcl::PointCloud<PointT> cluster_transformed;
+      pcl_ros::transformPointCloud(*cluster, cluster_transformed, transform.transform);
+
+      auto object_temp =
+          Conversions::convertToObject3D<PointT>(cluster_transformed, min_volume_target_frame_id, tf_buffer_);
+      auto object = Conversions::transform(object_temp, node_config_.objects_target_frame_id_, tf_buffer_);
       object.id = id++;
       object_array_.objects.push_back(object);
     }

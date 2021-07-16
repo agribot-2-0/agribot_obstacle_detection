@@ -131,24 +131,24 @@ agribot_msgs::BoundingBox3D convertToBoundingBox3D(const pcl::PointCloud<PointT>
 }
 
 template <typename PointT>
-agribot_msgs::Object3D convertToObject3D(typename pcl::PointCloud<PointT>::Ptr point_cloud,
-                                         const std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer)
+agribot_msgs::Object3D convertToObject3D(const pcl::PointCloud<PointT>& point_cloud, const std::string& target_frame_id,
+                                         const tf2_ros::Buffer& tf_buffer)
 {
   // Note: id and class information are not filled in this function!
   agribot_msgs::Object3D object;
 
-  if (point_cloud->header.frame_id == target_frame_id)
+  if (point_cloud.header.frame_id == target_frame_id)
   {
     // Cloud frame is the same as target frame. Just rewrite point_cloud
-    pcl::toROSMsg(*point_cloud, object.point_cloud);
-    object.bbox = convertToBoundingBox3D(*point_cloud);
+    pcl::toROSMsg(point_cloud, object.point_cloud);
+    object.bbox = convertToBoundingBox3D(point_cloud);
   }
   else
   {
     // Transform point_cloud to target frame
     pcl::PointCloud<PointT> temp_cloud;
-    auto transform = tf_buffer.lookupTransform(target_frame_id, point_cloud->header.frame_id, ros::Time::now());
-    pcl_ros::transformPointCloud(*point_cloud, temp_cloud, transform.transform);
+    auto transform = tf_buffer.lookupTransform(target_frame_id, point_cloud.header.frame_id, ros::Time::now());
+    pcl_ros::transformPointCloud(point_cloud, temp_cloud, transform.transform);
     temp_cloud.header.frame_id = target_frame_id;
     pcl::toROSMsg(temp_cloud, object.point_cloud);
     object.bbox = convertToBoundingBox3D(temp_cloud);
