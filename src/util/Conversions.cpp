@@ -24,9 +24,29 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs:
 
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object)
 {
-  auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
-  auto msg = getObjectPolygon(object.bbox.center.pose.position.x, object.bbox.center.pose.position.y,
-                              object.bbox.size.x, object.bbox.size.y, yaw);
+  // auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
+  // auto msg = getObjectPolygon(object.bbox.center.pose.position.x, object.bbox.center.pose.position.y,
+  //                             object.bbox.size.x, object.bbox.size.y, yaw);
+  agribot_msgs::ObjectPolygon msg;
+
+  // pcl::PointCloud<pcl::PointXYZ> pcl_pointcloud;
+  pcl::PCLPointCloud2 pcl_pointcloud2;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
+  pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
+
+  pcl::ConvexHull<pcl::PointXYZ> convex_hull;
+  convex_hull.setInputCloud(pcl_pointcloud);
+  convex_hull.setDimension(2);
+  convex_hull.reconstruct(*convex_hull_pointcloud);
+
+  for (const auto& point : convex_hull_pointcloud->points)
+  {
+    auto ros_point32 = Conversions::convertToPoint32Msg<pcl::PointXYZ>(point);
+    ros_point32.z = 0.0;
+    msg.polygon.points.push_back(ros_point32);
+  }
 
   msg.header = object.header;
   msg.type = msg.UNKNOWN;
