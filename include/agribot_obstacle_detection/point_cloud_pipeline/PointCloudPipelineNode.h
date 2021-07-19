@@ -120,9 +120,10 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
       std::vector<double> volumes{};
       for (const auto& target_frame_id : target_frame_id_vector)
       {
-        auto transform = tf_buffer_.lookupTransform(target_frame_id, cluster->header.frame_id, ros::Time::now());
+        auto transform = tf_buffer_.lookupTransform(target_frame_id, cluster->header.frame_id, ros::Time(0));
         pcl::PointCloud<PointT> cluster_transformed;
         pcl_ros::transformPointCloud(*cluster, cluster_transformed, transform.transform);
+        cluster_transformed.header.frame_id = target_frame_id;
         auto object = Conversions::convertToObject3D<PointT>(cluster_transformed, target_frame_id, tf_buffer_);
         volumes.push_back(object.bbox.size.x * object.bbox.size.y * object.bbox.size.z);
       }
@@ -130,10 +131,11 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
       auto min_volume_index = std::distance(volumes.begin(), std::min_element(volumes.begin(), volumes.end()));
       auto min_volume_target_frame_id = target_frame_id_vector[min_volume_index];
       auto transform =
-          tf_buffer_.lookupTransform(min_volume_target_frame_id, cluster->header.frame_id, ros::Time::now());
+          tf_buffer_.lookupTransform(min_volume_target_frame_id, cluster->header.frame_id, ros::Time(0));
 
       pcl::PointCloud<PointT> cluster_transformed;
       pcl_ros::transformPointCloud(*cluster, cluster_transformed, transform.transform);
+      cluster_transformed.header.frame_id = min_volume_target_frame_id;
 
       auto object_temp =
           Conversions::convertToObject3D<PointT>(cluster_transformed, min_volume_target_frame_id, tf_buffer_);

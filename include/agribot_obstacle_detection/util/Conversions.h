@@ -147,7 +147,7 @@ agribot_msgs::Object3D convertToObject3D(const pcl::PointCloud<PointT>& point_cl
   {
     // Transform point_cloud to target frame
     pcl::PointCloud<PointT> temp_cloud;
-    auto transform = tf_buffer.lookupTransform(target_frame_id, point_cloud.header.frame_id, ros::Time::now());
+    auto transform = tf_buffer.lookupTransform(target_frame_id, point_cloud.header.frame_id, ros::Time(0));
     pcl_ros::transformPointCloud(point_cloud, temp_cloud, transform.transform);
     temp_cloud.header.frame_id = target_frame_id;
     pcl::toROSMsg(temp_cloud, object.point_cloud);
