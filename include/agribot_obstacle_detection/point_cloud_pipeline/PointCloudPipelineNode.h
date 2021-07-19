@@ -134,7 +134,12 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
   if (node_config_.publish_objects_point_cloud_)
   {
     auto objects_point_cloud = pipeline_.getObjectsPointCloud();
-    objects_point_cloud_pub_.publish(*objects_point_cloud);
+    typename pcl::PointCloud<PointT>::Ptr filtered_objects_point_cloud{ new pcl::PointCloud<PointT> };
+    RadiusOutlierRemovalConfig ror_config;
+    ror_config.neighbours_n_ = 10;
+    ror_config.radius_ = 0.3;
+    radiusOutlierRemoval<PointT>(objects_point_cloud, filtered_objects_point_cloud, ror_config);
+    objects_point_cloud_pub_.publish(*filtered_objects_point_cloud);
   }
 
   // Stop timer and log results
