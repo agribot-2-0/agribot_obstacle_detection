@@ -36,6 +36,11 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
   pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
   pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
 
+  for (auto& point : pcl_pointcloud->points)
+  {
+    point.z = 0.0;
+  }
+
   pcl::ConvexHull<pcl::PointXYZ> convex_hull;
   convex_hull.setInputCloud(pcl_pointcloud);
   convex_hull.setDimension(2);
@@ -44,7 +49,6 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D&
   for (const auto& point : convex_hull_pointcloud->points)
   {
     auto ros_point32 = Conversions::convertToPoint32Msg<pcl::PointXYZ>(point);
-    ros_point32.z = 0.0;
     msg.polygon.points.push_back(ros_point32);
   }
 
