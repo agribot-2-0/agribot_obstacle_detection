@@ -200,6 +200,7 @@ agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,
 
   // TODO(olek) - use lookupTransform instead of transform
   out_msg.center = tf_buffer.transform(in_msg.center, target_frame_id);
+  out_msg.center.header.frame_id = target_frame_id;
   out_msg.size = in_msg.size;
 
   return out_msg;
