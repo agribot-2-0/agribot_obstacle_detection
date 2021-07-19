@@ -46,6 +46,7 @@
     <remap from="~input_point_cloud"                    to="$(arg lidar_point_cloud_topic)"/>
     <remap from="~ground_point_cloud"                   to="$(arg lidar_point_cloud_topic)/ground"/>
     <remap from="~objects_point_cloud"                  to="$(arg lidar_point_cloud_topic)/objects"/>
+    <remap from="~filtered_objects_point_cloud"         to="$(arg lidar_point_cloud_topic)/filtered_objects"/>
     <remap from="~objects"                              to="$(arg lidar_objects_topic)"/>
     <remap from="~processing_time"                      to="$(arg lidar_processing_time_topic)"/>
   </node>
@@ -55,6 +56,7 @@
     <remap from="~input_point_cloud"                    to="$(arg stereo_camera_point_cloud_topic)"/>
     <remap from="~ground_point_cloud"                   to="$(arg stereo_camera_point_cloud_topic)/ground"/>
     <remap from="~objects_point_cloud"                  to="$(arg stereo_camera_point_cloud_topic)/objects"/>
+    <remap from="~filtered_objects_point_cloud"         to="$(arg stereo_camera_point_cloud_topic)/filtered_objects"/>
     <remap from="~objects"                              to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~processing_time"                      to="$(arg stereo_camera_processing_time_topic)"/>
   </node>
