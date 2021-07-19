@@ -130,8 +130,7 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
 
       auto min_volume_index = std::distance(volumes.begin(), std::min_element(volumes.begin(), volumes.end()));
       auto min_volume_target_frame_id = target_frame_id_vector[min_volume_index];
-      auto transform =
-          tf_buffer_.lookupTransform(min_volume_target_frame_id, cluster->header.frame_id, ros::Time(0));
+      auto transform = tf_buffer_.lookupTransform(min_volume_target_frame_id, cluster->header.frame_id, ros::Time(0));
 
       pcl::PointCloud<PointT> cluster_transformed;
       pcl_ros::transformPointCloud(*cluster, cluster_transformed, transform.transform);
@@ -167,7 +166,12 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
   if (node_config_.publish_objects_point_cloud_)
   {
     auto objects_point_cloud = pipeline_.getObjectsPointCloud();
-    objects_point_cloud_pub_.publish(*objects_point_cloud);
+    typename pcl::PointCloud<PointT>::Ptr filtered_objects_point_cloud{ new pcl::PointCloud<PointT> };
+    RadiusOutlierRemovalConfig ror_config;
+    ror_config.neighbours_n_ = 10;
+    ror_config.radius_ = 0.3;
+    radiusOutlierRemoval<PointT>(objects_point_cloud, filtered_objects_point_cloud, ror_config);
+    objects_point_cloud_pub_.publish(*filtered_objects_point_cloud);
   }
 
   // Stop timer and log results
