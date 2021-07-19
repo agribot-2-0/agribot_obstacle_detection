@@ -9,6 +9,10 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/common.h>
 
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include <pcl/surface/convex_hull.h>
+#pragma GCC diagnostic pop
+
 #include <ros/ros.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -49,6 +53,9 @@ template <typename PointT>
 geometry_msgs::Point convertToPointMsg(PointT p);
 
 template <typename PointT>
+geometry_msgs::Point32 convertToPoint32Msg(PointT p);
+
+template <typename PointT>
 PointT getCenterPoint(const PointT& min_point, const PointT& max_point);
 
 template <typename PointT>
@@ -87,6 +94,16 @@ template <typename PointT>
 geometry_msgs::Point convertToPointMsg(PointT p)
 {
   geometry_msgs::Point point;
+  point.x = p.x;
+  point.y = p.y;
+  point.z = p.z;
+  return point;
+}
+
+template <typename PointT>
+geometry_msgs::Point32 convertToPoint32Msg(PointT p)
+{
+  geometry_msgs::Point32 point;
   point.x = p.x;
   point.y = p.y;
   point.z = p.z;
