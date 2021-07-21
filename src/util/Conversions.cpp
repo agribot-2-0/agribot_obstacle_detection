@@ -73,6 +73,12 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Objec
     msg.polygon.points.push_back(ros_point32);
   }
 
+  msg.area = convex_hull.getTotalArea();
+
+  pcl::PointXYZ pcl_centroid_point;
+  pcl::computeCentroid<pcl::PointXYZ>(*convex_hull_pointcloud, pcl_centroid_point);
+  msg.centroid = Conversions::convertToPoint32Msg<pcl::PointXYZ>(pcl_centroid_point);
+
   msg.header = object.header;
   msg.type = msg.UNKNOWN;
 
@@ -98,6 +104,8 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
 
   msg.header = pose.header;
   msg.type = msg.UNKNOWN;
+  msg.area = x_size * y_size;
+  msg.centroid = Conversions::convertToPoint32Msg(pose.pose.position);
 
   return msg;
 }
@@ -229,6 +237,27 @@ agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,
   out_msg.size = in_msg.size;
 
   return out_msg;
+}
+
+// ====================== //
+// Custom ROS conversions //
+// ====================== //
+geometry_msgs::Point convertToPointMsg(const geometry_msgs::Point32& p_32)
+{
+  geometry_msgs::Point p;
+  p.x = p_32.x;
+  p.y = p_32.y;
+  p.z = p_32.z;
+  return p;
+}
+
+geometry_msgs::Point32 convertToPoint32Msg(const geometry_msgs::Point& p)
+{
+  geometry_msgs::Point32 p_32;
+  p_32.x = p.x;
+  p_32.y = p.y;
+  p_32.z = p.z;
+  return p_32;
 }
 
 }  // namespace Conversions

@@ -89,6 +89,12 @@ agribot_msgs::Object3D transform(const agribot_msgs::Object3D& in_msg, const std
 agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,  // NOLINT [build/include_what_you_use]
                                       const std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer);
 
+// ====================== //
+// Custom ROS conversions //
+// ====================== //
+geometry_msgs::Point convertToPointMsg(const geometry_msgs::Point32& p_32);
+geometry_msgs::Point32 convertToPoint32Msg(const geometry_msgs::Point& p);
+
 // ================ //
 // PCL conversions  //
 // ================ //

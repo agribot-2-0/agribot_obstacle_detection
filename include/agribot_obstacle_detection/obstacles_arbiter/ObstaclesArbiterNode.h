@@ -17,6 +17,7 @@
 #include "agribot_common/CommonFunctions/ros_common_functions.h"
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
+#include "agribot_msgs/ObjectPolygon.h"
 #include "agribot_msgs/ObjectPolygonArray.h"
 #include "agribot_msgs/ObstacleDetectionStatus.h"
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
@@ -46,6 +47,8 @@ private:
   ros::Publisher path_polygons_pub_;
   ros::Publisher objects_polygons_pub_;
   ros::Publisher detection_status_pub_;
+  ros::Publisher left_row_path_pub_;
+  ros::Publisher right_row_path_pub_;
 
   // Processing time publisher
   ros::Publisher processing_time_pub_;
@@ -63,6 +66,7 @@ private:
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void checkCollisions();
+  void computeRowsPaths();
   void publishOutputPolygons();
   void publishDetectionStatus();
   void sendProcessingTimeInfo(double time_ms);

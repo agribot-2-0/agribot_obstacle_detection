@@ -22,6 +22,8 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   path_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("path_polygons", 1, true);
   objects_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("objects_polygons", 1, true);
   detection_status_pub_ = nh->advertise<agribot_msgs::ObstacleDetectionStatus>("detection_status", 1, true);
+  left_row_path_pub_ = nh->advertise<nav_msgs::Path>("left_row_path", 1, true);
+  right_row_path_pub_ = nh->advertise<nav_msgs::Path>("right_row_path", 1, true);
 
   processing_time_pub_ = nh->advertise<std_msgs::Float64>("processing_time", 1, false);
 
@@ -53,6 +55,7 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
     }
 
     checkCollisions();
+    computeRowsPaths();
 
     timer.stop();
     sendProcessingTimeInfo(timer.get_final_elapsed_time_ms());
@@ -135,6 +138,77 @@ void ObstaclesArbiterNode::checkCollisions()
 
   // Publish output polygons for visualization
   publishOutputPolygons();
+}
+
+void ObstaclesArbiterNode::computeRowsPaths()
+{
+  nav_msgs::Path left_row_path;
+  nav_msgs::Path right_row_path;
+  left_row_path.header.frame_id = "base_footprint";
+  left_row_path.header.stamp = ros::Time::now();
+  right_row_path.header.frame_id = "base_footprint";
+  right_row_path.header.stamp = ros::Time::now();
+
+  agribot_msgs::ObjectPolygon left_row_polygon;
+  agribot_msgs::ObjectPolygon right_row_polygon;
+
+  if (objects_polygons_->polygons.size() < 2)
+  {
+    left_row_path.poses.clear();
+    right_row_path.poses.clear();
+  }
+  else
+  {
+    // auto rows_polygons
+    auto area_comparison = [](const agribot_msgs::ObjectPolygon& p1, const agribot_msgs::ObjectPolygon& p2) {
+      return p1.area < p2.area;
+    };
+
+    // Sort objects in descending order by area
+    std::sort(objects_polygons_->polygons.rbegin(), objects_polygons_->polygons.rend(), area_comparison);
+
+    if (objects_polygons_->polygons[0].centroid.y > objects_polygons_->polygons[1].centroid.y)
+    {
+      left_row_polygon = objects_polygons_->polygons[0];
+      right_row_polygon = objects_polygons_->polygons[1];
+    }
+    else
+    {
+      left_row_polygon = objects_polygons_->polygons[1];
+      right_row_polygon = objects_polygons_->polygons[0];
+    }
+  }
+
+  geometry_msgs::PoseStamped left_start_pose;
+  left_start_pose.header = left_row_path.header;
+  left_start_pose.pose.position = Conversions::convertToPointMsg(left_row_polygon.centroid);
+  left_start_pose.pose.orientation.w = 1;
+
+  geometry_msgs::PoseStamped left_end_pose;
+  left_start_pose.header = left_row_path.header;
+  left_start_pose.pose.position = Conversions::convertToPointMsg(left_row_polygon.centroid);
+  left_start_pose.pose.position.x += 1.0;
+  left_start_pose.pose.orientation.w = 1;
+
+  left_row_path.poses.push_back(left_start_pose);
+  left_row_path.poses.push_back(left_end_pose);
+
+  geometry_msgs::PoseStamped right_start_pose;
+  right_start_pose.header = right_row_path.header;
+  right_start_pose.pose.position = Conversions::convertToPointMsg(right_row_polygon.centroid);
+  right_start_pose.pose.orientation.w = 1;
+
+  geometry_msgs::PoseStamped right_end_pose;
+  right_start_pose.header = right_row_path.header;
+  right_start_pose.pose.position = Conversions::convertToPointMsg(right_row_polygon.centroid);
+  right_start_pose.pose.position.x += 1.0;
+  right_start_pose.pose.orientation.w = 1;
+
+  right_row_path.poses.push_back(right_start_pose);
+  right_row_path.poses.push_back(right_end_pose);
+
+  left_row_path_pub_.publish(left_row_path);
+  right_row_path_pub_.publish(right_row_path);
 }
 
 void ObstaclesArbiterNode::publishOutputPolygons()
