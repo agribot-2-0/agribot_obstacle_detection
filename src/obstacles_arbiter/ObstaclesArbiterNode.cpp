@@ -43,12 +43,12 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
     {
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
-        objects_polygons_ = Conversions::convertToObjectPolygonArray(
+        objects_polygons_ = Conversions::convertToConvexHullPolygonArray(
             Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
       }
       else
       {
-        objects_polygons_ = Conversions::convertToObjectPolygonArray(*msg);
+        objects_polygons_ = Conversions::convertToConvexHullPolygonArray(*msg);
       }
     }
 

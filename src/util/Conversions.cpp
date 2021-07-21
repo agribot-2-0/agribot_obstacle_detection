@@ -22,14 +22,35 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs:
   return msg;
 }
 
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array)
+{
+  agribot_msgs::ObjectPolygonArray msg;
+
+  for (const auto& object : object_array.objects)
+  {
+    auto polygon = convertToConvexHullPolygon(object);
+    polygon.type = polygon.OBSTACLE_CLEAR;
+    msg.polygons.push_back(polygon);
+  }
+  return msg;
+}
+
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object)
 {
-  // auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
-  // auto msg = getObjectPolygon(object.bbox.center.pose.position.x, object.bbox.center.pose.position.y,
-  //                             object.bbox.size.x, object.bbox.size.y, yaw);
+  auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
+  auto msg = getObjectPolygon(object.bbox.center.pose.position.x, object.bbox.center.pose.position.y,
+                              object.bbox.size.x, object.bbox.size.y, yaw);
+
+  msg.header = object.header;
+  msg.type = msg.UNKNOWN;
+
+  return msg;
+}
+
+agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object)
+{
   agribot_msgs::ObjectPolygon msg;
 
-  // pcl::PointCloud<pcl::PointXYZ> pcl_pointcloud;
   pcl::PCLPointCloud2 pcl_pointcloud2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };

@@ -39,7 +39,9 @@ namespace Conversions
 // Polygon conversions  //
 // ==================== //
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
+agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double x_size, double y_size);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, double x_size,
                                                    double y_size);
