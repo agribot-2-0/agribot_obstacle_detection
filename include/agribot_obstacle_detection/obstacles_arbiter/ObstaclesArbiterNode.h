@@ -10,6 +10,10 @@
 #include <std_msgs/Float64.h>
 #include <tf2_ros/transform_listener.h>
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#include <pcl/segmentation/sac_segmentation.h>
+#pragma GCC diagnostic pop
+
 #include <memory>
 #include <optional>
 #include <string>

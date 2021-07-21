@@ -179,16 +179,47 @@ void ObstaclesArbiterNode::computeRowsPaths()
     }
   }
 
+  pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
+  pcl::SACSegmentation<pcl::PointXYZ> seg;
+
+  // Prepare segmentation object
+  seg.setOptimizeCoefficients(true);
+  seg.setModelType(pcl::SACMODEL_LINE);
+  seg.setMethodType(pcl::SAC_RANSAC);
+  seg.setDistanceThreshold(0.1);
+  seg.setMaxIterations(300);
+
+  // Do segmentation
+  pcl::PCLPointCloud2 left_row_pcl_pointcloud2;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr left_row_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::ModelCoefficients left_line_coefficients;
+
+  pcl_conversions::toPCL(left_row_polygon.point_cloud, left_row_pcl_pointcloud2);
+  pcl::fromPCLPointCloud2(left_row_pcl_pointcloud2, *left_row_pcl_pointcloud);
+
+  seg.setInputCloud(left_row_pcl_pointcloud);
+  seg.segment(*inliers, left_line_coefficients);
+
+  auto left_line_a = left_line_coefficients.values[3];
+  auto left_line_b = left_line_coefficients.values[4];
+
+  double left_line_start_x = 1.0;
+  double left_line_end_x = 5.0;
+
+  auto left_line_start_y = left_line_a * left_line_start_x + left_line_b;
+  auto left_line_end_y = left_line_a * left_line_end_x + left_line_b;
+
   geometry_msgs::PoseStamped left_start_pose;
   left_start_pose.header = left_row_path.header;
-  left_start_pose.pose.position = Conversions::convertToPointMsg(left_row_polygon.centroid);
+  left_start_pose.pose.position.x = left_line_start_x;
+  left_start_pose.pose.position.y = left_line_start_y;
   left_start_pose.pose.orientation.w = 1;
 
   geometry_msgs::PoseStamped left_end_pose;
-  left_start_pose.header = left_row_path.header;
-  left_start_pose.pose.position = Conversions::convertToPointMsg(left_row_polygon.centroid);
-  left_start_pose.pose.position.x += 1.0;
-  left_start_pose.pose.orientation.w = 1;
+  left_end_pose.header = left_row_path.header;
+  left_end_pose.pose.position.x = left_line_end_x;
+  left_end_pose.pose.position.y = left_line_end_y;
+  left_end_pose.pose.orientation.w = 1;
 
   left_row_path.poses.push_back(left_start_pose);
   left_row_path.poses.push_back(left_end_pose);
@@ -199,10 +230,10 @@ void ObstaclesArbiterNode::computeRowsPaths()
   right_start_pose.pose.orientation.w = 1;
 
   geometry_msgs::PoseStamped right_end_pose;
-  right_start_pose.header = right_row_path.header;
-  right_start_pose.pose.position = Conversions::convertToPointMsg(right_row_polygon.centroid);
-  right_start_pose.pose.position.x += 1.0;
-  right_start_pose.pose.orientation.w = 1;
+  right_end_pose.header = right_row_path.header;
+  right_end_pose.pose.position = Conversions::convertToPointMsg(right_row_polygon.centroid);
+  right_end_pose.pose.position.x += 1.0;
+  right_end_pose.pose.orientation.w = 1;
 
   right_row_path.poses.push_back(right_start_pose);
   right_row_path.poses.push_back(right_end_pose);

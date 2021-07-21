@@ -78,6 +78,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Objec
   pcl::PointXYZ pcl_centroid_point;
   pcl::computeCentroid<pcl::PointXYZ>(*convex_hull_pointcloud, pcl_centroid_point);
   msg.centroid = Conversions::convertToPoint32Msg<pcl::PointXYZ>(pcl_centroid_point);
+  msg.point_cloud = object.point_cloud;
 
   msg.header = object.header;
   msg.type = msg.UNKNOWN;
