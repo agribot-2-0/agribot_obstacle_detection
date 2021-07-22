@@ -71,6 +71,8 @@ private:
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void checkCollisions();
   void computeRowsPaths();
+  std::pair<double, double> lineCoefficientsWithRowLineSegmentation(const sensor_msgs::PointCloud2& pc2);
+  nav_msgs::Path pathFromLine(double line_a, double line_b, double start_x, double end_x);
   void publishOutputPolygons();
   void publishDetectionStatus();
   void sendProcessingTimeInfo(double time_ms);
