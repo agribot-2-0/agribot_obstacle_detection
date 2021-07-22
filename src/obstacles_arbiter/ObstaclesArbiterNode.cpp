@@ -149,9 +149,6 @@ void ObstaclesArbiterNode::computeRowsPaths()
   right_row_path.header.frame_id = "base_footprint";
   right_row_path.header.stamp = ros::Time::now();
 
-  agribot_msgs::ObjectPolygon left_row_polygon;
-  agribot_msgs::ObjectPolygon right_row_polygon;
-
   if (objects_polygons_->polygons.size() < 2)
   {
     left_row_path.poses.clear();
@@ -163,6 +160,9 @@ void ObstaclesArbiterNode::computeRowsPaths()
     auto area_comparison = [](const agribot_msgs::ObjectPolygon& p1, const agribot_msgs::ObjectPolygon& p2) {
       return p1.area < p2.area;
     };
+
+    agribot_msgs::ObjectPolygon left_row_polygon;
+    agribot_msgs::ObjectPolygon right_row_polygon;
 
     // Sort objects in descending order by area
     std::sort(objects_polygons_->polygons.rbegin(), objects_polygons_->polygons.rend(), area_comparison);
@@ -177,66 +177,94 @@ void ObstaclesArbiterNode::computeRowsPaths()
       left_row_polygon = objects_polygons_->polygons[1];
       right_row_polygon = objects_polygons_->polygons[0];
     }
+
+    double line_start_x = 1.0;
+    double line_end_x = 5.0;
+
+    // Find left line
+    pcl::PointIndices::Ptr left_inliers{ new pcl::PointIndices };
+    pcl::SACSegmentation<pcl::PointXYZ> left_seg;
+
+    left_seg.setOptimizeCoefficients(true);
+    left_seg.setModelType(pcl::SACMODEL_LINE);
+    left_seg.setMethodType(pcl::SAC_RANSAC);
+    left_seg.setDistanceThreshold(0.1);
+    left_seg.setMaxIterations(300);
+
+    pcl::PCLPointCloud2 left_row_pcl_pointcloud2;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr left_row_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+    pcl::ModelCoefficients left_line_coefficients;
+
+    pcl_conversions::toPCL(left_row_polygon.point_cloud, left_row_pcl_pointcloud2);
+    pcl::fromPCLPointCloud2(left_row_pcl_pointcloud2, *left_row_pcl_pointcloud);
+
+    left_seg.setInputCloud(left_row_pcl_pointcloud);
+    left_seg.segment(*left_inliers, left_line_coefficients);
+
+    auto left_line_a = left_line_coefficients.values[3];
+    auto left_line_b = left_line_coefficients.values[4];
+    auto left_line_c = left_line_coefficients.values[5];
+
+    auto left_line_start_y = -(left_line_a * line_start_x + left_line_c) / left_line_b;
+    auto left_line_end_y = -(left_line_a * line_end_x + left_line_c) / left_line_b;
+
+    geometry_msgs::PoseStamped left_start_pose;
+    left_start_pose.header = left_row_path.header;
+    left_start_pose.pose.position.x = line_start_x;
+    left_start_pose.pose.position.y = left_line_start_y;
+    left_start_pose.pose.orientation.w = 1;
+
+    geometry_msgs::PoseStamped left_end_pose;
+    left_end_pose.header = left_row_path.header;
+    left_end_pose.pose.position.x = line_end_x;
+    left_end_pose.pose.position.y = left_line_end_y;
+    left_end_pose.pose.orientation.w = 1;
+
+    left_row_path.poses.push_back(left_start_pose);
+    left_row_path.poses.push_back(left_end_pose);
+
+    // Find right line
+    pcl::PointIndices::Ptr right_inliers{ new pcl::PointIndices };
+    pcl::SACSegmentation<pcl::PointXYZ> right_seg;
+
+    right_seg.setOptimizeCoefficients(true);
+    right_seg.setModelType(pcl::SACMODEL_LINE);
+    right_seg.setMethodType(pcl::SAC_RANSAC);
+    right_seg.setDistanceThreshold(0.1);
+    right_seg.setMaxIterations(300);
+
+    pcl::PCLPointCloud2 right_row_pcl_pointcloud2;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr right_row_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+    pcl::ModelCoefficients right_line_coefficients;
+
+    pcl_conversions::toPCL(right_row_polygon.point_cloud, right_row_pcl_pointcloud2);
+    pcl::fromPCLPointCloud2(right_row_pcl_pointcloud2, *right_row_pcl_pointcloud);
+
+    right_seg.setInputCloud(right_row_pcl_pointcloud);
+    right_seg.segment(*right_inliers, right_line_coefficients);
+
+    auto right_line_a = right_line_coefficients.values[3];
+    auto right_line_b = right_line_coefficients.values[4];
+    auto right_line_c = right_line_coefficients.values[5];
+
+    auto right_line_start_y = -(right_line_a * line_start_x + right_line_c) / right_line_b;
+    auto right_line_end_y = -(right_line_a * line_end_x + right_line_c) / right_line_b;
+
+    geometry_msgs::PoseStamped right_start_pose;
+    right_start_pose.header = right_row_path.header;
+    right_start_pose.pose.position.x = line_start_x;
+    right_start_pose.pose.position.y = right_line_start_y;
+    right_start_pose.pose.orientation.w = 1;
+
+    geometry_msgs::PoseStamped right_end_pose;
+    right_end_pose.header = right_row_path.header;
+    right_end_pose.pose.position.x = line_end_x;
+    right_end_pose.pose.position.y = right_line_end_y;
+    right_end_pose.pose.orientation.w = 1;
+
+    right_row_path.poses.push_back(right_start_pose);
+    right_row_path.poses.push_back(right_end_pose);
   }
-
-  pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
-  pcl::SACSegmentation<pcl::PointXYZ> seg;
-
-  // Prepare segmentation object
-  seg.setOptimizeCoefficients(true);
-  seg.setModelType(pcl::SACMODEL_LINE);
-  seg.setMethodType(pcl::SAC_RANSAC);
-  seg.setDistanceThreshold(0.1);
-  seg.setMaxIterations(300);
-
-  // Do segmentation
-  pcl::PCLPointCloud2 left_row_pcl_pointcloud2;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr left_row_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
-  pcl::ModelCoefficients left_line_coefficients;
-
-  pcl_conversions::toPCL(left_row_polygon.point_cloud, left_row_pcl_pointcloud2);
-  pcl::fromPCLPointCloud2(left_row_pcl_pointcloud2, *left_row_pcl_pointcloud);
-
-  seg.setInputCloud(left_row_pcl_pointcloud);
-  seg.segment(*inliers, left_line_coefficients);
-
-  auto left_line_a = left_line_coefficients.values[3];
-  auto left_line_b = left_line_coefficients.values[4];
-
-  double left_line_start_x = 1.0;
-  double left_line_end_x = 5.0;
-
-  auto left_line_start_y = left_line_a * left_line_start_x + left_line_b;
-  auto left_line_end_y = left_line_a * left_line_end_x + left_line_b;
-
-  geometry_msgs::PoseStamped left_start_pose;
-  left_start_pose.header = left_row_path.header;
-  left_start_pose.pose.position.x = left_line_start_x;
-  left_start_pose.pose.position.y = left_line_start_y;
-  left_start_pose.pose.orientation.w = 1;
-
-  geometry_msgs::PoseStamped left_end_pose;
-  left_end_pose.header = left_row_path.header;
-  left_end_pose.pose.position.x = left_line_end_x;
-  left_end_pose.pose.position.y = left_line_end_y;
-  left_end_pose.pose.orientation.w = 1;
-
-  left_row_path.poses.push_back(left_start_pose);
-  left_row_path.poses.push_back(left_end_pose);
-
-  geometry_msgs::PoseStamped right_start_pose;
-  right_start_pose.header = right_row_path.header;
-  right_start_pose.pose.position = Conversions::convertToPointMsg(right_row_polygon.centroid);
-  right_start_pose.pose.orientation.w = 1;
-
-  geometry_msgs::PoseStamped right_end_pose;
-  right_end_pose.header = right_row_path.header;
-  right_end_pose.pose.position = Conversions::convertToPointMsg(right_row_polygon.centroid);
-  right_end_pose.pose.position.x += 1.0;
-  right_end_pose.pose.orientation.w = 1;
-
-  right_row_path.poses.push_back(right_start_pose);
-  right_row_path.poses.push_back(right_end_pose);
 
   left_row_path_pub_.publish(left_row_path);
   right_row_path_pub_.publish(right_row_path);
