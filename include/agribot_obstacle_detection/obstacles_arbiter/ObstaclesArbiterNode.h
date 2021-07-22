@@ -9,9 +9,11 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
 #include <tf2_ros/transform_listener.h>
+#include <rviz_visual_tools/rviz_visual_tools.h>
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/features/normal_3d.h>
 #pragma GCC diagnostic pop
 
 #include <memory>
@@ -67,11 +69,16 @@ private:
 
   std::unique_ptr<IPolygonCollisionDetection> collision_detection_;
 
+  rviz_visual_tools::RvizVisualToolsPtr left_row_plane_rviz_tools_;
+  rviz_visual_tools::RvizVisualToolsPtr right_row_plane_rviz_tools_;
+
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void checkCollisions();
   void computeRowsPaths();
   std::pair<double, double> lineCoefficientsWithRowLineSegmentation(const sensor_msgs::PointCloud2& pc2);
+  std::pair<double, double> lineCoefficientsWithRowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2,
+                                                                     const std::string& row);
   nav_msgs::Path pathFromLine(double line_a, double line_b, double start_x, double end_x);
   void publishOutputPolygons();
   void publishDetectionStatus();

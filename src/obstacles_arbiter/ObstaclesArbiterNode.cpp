@@ -17,6 +17,9 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   publish_processing_time_ = ros_common_functions::getRosParam<bool>("~publish_processing_time");
   print_processing_time_ = ros_common_functions::getRosParam<bool>("~print_processing_time");
 
+  left_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "left_row_plane_marker"));
+  right_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "right_row_plane_marker"));
+
   // Initialize publishers and subscribers
   out_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("out_polygons", 1, true);
   path_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("path_polygons", 1, true);
@@ -181,10 +184,13 @@ void ObstaclesArbiterNode::computeRowsPaths()
     double line_start_x = 1.0;
     double line_end_x = 5.0;
 
-    auto [left_line_a, left_line_b] = lineCoefficientsWithRowLineSegmentation(left_row_polygon.point_cloud);
+    // auto [left_line_a, left_line_b] = lineCoefficientsWithRowLineSegmentation(left_row_polygon.point_cloud);
+    auto [left_line_a, left_line_b] = lineCoefficientsWithRowPlaneSegmentation(left_row_polygon.point_cloud, "left");
     left_row_path = pathFromLine(left_line_a, left_line_b, line_start_x, line_end_x);
 
-    auto [right_line_a, right_line_b] = lineCoefficientsWithRowLineSegmentation(right_row_polygon.point_cloud);
+    // auto [right_line_a, right_line_b] = lineCoefficientsWithRowLineSegmentation(right_row_polygon.point_cloud);
+    auto [right_line_a, right_line_b] =
+        lineCoefficientsWithRowPlaneSegmentation(right_row_polygon.point_cloud, "right");
     right_row_path = pathFromLine(right_line_a, right_line_b, line_start_x, line_end_x);
   }
 
@@ -195,7 +201,6 @@ void ObstaclesArbiterNode::computeRowsPaths()
 std::pair<double, double>
 ObstaclesArbiterNode::lineCoefficientsWithRowLineSegmentation(const sensor_msgs::PointCloud2& pc2)
 {
-  // Find left line
   pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
   pcl::SACSegmentation<pcl::PointXYZ> seg;
 
@@ -228,6 +233,78 @@ ObstaclesArbiterNode::lineCoefficientsWithRowLineSegmentation(const sensor_msgs:
   auto line_b = p1_y - line_a * p1_x;
 
   return std::make_pair(line_a, line_b);
+}
+
+std::pair<double, double> ObstaclesArbiterNode::lineCoefficientsWithRowPlaneSegmentation(
+    const sensor_msgs::PointCloud2& pc2, const std::string& row)
+{
+  pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
+  pcl::SACSegmentation<pcl::PointXYZ> seg;
+  // pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal> seg;
+
+  seg.setOptimizeCoefficients(true);
+  // seg.setOptimizeCoefficients(false);
+  // seg.setModelType(pcl::SACMODEL_NORMAL_PLANE);
+  seg.setModelType(pcl::SACMODEL_PARALLEL_PLANE);
+  // seg.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);
+  // seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
+  seg.setAxis(Eigen::Vector3f(0, 0, 1));
+  seg.setEpsAngle(0.0872664626);
+  // seg.setNormalDistanceWeight(0.1);
+  // seg.setModelType(pcl::SACMODEL_PLANE);
+
+  seg.setMethodType(pcl::SAC_RANSAC);
+  // seg.setMethodType(pcl::SAC_PROSAC);
+  seg.setDistanceThreshold(0.05);
+  seg.setMaxIterations(1000);
+
+  pcl::PCLPointCloud2 pcl_pc2;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::ModelCoefficients plane_coefficients;
+
+  pcl_conversions::toPCL(pc2, pcl_pc2);
+  pcl::fromPCLPointCloud2(pcl_pc2, *pcl_cloud);
+
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+
+  // Estimate point normals
+  ne.setSearchMethod(tree);
+  ne.setInputCloud(pcl_cloud);
+  ne.setKSearch(30);
+  ne.compute(*cloud_normals);
+  // seg.setInputNormals(cloud_normals);
+
+  seg.setInputCloud(pcl_cloud);
+  seg.segment(*inliers, plane_coefficients);
+
+  auto row_plane_a = plane_coefficients.values[0];
+  auto row_plane_b = plane_coefficients.values[1];
+  auto row_plane_c = plane_coefficients.values[2];
+  auto row_plane_d = plane_coefficients.values[3];
+
+  if (row == "right")
+  {
+    right_row_plane_rviz_tools_->deleteAllMarkers();
+    right_row_plane_rviz_tools_->publishABCDPlane(row_plane_a, row_plane_b, row_plane_c, row_plane_d,
+                                                  rviz_visual_tools::RED, 15.0, 5.0);
+    right_row_plane_rviz_tools_->trigger(false);
+  }
+  else if (row == "left")
+  {
+    left_row_plane_rviz_tools_->deleteAllMarkers();
+    left_row_plane_rviz_tools_->publishABCDPlane(row_plane_a, row_plane_b, row_plane_c, row_plane_d,
+                                                 rviz_visual_tools::GREEN, 15.0, 5.0);
+    left_row_plane_rviz_tools_->trigger(false);
+  }
+
+  double cutoff_z = 0.77;
+
+  double line_m = -row_plane_a / row_plane_b;
+  double line_n = -(row_plane_c * cutoff_z + row_plane_d) / row_plane_b;
+
+  return std::make_pair(line_m, line_n);
 }
 
 nav_msgs::Path ObstaclesArbiterNode::pathFromLine(double line_a, double line_b, double start_x, double end_x)
