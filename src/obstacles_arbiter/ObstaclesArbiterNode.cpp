@@ -201,12 +201,20 @@ void ObstaclesArbiterNode::computeRowsPaths()
     left_seg.setInputCloud(left_row_pcl_pointcloud);
     left_seg.segment(*left_inliers, left_line_coefficients);
 
-    auto left_line_a = left_line_coefficients.values[3];
-    auto left_line_b = left_line_coefficients.values[4];
-    auto left_line_c = left_line_coefficients.values[5];
+    auto left_p1_x = left_line_coefficients.values[0];
+    auto left_p1_y = left_line_coefficients.values[1];
 
-    auto left_line_start_y = -(left_line_a * line_start_x + left_line_c) / left_line_b;
-    auto left_line_end_y = -(left_line_a * line_end_x + left_line_c) / left_line_b;
+    auto left_direction_x = left_line_coefficients.values[3];
+    auto left_direction_y = left_line_coefficients.values[4];
+
+    auto left_p2_x = left_p1_x + left_direction_x;
+    auto left_p2_y = left_p1_y + left_direction_y;
+
+    auto left_line_a = (left_p2_y - left_p1_y) / (left_p2_x - left_p1_x);
+    auto left_line_b = left_p1_y - left_line_a * left_p1_x;
+
+    auto left_line_start_y = left_line_a * line_start_x + left_line_b;
+    auto left_line_end_y = left_line_a * line_end_x + left_line_b;
 
     geometry_msgs::PoseStamped left_start_pose;
     left_start_pose.header = left_row_path.header;
@@ -243,12 +251,20 @@ void ObstaclesArbiterNode::computeRowsPaths()
     right_seg.setInputCloud(right_row_pcl_pointcloud);
     right_seg.segment(*right_inliers, right_line_coefficients);
 
-    auto right_line_a = right_line_coefficients.values[3];
-    auto right_line_b = right_line_coefficients.values[4];
-    auto right_line_c = right_line_coefficients.values[5];
+    auto right_p1_x = right_line_coefficients.values[0];
+    auto right_p1_y = right_line_coefficients.values[1];
 
-    auto right_line_start_y = -(right_line_a * line_start_x + right_line_c) / right_line_b;
-    auto right_line_end_y = -(right_line_a * line_end_x + right_line_c) / right_line_b;
+    auto right_direction_x = right_line_coefficients.values[3];
+    auto right_direction_y = right_line_coefficients.values[4];
+
+    auto right_p2_x = right_p1_x + right_direction_x;
+    auto right_p2_y = right_p1_y + right_direction_y;
+
+    auto right_line_a = (right_p2_y - right_p1_y) / (right_p2_x - right_p1_x);
+    auto right_line_b = right_p1_y - right_line_a * right_p1_x;
+
+    auto right_line_start_y = right_line_a * line_start_x + right_line_b;
+    auto right_line_end_y = right_line_a * line_end_x + right_line_b;
 
     geometry_msgs::PoseStamped right_start_pose;
     right_start_pose.header = right_row_path.header;
