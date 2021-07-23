@@ -65,6 +65,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Objec
   pcl::ConvexHull<pcl::PointXYZ> convex_hull;
   convex_hull.setInputCloud(pcl_pointcloud);
   convex_hull.setDimension(2);
+  convex_hull.setComputeAreaVolume(true);
   convex_hull.reconstruct(*convex_hull_pointcloud);
 
   for (const auto& point : convex_hull_pointcloud->points)
