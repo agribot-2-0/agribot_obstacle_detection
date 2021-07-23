@@ -91,6 +91,7 @@
     <param name="print_processing_time"                 value="false"/>
 
     <remap from="~in_objects"                           to="$(arg final_objects_topic)"/>
+    <remap from="~row_objects"                          to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~path"                                 to="$(arg path_topic)"/>
     <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>
     <remap from="~path_polygons"                        to="$(arg path_polygons_topic)"/>

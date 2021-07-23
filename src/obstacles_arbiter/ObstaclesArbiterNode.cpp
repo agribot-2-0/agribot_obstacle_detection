@@ -31,6 +31,7 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   processing_time_pub_ = nh->advertise<std_msgs::Float64>("processing_time", 1, false);
 
   in_object_array_sub_ = nh->subscribe("in_objects", 1, &ObstaclesArbiterNode::object3DArrayCallback, this);
+  row_object_array_sub_ = nh->subscribe("row_objects", 1, &ObstaclesArbiterNode::rowObjectsCallback, this);
   path_sub_ = nh->subscribe("path", 1, &ObstaclesArbiterNode::pathCallback, this);
 }
 
@@ -58,10 +59,38 @@ void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArr
     }
 
     checkCollisions();
-    computeRowsPaths();
 
     timer.stop();
     sendProcessingTimeInfo(timer.get_final_elapsed_time_ms());
+  }
+  catch (const std::exception& e)
+  {
+    ROS_WARN_STREAM(log_tag_ << e.what());
+  }
+}
+
+void ObstaclesArbiterNode::rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
+{
+  try
+  {
+    if (msg->objects.size() == 0)
+    {
+      row_polygons_ = agribot_msgs::ObjectPolygonArray();
+    }
+    else
+    {
+      if (msg->objects[0].header.frame_id != objects_target_frame_id_)
+      {
+        row_polygons_ = Conversions::convertToConvexHullPolygonArray(
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
+      }
+      else
+      {
+        row_polygons_ = Conversions::convertToConvexHullPolygonArray(*msg);
+      }
+    }
+
+    computeRowsPaths();
   }
   catch (const std::exception& e)
   {
@@ -148,7 +177,7 @@ void ObstaclesArbiterNode::computeRowsPaths()
   nav_msgs::Path left_row_path;
   nav_msgs::Path right_row_path;
 
-  if (objects_polygons_->polygons.size() < 2)
+  if (row_polygons_->polygons.size() < 2)
   {
     left_row_path.poses.clear();
     left_row_path.header.frame_id = "base_footprint";
@@ -168,17 +197,17 @@ void ObstaclesArbiterNode::computeRowsPaths()
     agribot_msgs::ObjectPolygon right_row_polygon;
 
     // Sort objects in descending order by area
-    std::sort(objects_polygons_->polygons.rbegin(), objects_polygons_->polygons.rend(), area_comparison);
+    std::sort(row_polygons_->polygons.rbegin(), row_polygons_->polygons.rend(), area_comparison);
 
-    if (objects_polygons_->polygons[0].centroid.y > objects_polygons_->polygons[1].centroid.y)
+    if (row_polygons_->polygons[0].centroid.y > row_polygons_->polygons[1].centroid.y)
     {
-      left_row_polygon = objects_polygons_->polygons[0];
-      right_row_polygon = objects_polygons_->polygons[1];
+      left_row_polygon = row_polygons_->polygons[0];
+      right_row_polygon = row_polygons_->polygons[1];
     }
     else
     {
-      left_row_polygon = objects_polygons_->polygons[1];
-      right_row_polygon = objects_polygons_->polygons[0];
+      left_row_polygon = row_polygons_->polygons[1];
+      right_row_polygon = row_polygons_->polygons[0];
     }
 
     double line_start_x = 1.0;

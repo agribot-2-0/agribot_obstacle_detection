@@ -41,6 +41,7 @@ private:
 
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
+  std::optional<agribot_msgs::ObjectPolygonArray> row_polygons_;
   agribot_msgs::ObjectPolygonArray output_polygons_;
   agribot_msgs::ObstacleDetectionStatus detection_status_;
 
@@ -48,6 +49,7 @@ private:
 
   // Main subscribers and publishers
   ros::Subscriber in_object_array_sub_;
+  ros::Subscriber row_object_array_sub_;
   ros::Subscriber path_sub_;
   ros::Publisher out_polygons_pub_;
   ros::Publisher path_polygons_pub_;
@@ -73,6 +75,7 @@ private:
   rviz_visual_tools::RvizVisualToolsPtr right_row_plane_rviz_tools_;
 
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
+  void rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void checkCollisions();
   void computeRowsPaths();
