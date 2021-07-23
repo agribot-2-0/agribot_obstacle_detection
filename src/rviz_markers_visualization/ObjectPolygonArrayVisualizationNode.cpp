@@ -86,7 +86,7 @@ void ObjectPolygonArrayVisualizationNode::updateMarkers(const agribot_msgs::Obje
     }
   }
 
-  rviz_visual_tools_->trigger();
+  rviz_visual_tools_->trigger(false);
 }
 
 void ObjectPolygonArrayVisualizationNode::run() const

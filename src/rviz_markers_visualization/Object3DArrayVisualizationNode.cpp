@@ -63,7 +63,7 @@ void Object3DArrayVisualizationNode::updateMarkers(const agribot_msgs::Object3DA
     rviz_visual_tools_->publishText(text_pose, text, rviz_visual_tools::WHITE, rviz_visual_tools::TEXTSIZE, false);
   }
 
-  rviz_visual_tools_->trigger();
+  rviz_visual_tools_->trigger(false);
 }
 
 Eigen::Isometry3d Object3DArrayVisualizationNode::getObjectEigenPose(const agribot_msgs::Object3D& object) const
