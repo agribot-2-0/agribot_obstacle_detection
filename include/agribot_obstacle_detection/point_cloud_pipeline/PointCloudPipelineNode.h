@@ -181,6 +181,12 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamicReconfigureCall
   node_config_.pipeline_config_.vgf_config_.resolution_ = dynamic_config.vgf_resolution;
   node_config_.pipeline_config_.vgf_config_.distance_filter_min_x_ = dynamic_config.vgf_min_x;
   node_config_.pipeline_config_.vgf_config_.distance_filter_max_x_ = dynamic_config.vgf_max_x;
+  node_config_.pipeline_config_.vgf_config_.use_passthrough_y_ = dynamic_config.use_passthrough_y;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_min_y_ = dynamic_config.vgf_min_y;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_max_y_ = dynamic_config.vgf_max_y;
+  node_config_.pipeline_config_.vgf_config_.use_passthrough_z_ = dynamic_config.use_passthrough_z;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_min_z_ = dynamic_config.vgf_min_z;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_max_z_ = dynamic_config.vgf_max_z;
   node_config_.pipeline_config_.outlier_removal_method_ =
       static_cast<OutlierRemovalMethod>(dynamic_config.outlier_removal_method);
   node_config_.pipeline_config_.ror_config_.neighbours_n_ = dynamic_config.ror_neighbours_n;
