@@ -27,6 +27,8 @@
 #include "agribot_msgs/ObjectPolygon.h"
 #include "agribot_msgs/ObjectPolygonArray.h"
 #include "agribot_msgs/ObstacleDetectionStatus.h"
+
+#include "agribot_obstacle_detection/ObstaclesArbiterConfig.h"
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
@@ -66,6 +68,15 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
+  dynamic_reconfigure::Server<agribot_obstacle_detection::ObstaclesArbiterConfig> dynamic_reconfigure_server_;
+
+  double eps_angle_;
+  double parallel_axis_x_;
+  double parallel_axis_y_;
+  double parallel_axis_z_;
+  double seg_distance_threshold_;
+  int seg_max_iterations_;
+
   // Logging and debug
   std::string log_tag_;
   ProcessingTimer timer;
@@ -87,6 +98,8 @@ private:
   void publishOutputPolygons();
   void publishDetectionStatus();
   void sendProcessingTimeInfo(double time_ms);
+  void dynamicReconfigureCallback(const agribot_obstacle_detection::ObstaclesArbiterConfig& dynamic_config,
+                                  uint32_t level);
 
 public:
   ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag,

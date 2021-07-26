@@ -17,6 +17,10 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   publish_processing_time_ = ros_common_functions::getRosParam<bool>("~publish_processing_time");
   print_processing_time_ = ros_common_functions::getRosParam<bool>("~print_processing_time");
 
+  typename dynamic_reconfigure::Server<agribot_obstacle_detection::ObstaclesArbiterConfig>::CallbackType
+      dynamic_reconfigure_function = boost::bind(&ObstaclesArbiterNode::dynamicReconfigureCallback, this, _1, _2);
+  dynamic_reconfigure_server_.setCallback(dynamic_reconfigure_function);
+
   left_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "left_row_plane_marker"));
   right_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "right_row_plane_marker"));
 
@@ -236,8 +240,8 @@ ObstaclesArbiterNode::lineCoefficientsWithRowLineSegmentation(const sensor_msgs:
   seg.setOptimizeCoefficients(true);
   seg.setModelType(pcl::SACMODEL_LINE);
   seg.setMethodType(pcl::SAC_RANSAC);
-  seg.setDistanceThreshold(0.1);
-  seg.setMaxIterations(300);
+  seg.setDistanceThreshold(seg_distance_threshold_);
+  seg.setMaxIterations(seg_max_iterations_);
 
   pcl::PCLPointCloud2 pcl_pc2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud{ new pcl::PointCloud<pcl::PointXYZ> };
@@ -277,15 +281,15 @@ std::pair<double, double> ObstaclesArbiterNode::lineCoefficientsWithRowPlaneSegm
   seg.setModelType(pcl::SACMODEL_PARALLEL_PLANE);
   // seg.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);
   // seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
-  seg.setAxis(Eigen::Vector3f(0, 0, 1));
-  seg.setEpsAngle(0.0872664626);
+  seg.setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
+  seg.setEpsAngle(eps_angle_);
   // seg.setNormalDistanceWeight(0.1);
   // seg.setModelType(pcl::SACMODEL_PLANE);
 
   seg.setMethodType(pcl::SAC_RANSAC);
   // seg.setMethodType(pcl::SAC_PROSAC);
-  seg.setDistanceThreshold(0.05);
-  seg.setMaxIterations(1000);
+  seg.setDistanceThreshold(seg_distance_threshold_);
+  seg.setMaxIterations(seg_max_iterations_);
 
   pcl::PCLPointCloud2 pcl_pc2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud{ new pcl::PointCloud<pcl::PointXYZ> };
@@ -400,4 +404,17 @@ void ObstaclesArbiterNode::sendProcessingTimeInfo(double time_ms)
 void ObstaclesArbiterNode::run() const
 {
   ros::spin();
+}
+
+void ObstaclesArbiterNode::dynamicReconfigureCallback(
+    const agribot_obstacle_detection::ObstaclesArbiterConfig& dynamic_config, uint32_t level)
+{
+  static_cast<void>(level);  // Suppress unused variable warning
+
+  eps_angle_ = dynamic_config.eps_angle;
+  parallel_axis_x_ = dynamic_config.parallel_axis_x;
+  parallel_axis_y_ = dynamic_config.parallel_axis_y;
+  parallel_axis_z_ = dynamic_config.parallel_axis_z;
+  seg_distance_threshold_ = dynamic_config.seg_distance_threshold;
+  seg_max_iterations_ = dynamic_config.seg_max_iterations;
 }

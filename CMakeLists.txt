@@ -24,6 +24,7 @@ generate_dynamic_reconfigure_options(
   cfg/LidarPointCloudPipeline.cfg
   cfg/StereoCameraPointCloudPipeline.cfg
   cfg/PointCloudLateFusion.cfg
+  cfg/ObstaclesArbiter.cfg
 )
 
 catkin_package(
