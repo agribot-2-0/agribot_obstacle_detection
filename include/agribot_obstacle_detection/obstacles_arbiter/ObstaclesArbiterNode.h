@@ -78,6 +78,8 @@ private:
   int seg_max_iterations_;
   int seg_model_type_;
   int seg_method_type_;
+  int seg_normal_neighbours_n_;
+  double seg_normal_distance_weight_;
 
   // Logging and debug
   std::string log_tag_;

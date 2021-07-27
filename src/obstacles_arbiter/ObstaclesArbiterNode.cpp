@@ -272,40 +272,77 @@ std::pair<double, double> ObstaclesArbiterNode::lineCoefficientsWithRowPlaneSegm
     const sensor_msgs::PointCloud2& pc2, const std::string& row)
 {
   pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
-  pcl::SACSegmentation<pcl::PointXYZ> seg;
-  // pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal> seg;
-
-  seg.setOptimizeCoefficients(true);
-  // seg.setOptimizeCoefficients(false);
-  seg.setModelType(seg_model_type_);
-  seg.setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
-  seg.setEpsAngle(eps_angle_);
-  // seg.setNormalDistanceWeight(0.1);
-
-  seg.setMethodType(seg_method_type_);
-  seg.setDistanceThreshold(seg_distance_threshold_);
-  seg.setMaxIterations(seg_max_iterations_);
-
   pcl::PCLPointCloud2 pcl_pc2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::ModelCoefficients plane_coefficients;
-
-  pcl_conversions::toPCL(pc2, pcl_pc2);
-  pcl::fromPCLPointCloud2(pcl_pc2, *pcl_cloud);
-
+  boost::shared_ptr<pcl::SACSegmentation<pcl::PointXYZ>> seg;
+  boost::shared_ptr<pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>> normal_seg;
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
 
-  // Estimate point normals
-  ne.setSearchMethod(tree);
-  ne.setInputCloud(pcl_cloud);
-  ne.setKSearch(30);
-  ne.compute(*cloud_normals);
-  // seg.setInputNormals(cloud_normals);
+  pcl_conversions::toPCL(pc2, pcl_pc2);
+  pcl::fromPCLPointCloud2(pcl_pc2, *pcl_cloud);
 
-  seg.setInputCloud(pcl_cloud);
-  seg.segment(*inliers, plane_coefficients);
+  switch (seg_model_type_)
+  {
+    case agribot_obstacle_detection::ObstaclesArbiter_plane:
+      seg.reset(new pcl::SACSegmentation<pcl::PointXYZ>);
+      break;
+
+    case agribot_obstacle_detection::ObstaclesArbiter_parallel_plane:
+      seg.reset(new pcl::SACSegmentation<pcl::PointXYZ>);
+      seg->setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
+      seg->setEpsAngle(eps_angle_);
+      break;
+
+    case agribot_obstacle_detection::ObstaclesArbiter_normal_plane:
+      normal_seg.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
+
+      // Estimate point normals
+      ne.setSearchMethod(tree);
+      ne.setInputCloud(pcl_cloud);
+      ne.setKSearch(seg_normal_neighbours_n_);
+      ne.compute(*cloud_normals);
+
+      normal_seg->setInputNormals(cloud_normals);
+      normal_seg->setNormalDistanceWeight(seg_normal_distance_weight_);
+
+      seg = normal_seg;
+
+      break;
+
+    case agribot_obstacle_detection::ObstaclesArbiter_normal_parallel_plane:
+      normal_seg.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
+
+      // Estimate point normals
+      ne.setSearchMethod(tree);
+      ne.setInputCloud(pcl_cloud);
+      ne.setKSearch(seg_normal_neighbours_n_);
+      ne.compute(*cloud_normals);
+
+      normal_seg->setInputNormals(cloud_normals);
+      normal_seg->setNormalDistanceWeight(seg_normal_distance_weight_);
+      normal_seg->setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
+      normal_seg->setEpsAngle(eps_angle_);
+
+      seg = normal_seg;
+
+      break;
+
+    default:
+      ROS_ERROR_STREAM("[ObstaclesArbiterNode] Unsupported segmentation model selected...");
+      break;
+  }
+
+  seg->setOptimizeCoefficients(true);
+  seg->setModelType(seg_model_type_);
+  seg->setMethodType(seg_method_type_);
+  seg->setDistanceThreshold(seg_distance_threshold_);
+  seg->setMaxIterations(seg_max_iterations_);
+
+  seg->setInputCloud(pcl_cloud);
+  seg->segment(*inliers, plane_coefficients);
 
   auto row_plane_a = plane_coefficients.values[0];
   auto row_plane_b = plane_coefficients.values[1];
@@ -414,4 +451,6 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   seg_max_iterations_ = dynamic_config.seg_max_iterations;
   seg_model_type_ = dynamic_config.seg_model_type;
   seg_method_type_ = dynamic_config.seg_method_type;
+  seg_normal_distance_weight_ = dynamic_config.seg_normal_distance_weight;
+  seg_normal_neighbours_n_ = dynamic_config.seg_normal_neighbours_n;
 }
