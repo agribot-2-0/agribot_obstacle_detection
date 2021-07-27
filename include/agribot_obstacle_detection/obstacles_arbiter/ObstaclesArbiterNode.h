@@ -76,6 +76,8 @@ private:
   double parallel_axis_z_;
   double seg_distance_threshold_;
   int seg_max_iterations_;
+  int seg_model_type_;
+  int seg_method_type_;
 
   // Logging and debug
   std::string log_tag_;

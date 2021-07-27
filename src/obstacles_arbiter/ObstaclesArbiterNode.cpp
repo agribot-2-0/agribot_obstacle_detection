@@ -239,7 +239,7 @@ ObstaclesArbiterNode::lineCoefficientsWithRowLineSegmentation(const sensor_msgs:
 
   seg.setOptimizeCoefficients(true);
   seg.setModelType(pcl::SACMODEL_LINE);
-  seg.setMethodType(pcl::SAC_RANSAC);
+  seg.setMethodType(seg_method_type_);
   seg.setDistanceThreshold(seg_distance_threshold_);
   seg.setMaxIterations(seg_max_iterations_);
 
@@ -277,17 +277,12 @@ std::pair<double, double> ObstaclesArbiterNode::lineCoefficientsWithRowPlaneSegm
 
   seg.setOptimizeCoefficients(true);
   // seg.setOptimizeCoefficients(false);
-  // seg.setModelType(pcl::SACMODEL_NORMAL_PLANE);
-  seg.setModelType(pcl::SACMODEL_PARALLEL_PLANE);
-  // seg.setModelType(pcl::SACMODEL_NORMAL_PARALLEL_PLANE);
-  // seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
+  seg.setModelType(seg_model_type_);
   seg.setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
   seg.setEpsAngle(eps_angle_);
   // seg.setNormalDistanceWeight(0.1);
-  // seg.setModelType(pcl::SACMODEL_PLANE);
 
-  seg.setMethodType(pcl::SAC_RANSAC);
-  // seg.setMethodType(pcl::SAC_PROSAC);
+  seg.setMethodType(seg_method_type_);
   seg.setDistanceThreshold(seg_distance_threshold_);
   seg.setMaxIterations(seg_max_iterations_);
 
@@ -417,4 +412,6 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   parallel_axis_z_ = dynamic_config.parallel_axis_z;
   seg_distance_threshold_ = dynamic_config.seg_distance_threshold;
   seg_max_iterations_ = dynamic_config.seg_max_iterations;
+  seg_model_type_ = dynamic_config.seg_model_type;
+  seg_method_type_ = dynamic_config.seg_method_type;
 }
