@@ -10,12 +10,23 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
 {
   detection_status_.status = detection_status_.UNKNOWN;
 
-  safety_zone_length_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/safety_zone_length");
-  safety_zone_width_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/safety_zone_width");
+  robot_safety_zone_length_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/robot_safety_zone_length");
+  robot_safety_zone_width_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/robot_safety_zone_width");
+  min_path_safety_zone_length_ =
+      ros_common_functions::getRosParam<double>("~obstacles_arbiter/min_path_safety_zone_length");
+  min_path_safety_zone_width_ =
+      ros_common_functions::getRosParam<double>("~obstacles_arbiter/min_path_safety_zone_width");
+  max_path_safety_zone_length_ =
+      ros_common_functions::getRosParam<double>("~obstacles_arbiter/max_path_safety_zone_length");
+  max_path_safety_zone_width_ =
+      ros_common_functions::getRosParam<double>("~obstacles_arbiter/max_path_safety_zone_width");
+  path_safety_zone_horizon_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/path_safety_zone_horizon");
 
   objects_target_frame_id_ = ros_common_functions::getRosParam<std::string>("~objects_target_frame_id");
   publish_processing_time_ = ros_common_functions::getRosParam<bool>("~publish_processing_time");
   print_processing_time_ = ros_common_functions::getRosParam<bool>("~print_processing_time");
+
+  buildRobotPolygon();
 
   typename dynamic_reconfigure::Server<agribot_obstacle_detection::ObstaclesArbiterConfig>::CallbackType
       dynamic_reconfigure_function = boost::bind(&ObstaclesArbiterNode::dynamicReconfigureCallback, this, _1, _2);
@@ -37,6 +48,16 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   in_object_array_sub_ = nh->subscribe("in_objects", 1, &ObstaclesArbiterNode::object3DArrayCallback, this);
   row_object_array_sub_ = nh->subscribe("row_objects", 1, &ObstaclesArbiterNode::rowObjectsCallback, this);
   path_sub_ = nh->subscribe("path", 1, &ObstaclesArbiterNode::pathCallback, this);
+}
+
+void ObstaclesArbiterNode::buildRobotPolygon()
+{
+  geometry_msgs::PoseStamped robot_pose;
+  robot_pose.header.frame_id = "base_footprint";
+  robot_pose.header.stamp = ros::Time::now();
+  robot_pose.pose.orientation.w = 1.0;
+
+  robot_polygon_ = Conversions::convertToObjectPolygon(robot_pose, robot_safety_zone_length_, robot_safety_zone_width_);
 }
 
 void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
@@ -111,11 +132,15 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
     if (msg->header.frame_id != objects_target_frame_id_)
     {
       path_polygons_ = Conversions::convertToObjectPolygonArray(
-          Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), safety_zone_length_, safety_zone_width_);
+          Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), min_path_safety_zone_length_,
+          min_path_safety_zone_width_, max_path_safety_zone_length_, max_path_safety_zone_width_,
+          path_safety_zone_horizon_);
     }
     else
     {
-      path_polygons_ = Conversions::convertToObjectPolygonArray(*msg, safety_zone_length_, safety_zone_width_);
+      path_polygons_ = Conversions::convertToObjectPolygonArray(
+          *msg, min_path_safety_zone_length_, min_path_safety_zone_width_, max_path_safety_zone_length_,
+          max_path_safety_zone_width_, path_safety_zone_horizon_);
     }
 
     checkCollisions();
@@ -131,15 +156,6 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
 
 void ObstaclesArbiterNode::checkCollisions()
 {
-  if (path_polygons_ == std::nullopt)
-  {
-    detection_status_.status = detection_status_.WAITING_FOR_PATH;
-    publishDetectionStatus();
-
-    ROS_WARN_STREAM_THROTTLE(5.0, log_tag_ << "Missing path info. Skipping calculation of output polygons...");
-    return;
-  }
-
   if (objects_polygons_ == std::nullopt)
   {
     detection_status_.status = detection_status_.WAITING_FOR_OBJECTS;
@@ -149,22 +165,46 @@ void ObstaclesArbiterNode::checkCollisions()
     return;
   }
 
+  if (path_polygons_ == std::nullopt)
+  {
+    detection_status_.status = detection_status_.WAITING_FOR_PATH;
+    publishDetectionStatus();
+
+    ROS_WARN_STREAM_THROTTLE(5.0, log_tag_ << "Missing path info. Checking collisions only for robot polygon...");
+  }
+
   // Clear detection status before checking new collisions
   detection_status_.status = detection_status_.NO_OBSTACLE;
+  robot_polygon_.type = robot_polygon_.PATH_CLEAR;
 
   // If there are no polygons in any of the lists, NO_OBSTACLE will be published as for loop will be omitted
-  for (auto& path_polygon : path_polygons_->polygons)
+  for (auto& object_polygon : objects_polygons_->polygons)
   {
-    for (auto& object_polygon : objects_polygons_->polygons)
+    // Check collision with robot polygon
+    if (collision_detection_->areColliding(object_polygon, robot_polygon_))
     {
-      if (collision_detection_->areColliding(object_polygon, path_polygon))
-      {
-        detection_status_.status = detection_status_.OBSTACLE_DETECTED;
-        publishDetectionStatus();
+      detection_status_.status = detection_status_.OBSTACLE_DETECTED;
+      publishDetectionStatus();
 
-        // Mark path and objects polygons with _COLLIDING type
-        object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
-        path_polygon.type = object_polygon.PATH_COLLIDING;
+      // Mark path and objects polygons with _COLLIDING type
+      object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
+      robot_polygon_.type = object_polygon.PATH_COLLIDING;
+    }
+
+    // Check collisions with path polygons
+    if (path_polygons_ != std::nullopt)
+    {
+      for (auto& path_polygon : path_polygons_->polygons)
+      {
+        if (collision_detection_->areColliding(object_polygon, path_polygon))
+        {
+          detection_status_.status = detection_status_.OBSTACLE_DETECTED;
+          publishDetectionStatus();
+
+          // Mark path and objects polygons with _COLLIDING type
+          object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
+          path_polygon.type = object_polygon.PATH_COLLIDING;
+        }
       }
     }
   }
@@ -404,11 +444,25 @@ void ObstaclesArbiterNode::publishOutputPolygons()
 {
   // Just rewrite path and obstacles polygons. They should have proper "type" set already
   output_polygons_.polygons.clear();
-  output_polygons_.polygons.reserve(objects_polygons_->polygons.size() + path_polygons_->polygons.size());
+
+  std::size_t output_size = objects_polygons_->polygons.size() + 1;  // At least for objects and robot polygon
+
+  if (path_polygons_ != std::nullopt)
+  {
+    output_size += path_polygons_->polygons.size();
+  }
+
+  output_polygons_.polygons.reserve(output_size);
+
+  if (path_polygons_ != std::nullopt)
+  {
+    output_polygons_.polygons.insert(output_polygons_.polygons.end(), path_polygons_->polygons.begin(),
+                                     path_polygons_->polygons.end());
+  }
+
   output_polygons_.polygons.insert(output_polygons_.polygons.end(), objects_polygons_->polygons.begin(),
                                    objects_polygons_->polygons.end());
-  output_polygons_.polygons.insert(output_polygons_.polygons.end(), path_polygons_->polygons.begin(),
-                                   path_polygons_->polygons.end());
+  output_polygons_.polygons.push_back(robot_polygon_);
 
   out_polygons_pub_.publish(output_polygons_);
 }

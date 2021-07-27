@@ -99,6 +99,33 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Pat
   return msg;
 }
 
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double min_x_size,
+                                                             double min_y_size, double max_x_size, double max_y_size,
+                                                             double path_horizon)
+{
+  agribot_msgs::ObjectPolygonArray msg;
+  for (const auto& pose : path.poses)
+  {
+    auto distance = std::hypot(pose.pose.position.x, pose.pose.position.y);
+
+    if (distance < path_horizon)
+    {
+      auto size_coefficient = 1.0 - (distance / path_horizon);
+
+      auto x_size_diff = max_x_size - min_x_size;
+      auto y_size_diff = max_y_size - min_y_size;
+
+      auto x_size = min_x_size + size_coefficient * x_size_diff;
+      auto y_size = min_y_size + size_coefficient * y_size_diff;
+
+      auto polygon = convertToObjectPolygon(pose, x_size, y_size);
+      polygon.type = polygon.PATH_CLEAR;
+      msg.polygons.push_back(polygon);
+    }
+  }
+  return msg;
+}
+
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, double x_size, double y_size)
 {
   auto yaw = tf::getYaw(pose.pose.orientation);

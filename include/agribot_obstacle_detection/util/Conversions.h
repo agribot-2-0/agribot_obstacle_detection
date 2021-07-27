@@ -43,6 +43,9 @@ agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_m
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double x_size, double y_size);
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double min_x_size,
+                                                             double min_y_size, double max_x_size, double max_y_size,
+                                                             double path_horizon);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, double x_size,
                                                    double y_size);
 agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, double x_size, double y_size,
