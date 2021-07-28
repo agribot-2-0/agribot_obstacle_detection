@@ -9,24 +9,7 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   : nh_{ nh }, tf_listener_{ tf_buffer_ }, log_tag_{ log_tag }, collision_detection_{ std::move(collision_detection) }
 {
   detection_status_.status = detection_status_.UNKNOWN;
-
-  robot_safety_zone_length_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/robot_safety_zone_length");
-  robot_safety_zone_width_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/robot_safety_zone_width");
-  min_path_safety_zone_length_ =
-      ros_common_functions::getRosParam<double>("~obstacles_arbiter/min_path_safety_zone_length");
-  min_path_safety_zone_width_ =
-      ros_common_functions::getRosParam<double>("~obstacles_arbiter/min_path_safety_zone_width");
-  max_path_safety_zone_length_ =
-      ros_common_functions::getRosParam<double>("~obstacles_arbiter/max_path_safety_zone_length");
-  max_path_safety_zone_width_ =
-      ros_common_functions::getRosParam<double>("~obstacles_arbiter/max_path_safety_zone_width");
-  path_safety_zone_horizon_ = ros_common_functions::getRosParam<double>("~obstacles_arbiter/path_safety_zone_horizon");
-
-  objects_target_frame_id_ = ros_common_functions::getRosParam<std::string>("~objects_target_frame_id");
-  publish_processing_time_ = ros_common_functions::getRosParam<bool>("~publish_processing_time");
-  print_processing_time_ = ros_common_functions::getRosParam<bool>("~print_processing_time");
-
-  buildRobotPolygon();
+  objects_target_frame_id_ = "base_footprint";
 
   typename dynamic_reconfigure::Server<agribot_obstacle_detection::ObstaclesArbiterConfig>::CallbackType
       dynamic_reconfigure_function = boost::bind(&ObstaclesArbiterNode::dynamicReconfigureCallback, this, _1, _2);
@@ -48,6 +31,8 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   in_object_array_sub_ = nh->subscribe("in_objects", 1, &ObstaclesArbiterNode::object3DArrayCallback, this);
   row_object_array_sub_ = nh->subscribe("row_objects", 1, &ObstaclesArbiterNode::rowObjectsCallback, this);
   path_sub_ = nh->subscribe("path", 1, &ObstaclesArbiterNode::pathCallback, this);
+
+  buildRobotPolygon();
 }
 
 void ObstaclesArbiterNode::buildRobotPolygon()
@@ -497,6 +482,8 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
 {
   static_cast<void>(level);  // Suppress unused variable warning
 
+  publish_processing_time_ = dynamic_config.publish_processing_time;
+  print_processing_time_ = dynamic_config.print_processing_time;
   eps_angle_ = dynamic_config.eps_angle;
   parallel_axis_x_ = dynamic_config.parallel_axis_x;
   parallel_axis_y_ = dynamic_config.parallel_axis_y;
@@ -507,4 +494,11 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   seg_method_type_ = dynamic_config.seg_method_type;
   seg_normal_distance_weight_ = dynamic_config.seg_normal_distance_weight;
   seg_normal_neighbours_n_ = dynamic_config.seg_normal_neighbours_n;
+  robot_safety_zone_length_ = dynamic_config.robot_safety_zone_length;
+  robot_safety_zone_width_ = dynamic_config.robot_safety_zone_width;
+  min_path_safety_zone_length_ = dynamic_config.min_path_safety_zone_length;
+  min_path_safety_zone_width_ = dynamic_config.min_path_safety_zone_width;
+  max_path_safety_zone_length_ = dynamic_config.max_path_safety_zone_length;
+  max_path_safety_zone_width_ = dynamic_config.max_path_safety_zone_width;
+  path_safety_zone_horizon_ = dynamic_config.path_safety_zone_horizon;
 }
