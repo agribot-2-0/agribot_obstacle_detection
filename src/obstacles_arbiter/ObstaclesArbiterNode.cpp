@@ -239,17 +239,14 @@ void ObstaclesArbiterNode::computeRowsPaths()
       right_row_polygon = row_polygons_->polygons[0];
     }
 
-    double line_start_x = 1.0;
-    double line_end_x = 5.0;
-
     // auto [left_line_a, left_line_b] = lineCoefficientsWithRowLineSegmentation(left_row_polygon.point_cloud);
     auto [left_line_a, left_line_b] = lineCoefficientsWithRowPlaneSegmentation(left_row_polygon.point_cloud, "left");
-    left_row_path = pathFromLine(left_line_a, left_line_b, line_start_x, line_end_x);
+    left_row_path = pathFromLine(left_line_a, left_line_b, row_path_start_x_, row_path_end_x_);
 
     // auto [right_line_a, right_line_b] = lineCoefficientsWithRowLineSegmentation(right_row_polygon.point_cloud);
     auto [right_line_a, right_line_b] =
         lineCoefficientsWithRowPlaneSegmentation(right_row_polygon.point_cloud, "right");
-    right_row_path = pathFromLine(right_line_a, right_line_b, line_start_x, line_end_x);
+    right_row_path = pathFromLine(right_line_a, right_line_b, row_path_start_x_, row_path_end_x_);
   }
 
   left_row_path_pub_.publish(left_row_path);
@@ -501,4 +498,6 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   max_path_safety_zone_length_ = dynamic_config.max_path_safety_zone_length;
   max_path_safety_zone_width_ = dynamic_config.max_path_safety_zone_width;
   path_safety_zone_horizon_ = dynamic_config.path_safety_zone_horizon;
+  row_path_start_x_ = dynamic_config.row_path_start_x;
+  row_path_end_x_ = dynamic_config.row_path_end_x;
 }
