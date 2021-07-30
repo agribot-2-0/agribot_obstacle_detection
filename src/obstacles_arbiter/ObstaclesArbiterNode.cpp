@@ -206,7 +206,10 @@ void ObstaclesArbiterNode::computeRowsPaths()
   nav_msgs::Path left_row_path;
   nav_msgs::Path right_row_path;
 
-  if (row_polygons_->polygons.size() < 2)
+  auto row_obstacle_on_the_left = [](const agribot_msgs::ObjectPolygon& p) { return p.centroid.y > 0.3; };
+  auto row_obstacle_on_the_right = [](const agribot_msgs::ObjectPolygon& p) { return p.centroid.y < -0.3; };
+
+  if (!std::any_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_left))
   {
     left_row_path.poses.clear();
     left_row_path.header.frame_id = "base_footprint";
@@ -214,38 +217,38 @@ void ObstaclesArbiterNode::computeRowsPaths()
     right_row_path.poses.clear();
     right_row_path.header.frame_id = "base_footprint";
     right_row_path.header.stamp = ros::Time::now();
+    ROS_WARN_STREAM("[ObstaclesArbiterNode] No row obstacle on the left. Publishing empty row paths...");
+  }
+  else if (!std::any_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_right))
+  {
+    left_row_path.poses.clear();
+    left_row_path.header.frame_id = "base_footprint";
+    left_row_path.header.stamp = ros::Time::now();
+    right_row_path.poses.clear();
+    right_row_path.header.frame_id = "base_footprint";
+    right_row_path.header.stamp = ros::Time::now();
+    ROS_WARN_STREAM("[ObstaclesArbiterNode] No row obstacle on the right. Publishing empty row paths...");
   }
   else
   {
-    // auto rows_polygons
+    // Sort objects in descending order by area
     auto area_comparison = [](const agribot_msgs::ObjectPolygon& p1, const agribot_msgs::ObjectPolygon& p2) {
       return p1.area < p2.area;
     };
-
-    agribot_msgs::ObjectPolygon left_row_polygon;
-    agribot_msgs::ObjectPolygon right_row_polygon;
-
-    // Sort objects in descending order by area
     std::sort(row_polygons_->polygons.rbegin(), row_polygons_->polygons.rend(), area_comparison);
 
-    if (row_polygons_->polygons[0].centroid.y > row_polygons_->polygons[1].centroid.y)
-    {
-      left_row_polygon = row_polygons_->polygons[0];
-      right_row_polygon = row_polygons_->polygons[1];
-    }
-    else
-    {
-      left_row_polygon = row_polygons_->polygons[1];
-      right_row_polygon = row_polygons_->polygons[0];
-    }
+    // Find biggest polygons on the left and right
+    auto left_row_polygon_it =
+        std::find_if(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_left);
+    auto right_row_polygon_it =
+        std::find_if(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_right);
 
-    // auto [left_line_a, left_line_b] = lineCoefficientsWithRowLineSegmentation(left_row_polygon.point_cloud);
-    auto [left_line_a, left_line_b] = lineCoefficientsWithRowPlaneSegmentation(left_row_polygon.point_cloud, "left");
+    auto [left_line_a, left_line_b] =
+        lineCoefficientsWithRowPlaneSegmentation(left_row_polygon_it->point_cloud, "left");
     left_row_path = pathFromLine(left_line_a, left_line_b, row_path_start_x_, row_path_end_x_);
 
-    // auto [right_line_a, right_line_b] = lineCoefficientsWithRowLineSegmentation(right_row_polygon.point_cloud);
     auto [right_line_a, right_line_b] =
-        lineCoefficientsWithRowPlaneSegmentation(right_row_polygon.point_cloud, "right");
+        lineCoefficientsWithRowPlaneSegmentation(right_row_polygon_it->point_cloud, "right");
     right_row_path = pathFromLine(right_line_a, right_line_b, row_path_start_x_, row_path_end_x_);
   }
 
