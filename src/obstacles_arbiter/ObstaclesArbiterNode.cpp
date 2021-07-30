@@ -247,9 +247,6 @@ void ObstaclesArbiterNode::computeRowsPaths()
     auto right_row_polygon_it =
         std::find_if(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_right);
 
-    ROS_ERROR_STREAM("Left polygon area: " << left_row_polygon_it->area);
-    ROS_ERROR_STREAM("Right polygon area: " << right_row_polygon_it->area);
-
     auto [left_line_a, left_line_b] =
         lineCoefficientsWithRowPlaneSegmentation(left_row_polygon_it->point_cloud, "left");
     left_row_path = pathFromLine(left_line_a, left_line_b, row_path_start_x_, row_path_end_x_);
