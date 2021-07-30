@@ -209,7 +209,7 @@ void ObstaclesArbiterNode::computeRowsPaths()
   auto row_obstacle_on_the_left = [](const agribot_msgs::ObjectPolygon& p) { return p.centroid.y > 0.3; };
   auto row_obstacle_on_the_right = [](const agribot_msgs::ObjectPolygon& p) { return p.centroid.y < -0.3; };
 
-  if (!std::any_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_left))
+  if (std::none_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_left))
   {
     left_row_path.poses.clear();
     left_row_path.header.frame_id = "base_footprint";
@@ -219,7 +219,7 @@ void ObstaclesArbiterNode::computeRowsPaths()
     right_row_path.header.stamp = ros::Time::now();
     ROS_WARN_STREAM("[ObstaclesArbiterNode] No row obstacle on the left. Publishing empty row paths...");
   }
-  else if (!std::any_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_right))
+  else if (std::none_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_right))
   {
     left_row_path.poses.clear();
     left_row_path.header.frame_id = "base_footprint";
