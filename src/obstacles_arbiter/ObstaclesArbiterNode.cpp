@@ -206,8 +206,12 @@ void ObstaclesArbiterNode::computeRowsPaths()
   nav_msgs::Path left_row_path;
   nav_msgs::Path right_row_path;
 
-  auto row_obstacle_on_the_left = [](const agribot_msgs::ObjectPolygon& p) { return p.centroid.y > 0.3; };
-  auto row_obstacle_on_the_right = [](const agribot_msgs::ObjectPolygon& p) { return p.centroid.y < -0.3; };
+  auto row_obstacle_on_the_left = [this](const agribot_msgs::ObjectPolygon& p) {
+    return p.centroid.y > this->row_polygon_centroid_y_threshold_ && p.area > this->row_polygon_area_threshold_;
+  };
+  auto row_obstacle_on_the_right = [this](const agribot_msgs::ObjectPolygon& p) {
+    return p.centroid.y < -this->row_polygon_centroid_y_threshold_ && p.area > this->row_polygon_area_threshold_;
+  };
 
   if (std::none_of(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_left))
   {
@@ -242,6 +246,9 @@ void ObstaclesArbiterNode::computeRowsPaths()
         std::find_if(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_left);
     auto right_row_polygon_it =
         std::find_if(row_polygons_->polygons.begin(), row_polygons_->polygons.end(), row_obstacle_on_the_right);
+
+    ROS_ERROR_STREAM("Left polygon area: " << left_row_polygon_it->area);
+    ROS_ERROR_STREAM("Right polygon area: " << right_row_polygon_it->area);
 
     auto [left_line_a, left_line_b] =
         lineCoefficientsWithRowPlaneSegmentation(left_row_polygon_it->point_cloud, "left");
@@ -503,4 +510,6 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   path_safety_zone_horizon_ = dynamic_config.path_safety_zone_horizon;
   row_path_start_x_ = dynamic_config.row_path_start_x;
   row_path_end_x_ = dynamic_config.row_path_end_x;
+  row_polygon_centroid_y_threshold_ = dynamic_config.row_polygon_centroid_y_threshold;
+  row_polygon_area_threshold_ = dynamic_config.row_polygon_area_threshold;
 }

@@ -45,6 +45,8 @@ private:
   double path_safety_zone_horizon_;
   double row_path_start_x_;
   double row_path_end_x_;
+  double row_polygon_centroid_y_threshold_;
+  double row_polygon_area_threshold_;
   std::string objects_target_frame_id_;
   bool publish_processing_time_;
   bool print_processing_time_;
