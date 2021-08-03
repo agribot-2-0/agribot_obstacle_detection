@@ -16,9 +16,10 @@
 #pragma GCC diagnostic pop
 
 #include <string>
-#include <utility>
 
 #include "agribot_obstacle_detection/RowDetectionConfig.h"
+#include "agribot_obstacle_detection/row_detection/LineCoefficients.h"
+#include "agribot_obstacle_detection/row_detection/PlaneCoefficients.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 
 class RowDetectionNode
@@ -65,10 +66,10 @@ private:
 
   void rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void computeRowsPaths();
-  std::pair<double, double> lineCoefficientsWithRowLineSegmentation(const sensor_msgs::PointCloud2& pc2);
-  std::pair<double, double> lineCoefficientsWithRowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2,
-                                                                     const std::string& row);
-  nav_msgs::Path pathFromLine(double line_a, double line_b, double start_x, double end_x);
+  PlaneCoefficients rowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2);
+  LineCoefficients lineFromPlane(const PlaneCoefficients& plane, double cutoff_height);
+  nav_msgs::Path pathFromLine(const LineCoefficients& line, double start_x, double end_x);
+  void publishPlaneMarker(const PlaneCoefficients& plane, const std::string& row);
   void dynamicReconfigureCallback(const agribot_obstacle_detection::RowDetectionConfig& dynamic_config, uint32_t level);
 
 public:

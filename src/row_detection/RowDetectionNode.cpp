@@ -98,57 +98,24 @@ void RowDetectionNode::computeRowsPaths()
     auto right_row_polygon_it =
         std::find_if(row_polygons_.polygons.begin(), row_polygons_.polygons.end(), row_obstacle_on_the_right);
 
-    auto [left_line_a, left_line_b] =
-        lineCoefficientsWithRowPlaneSegmentation(left_row_polygon_it->point_cloud, "left");
-    left_row_path = pathFromLine(left_line_a, left_line_b, row_path_start_x_, row_path_end_x_);
+    auto left_row_plane_coefficients = rowPlaneSegmentation(left_row_polygon_it->point_cloud);
+    auto right_row_plane_coefficients = rowPlaneSegmentation(right_row_polygon_it->point_cloud);
 
-    auto [right_line_a, right_line_b] =
-        lineCoefficientsWithRowPlaneSegmentation(right_row_polygon_it->point_cloud, "right");
-    right_row_path = pathFromLine(right_line_a, right_line_b, row_path_start_x_, row_path_end_x_);
+    publishPlaneMarker(left_row_plane_coefficients, "left");
+    publishPlaneMarker(right_row_plane_coefficients, "right");
+
+    auto left_row_line_coefficients = lineFromPlane(left_row_plane_coefficients, row_plane_cutoff_z_);
+    auto right_row_line_coefficients = lineFromPlane(right_row_plane_coefficients, row_plane_cutoff_z_);
+
+    left_row_path = pathFromLine(left_row_line_coefficients, row_path_start_x_, row_path_end_x_);
+    right_row_path = pathFromLine(right_row_line_coefficients, row_path_start_x_, row_path_end_x_);
   }
 
   left_row_path_pub_.publish(left_row_path);
   right_row_path_pub_.publish(right_row_path);
 }
 
-std::pair<double, double> RowDetectionNode::lineCoefficientsWithRowLineSegmentation(const sensor_msgs::PointCloud2& pc2)
-{
-  pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
-  pcl::SACSegmentation<pcl::PointXYZ> seg;
-
-  seg.setOptimizeCoefficients(true);
-  seg.setModelType(pcl::SACMODEL_LINE);
-  seg.setMethodType(seg_method_type_);
-  seg.setDistanceThreshold(seg_distance_threshold_);
-  seg.setMaxIterations(seg_max_iterations_);
-
-  pcl::PCLPointCloud2 pcl_pc2;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud{ new pcl::PointCloud<pcl::PointXYZ> };
-  pcl::ModelCoefficients line_coefficients;
-
-  pcl_conversions::toPCL(pc2, pcl_pc2);
-  pcl::fromPCLPointCloud2(pcl_pc2, *pcl_cloud);
-
-  seg.setInputCloud(pcl_cloud);
-  seg.segment(*inliers, line_coefficients);
-
-  auto p1_x = line_coefficients.values[0];
-  auto p1_y = line_coefficients.values[1];
-
-  auto direction_x = line_coefficients.values[3];
-  auto direction_y = line_coefficients.values[4];
-
-  auto p2_x = p1_x + direction_x;
-  auto p2_y = p1_y + direction_y;
-
-  auto line_a = (p2_y - p1_y) / (p2_x - p1_x);
-  auto line_b = p1_y - line_a * p1_x;
-
-  return std::make_pair(line_a, line_b);
-}
-
-std::pair<double, double>
-RowDetectionNode::lineCoefficientsWithRowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2, const std::string& row)
+PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2)
 {
   pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
   pcl::PCLPointCloud2 pcl_pc2;
@@ -223,38 +190,24 @@ RowDetectionNode::lineCoefficientsWithRowPlaneSegmentation(const sensor_msgs::Po
   seg->setInputCloud(pcl_cloud);
   seg->segment(*inliers, plane_coefficients);
 
-  auto row_plane_a = plane_coefficients.values[0];
-  auto row_plane_b = plane_coefficients.values[1];
-  auto row_plane_c = plane_coefficients.values[2];
-  auto row_plane_d = plane_coefficients.values[3];
-
-  if (row == "right")
-  {
-    right_row_plane_rviz_tools_->deleteAllMarkers();
-    right_row_plane_rviz_tools_->publishABCDPlane(row_plane_a, row_plane_b, row_plane_c, row_plane_d,
-                                                  rviz_visual_tools::RED, 15.0, 5.0);
-    right_row_plane_rviz_tools_->trigger(false);
-  }
-  else if (row == "left")
-  {
-    left_row_plane_rviz_tools_->deleteAllMarkers();
-    left_row_plane_rviz_tools_->publishABCDPlane(row_plane_a, row_plane_b, row_plane_c, row_plane_d,
-                                                 rviz_visual_tools::GREEN, 15.0, 5.0);
-    left_row_plane_rviz_tools_->trigger(false);
-  }
-
-  double line_m = -row_plane_a / row_plane_b;
-  double line_n = -(row_plane_c * row_plane_cutoff_z_ + row_plane_d) / row_plane_b;
-
-  return std::make_pair(line_m, line_n);
+  return { plane_coefficients.values[0], plane_coefficients.values[1], plane_coefficients.values[2],
+           plane_coefficients.values[3] };
 }
 
-nav_msgs::Path RowDetectionNode::pathFromLine(double line_a, double line_b, double start_x, double end_x)
+LineCoefficients RowDetectionNode::lineFromPlane(const PlaneCoefficients& plane, double cutoff_height)
+{
+  double line_a = -plane.a_ / plane.b_;
+  double line_b = -(plane.c_ * cutoff_height + plane.d_) / plane.b_;
+
+  return { line_a, line_b };
+}
+
+nav_msgs::Path RowDetectionNode::pathFromLine(const LineCoefficients& line, double start_x, double end_x)
 {
   nav_msgs::Path path;
 
-  auto start_y = line_a * start_x + line_b;
-  auto end_y = line_a * end_x + line_b;
+  auto start_y = line.a_ * start_x + line.b_;
+  auto end_y = line.a_ * end_x + line.b_;
 
   geometry_msgs::PoseStamped left_start_pose;
   left_start_pose.header = path.header;
@@ -275,6 +228,24 @@ nav_msgs::Path RowDetectionNode::pathFromLine(double line_a, double line_b, doub
   path.header.stamp = ros::Time::now();
 
   return path;
+}
+
+void RowDetectionNode::publishPlaneMarker(const PlaneCoefficients& plane, const std::string& row)
+{
+  if (row == "right")
+  {
+    right_row_plane_rviz_tools_->deleteAllMarkers();
+    right_row_plane_rviz_tools_->publishABCDPlane(plane.a_, plane.b_, plane.c_, plane.d_, rviz_visual_tools::RED, 15.0,
+                                                  5.0);
+    right_row_plane_rviz_tools_->trigger(false);
+  }
+  else if (row == "left")
+  {
+    left_row_plane_rviz_tools_->deleteAllMarkers();
+    left_row_plane_rviz_tools_->publishABCDPlane(plane.a_, plane.b_, plane.c_, plane.d_, rviz_visual_tools::GREEN, 15.0,
+                                                 5.0);
+    left_row_plane_rviz_tools_->trigger(false);
+  }
 }
 
 void RowDetectionNode::run() const
