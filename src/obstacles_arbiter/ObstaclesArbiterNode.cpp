@@ -393,10 +393,8 @@ std::pair<double, double> ObstaclesArbiterNode::lineCoefficientsWithRowPlaneSegm
     left_row_plane_rviz_tools_->trigger(false);
   }
 
-  double cutoff_z = 0.77;
-
   double line_m = -row_plane_a / row_plane_b;
-  double line_n = -(row_plane_c * cutoff_z + row_plane_d) / row_plane_b;
+  double line_n = -(row_plane_c * row_plane_cutoff_z_ + row_plane_d) / row_plane_b;
 
   return std::make_pair(line_m, line_n);
 }
@@ -509,4 +507,5 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   row_path_end_x_ = dynamic_config.row_path_end_x;
   row_polygon_centroid_y_threshold_ = dynamic_config.row_polygon_centroid_y_threshold;
   row_polygon_area_threshold_ = dynamic_config.row_polygon_area_threshold;
+  row_plane_cutoff_z_ = dynamic_config.row_plane_cutoff_z;
 }
