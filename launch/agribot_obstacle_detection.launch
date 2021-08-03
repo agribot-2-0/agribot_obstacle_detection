@@ -88,15 +88,20 @@
   <!-- Obstacles arbiter node -->
   <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="obstacles_arbiter_node" name="obstacles_arbiter_node" output="screen" launch-prefix="">
     <remap from="~in_objects"                           to="$(arg final_objects_topic)"/>
-    <remap from="~row_objects"                          to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~path"                                 to="$(arg path_topic)"/>
     <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>
     <remap from="~path_polygons"                        to="$(arg path_polygons_topic)"/>
     <remap from="~objects_polygons"                     to="$(arg objects_polygons_topic)"/>
     <remap from="~detection_status"                     to="$(arg detection_status_topic)"/>
+    <remap from="~processing_time"                      to="$(arg arbiter_processing_time_topic)"/>
+  </node>
+
+
+  <!-- Row detection node -->
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="row_detection_node" name="row_detection_node" output="screen" launch-prefix="">
+    <remap from="~row_objects"                          to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~left_row_path"                        to="$(arg left_row_path_topic)"/>
     <remap from="~right_row_path"                       to="$(arg right_row_path_topic)"/>
-    <remap from="~processing_time"                      to="$(arg arbiter_processing_time_topic)"/>
   </node>
 
 

@@ -25,6 +25,7 @@ generate_dynamic_reconfigure_options(
   cfg/StereoCameraPointCloudPipeline.cfg
   cfg/PointCloudLateFusion.cfg
   cfg/ObstaclesArbiter.cfg
+  cfg/RowDetection.cfg
 )
 
 catkin_package(
@@ -106,6 +107,15 @@ add_executable(obstacles_arbiter_node
 target_link_libraries(obstacles_arbiter_node ${catkin_LIBRARIES})
 add_dependencies(obstacles_arbiter_node ${catkin_EXPORTED_TARGETS})
 
+add_executable(row_detection_node
+  src/row_detection/row_detection_node.cpp
+  src/row_detection/RowDetectionNode.cpp
+  src/util/Conversions.cpp
+)
+target_link_libraries(row_detection_node ${catkin_LIBRARIES})
+add_dependencies(row_detection_node ${catkin_EXPORTED_TARGETS})
+
+
 
 #############
 ## Install ##
@@ -119,6 +129,7 @@ install(TARGETS
   point_cloud_late_fusion_node
   point_cloud_rgb_camera_fusion_node
   obstacles_arbiter_node
+  row_detection_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
