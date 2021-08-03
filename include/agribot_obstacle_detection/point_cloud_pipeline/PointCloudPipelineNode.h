@@ -138,6 +138,8 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
     auto objects_point_cloud = pipeline_.getObjectsPointCloud();
     objects_point_cloud_pub_.publish(*objects_point_cloud);
 
+    // TODO(olek) - consider if this cloud should still be published
+    // If yes - add parameters to dynamic reconfigure
     typename pcl::PointCloud<PointT>::Ptr filtered_objects_point_cloud{ new pcl::PointCloud<PointT> };
     RadiusOutlierRemovalConfig ror_config;
     ror_config.neighbours_n_ = 50;
