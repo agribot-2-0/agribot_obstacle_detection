@@ -124,7 +124,7 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
   boost::shared_ptr<pcl::SACSegmentation<pcl::PointXYZ>> seg;
   boost::shared_ptr<pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>> normal_seg;
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimation;
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
 
   pcl_conversions::toPCL(pc2, pcl_pc2);
@@ -146,10 +146,10 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
       normal_seg.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
 
       // Estimate point normals
-      ne.setSearchMethod(tree);
-      ne.setInputCloud(pcl_cloud);
-      ne.setKSearch(seg_normal_neighbours_n_);
-      ne.compute(*cloud_normals);
+      normal_estimation.setSearchMethod(tree);
+      normal_estimation.setInputCloud(pcl_cloud);
+      normal_estimation.setKSearch(seg_normal_neighbours_n_);
+      normal_estimation.compute(*cloud_normals);
 
       normal_seg->setInputNormals(cloud_normals);
       normal_seg->setNormalDistanceWeight(seg_normal_distance_weight_);
@@ -162,10 +162,10 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
       normal_seg.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
 
       // Estimate point normals
-      ne.setSearchMethod(tree);
-      ne.setInputCloud(pcl_cloud);
-      ne.setKSearch(seg_normal_neighbours_n_);
-      ne.compute(*cloud_normals);
+      normal_estimation.setSearchMethod(tree);
+      normal_estimation.setInputCloud(pcl_cloud);
+      normal_estimation.setKSearch(seg_normal_neighbours_n_);
+      normal_estimation.compute(*cloud_normals);
 
       normal_seg->setInputNormals(cloud_normals);
       normal_seg->setNormalDistanceWeight(seg_normal_distance_weight_);
