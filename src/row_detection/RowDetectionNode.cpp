@@ -121,8 +121,8 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
   pcl::PCLPointCloud2 pcl_pc2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::ModelCoefficients plane_coefficients;
-  boost::shared_ptr<pcl::SACSegmentation<pcl::PointXYZ>> seg;
-  boost::shared_ptr<pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>> normal_seg;
+  boost::shared_ptr<pcl::SACSegmentation<pcl::PointXYZ>> segmentation;
+  boost::shared_ptr<pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>> normal_segmentation;
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimation;
   pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
@@ -133,17 +133,17 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
   switch (seg_model_type_)
   {
     case agribot_obstacle_detection::RowDetection_plane:
-      seg.reset(new pcl::SACSegmentation<pcl::PointXYZ>);
+      segmentation.reset(new pcl::SACSegmentation<pcl::PointXYZ>);
       break;
 
     case agribot_obstacle_detection::RowDetection_parallel_plane:
-      seg.reset(new pcl::SACSegmentation<pcl::PointXYZ>);
-      seg->setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
-      seg->setEpsAngle(eps_angle_);
+      segmentation.reset(new pcl::SACSegmentation<pcl::PointXYZ>);
+      segmentation->setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
+      segmentation->setEpsAngle(eps_angle_);
       break;
 
     case agribot_obstacle_detection::RowDetection_normal_plane:
-      normal_seg.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
+      normal_segmentation.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
 
       // Estimate point normals
       normal_estimation.setSearchMethod(tree);
@@ -151,15 +151,15 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
       normal_estimation.setKSearch(seg_normal_neighbours_n_);
       normal_estimation.compute(*cloud_normals);
 
-      normal_seg->setInputNormals(cloud_normals);
-      normal_seg->setNormalDistanceWeight(seg_normal_distance_weight_);
+      normal_segmentation->setInputNormals(cloud_normals);
+      normal_segmentation->setNormalDistanceWeight(seg_normal_distance_weight_);
 
-      seg = normal_seg;
+      segmentation = normal_segmentation;
 
       break;
 
     case agribot_obstacle_detection::RowDetection_normal_parallel_plane:
-      normal_seg.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
+      normal_segmentation.reset(new pcl::SACSegmentationFromNormals<pcl::PointXYZ, pcl::Normal>);
 
       // Estimate point normals
       normal_estimation.setSearchMethod(tree);
@@ -167,12 +167,12 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
       normal_estimation.setKSearch(seg_normal_neighbours_n_);
       normal_estimation.compute(*cloud_normals);
 
-      normal_seg->setInputNormals(cloud_normals);
-      normal_seg->setNormalDistanceWeight(seg_normal_distance_weight_);
-      normal_seg->setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
-      normal_seg->setEpsAngle(eps_angle_);
+      normal_segmentation->setInputNormals(cloud_normals);
+      normal_segmentation->setNormalDistanceWeight(seg_normal_distance_weight_);
+      normal_segmentation->setAxis(Eigen::Vector3f(parallel_axis_x_, parallel_axis_y_, parallel_axis_z_));
+      normal_segmentation->setEpsAngle(eps_angle_);
 
-      seg = normal_seg;
+      segmentation = normal_segmentation;
 
       break;
 
@@ -181,14 +181,14 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
       break;
   }
 
-  seg->setOptimizeCoefficients(true);
-  seg->setDistanceThreshold(seg_distance_threshold_);
-  seg->setMaxIterations(seg_max_iterations_);
-  seg->setModelType(seg_model_type_);
-  seg->setMethodType(seg_method_type_);
+  segmentation->setOptimizeCoefficients(true);
+  segmentation->setDistanceThreshold(seg_distance_threshold_);
+  segmentation->setMaxIterations(seg_max_iterations_);
+  segmentation->setModelType(seg_model_type_);
+  segmentation->setMethodType(seg_method_type_);
 
-  seg->setInputCloud(pcl_cloud);
-  seg->segment(*inliers, plane_coefficients);
+  segmentation->setInputCloud(pcl_cloud);
+  segmentation->segment(*inliers, plane_coefficients);
 
   return { plane_coefficients.values[0], plane_coefficients.values[1], plane_coefficients.values[2],
            plane_coefficients.values[3] };
