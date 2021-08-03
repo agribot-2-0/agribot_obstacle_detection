@@ -194,7 +194,7 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
            plane_coefficients.values[3] };
 }
 
-LineCoefficients RowDetectionNode::lineFromPlane(const PlaneCoefficients& plane, double cutoff_height)
+LineCoefficients RowDetectionNode::lineFromPlane(const PlaneCoefficients& plane, double cutoff_height) const
 {
   double line_a = -plane.a_ / plane.b_;
   double line_b = -(plane.c_ * cutoff_height + plane.d_) / plane.b_;
@@ -202,7 +202,7 @@ LineCoefficients RowDetectionNode::lineFromPlane(const PlaneCoefficients& plane,
   return { line_a, line_b };
 }
 
-nav_msgs::Path RowDetectionNode::pathFromLine(const LineCoefficients& line, double start_x, double end_x)
+nav_msgs::Path RowDetectionNode::pathFromLine(const LineCoefficients& line, double start_x, double end_x) const
 {
   nav_msgs::Path path;
 
@@ -230,7 +230,7 @@ nav_msgs::Path RowDetectionNode::pathFromLine(const LineCoefficients& line, doub
   return path;
 }
 
-void RowDetectionNode::publishPlaneMarker(const PlaneCoefficients& plane, const std::string& row)
+void RowDetectionNode::publishPlaneMarker(const PlaneCoefficients& plane, const std::string& row) const
 {
   if (row == "right")
   {

@@ -67,9 +67,9 @@ private:
   void rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void computeRowsPaths();
   PlaneCoefficients rowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2);
-  LineCoefficients lineFromPlane(const PlaneCoefficients& plane, double cutoff_height);
-  nav_msgs::Path pathFromLine(const LineCoefficients& line, double start_x, double end_x);
-  void publishPlaneMarker(const PlaneCoefficients& plane, const std::string& row);
+  LineCoefficients lineFromPlane(const PlaneCoefficients& plane, double cutoff_height) const;
+  nav_msgs::Path pathFromLine(const LineCoefficients& line, double start_x, double end_x) const;
+  void publishPlaneMarker(const PlaneCoefficients& plane, const std::string& row) const;
   void dynamicReconfigureCallback(const agribot_obstacle_detection::RowDetectionConfig& dynamic_config, uint32_t level);
 
 public:
