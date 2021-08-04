@@ -37,6 +37,7 @@ struct PointCloudPipelineConfig
   // Outlier removal filtering
   OutlierRemovalMethod outlier_removal_method_;
   RadiusOutlierRemovalConfig ror_config_;
+  RadiusOutlierRemovalConfig filtered_objects_cloud_ror_config_;
   StatisticalOutlierRemovalConfig sor_config_;
 
   // Ground segmentation

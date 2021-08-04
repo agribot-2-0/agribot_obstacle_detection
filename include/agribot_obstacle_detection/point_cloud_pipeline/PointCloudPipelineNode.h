@@ -138,13 +138,9 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
     auto objects_point_cloud = pipeline_.getObjectsPointCloud();
     objects_point_cloud_pub_.publish(*objects_point_cloud);
 
-    // TODO(olek) - consider if this cloud should still be published
-    // If yes - add parameters to dynamic reconfigure
     typename pcl::PointCloud<PointT>::Ptr filtered_objects_point_cloud{ new pcl::PointCloud<PointT> };
-    RadiusOutlierRemovalConfig ror_config;
-    ror_config.neighbours_n_ = 50;
-    ror_config.radius_ = 0.3;
-    radiusOutlierRemoval<PointT>(objects_point_cloud, filtered_objects_point_cloud, ror_config);
+    radiusOutlierRemoval<PointT>(objects_point_cloud, filtered_objects_point_cloud,
+                                 node_config_.pipeline_config_.filtered_objects_cloud_ror_config_);
     filtered_objects_point_cloud_pub_.publish(*filtered_objects_point_cloud);
   }
 
@@ -193,6 +189,10 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamicReconfigureCall
       static_cast<OutlierRemovalMethod>(dynamic_config.outlier_removal_method);
   node_config_.pipeline_config_.ror_config_.neighbours_n_ = dynamic_config.ror_neighbours_n;
   node_config_.pipeline_config_.ror_config_.radius_ = dynamic_config.ror_radius;
+  node_config_.pipeline_config_.filtered_objects_cloud_ror_config_.neighbours_n_ =
+      dynamic_config.filtered_objects_cloud_ror_neighbours_n;
+  node_config_.pipeline_config_.filtered_objects_cloud_ror_config_.radius_ =
+      dynamic_config.filtered_objects_cloud_ror_radius;
   node_config_.pipeline_config_.sor_config_.neighbours_n_ = dynamic_config.sor_neighbours_n;
   node_config_.pipeline_config_.sor_config_.stddev_mul_ = dynamic_config.sor_stddev_mul;
   node_config_.pipeline_config_.seg_config_.max_iterations_n = dynamic_config.segmentation_iterations_n;
