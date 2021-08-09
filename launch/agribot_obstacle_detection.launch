@@ -1,6 +1,10 @@
 <launch>
   <arg name="detection_namespace"                       default="agribot/obstacle_detection"/>
 
+
+  <include file="$(find agribot_common)/launch/machines.launch" />
+  <arg name="machine"                                   value="$(env OBSTACLE_DETECTION_MACHINE)"/>
+
   <!-- Lidar arguments -->
   <arg name="lidar_namespace"                           default="front/3d/lidar"/>
   <arg name="lidar_point_cloud_topic"                   value="$(arg lidar_namespace)/point_cloud"/>
@@ -38,30 +42,34 @@
   <arg name="objects_polygons_markers_topic"            value="$(arg arbiter_namespace)/objects_polygons_markers"/>
   <arg name="arbiter_processing_time_topic"             value="$(arg arbiter_namespace)/processing_time"/>
   <arg name="detection_status_topic"                    value="/agribot/obstacle_detection/front/status"/>
+  <arg name="left_row_path_topic"                       value="$(arg arbiter_namespace)/left_row"/>
+  <arg name="right_row_path_topic"                      value="$(arg arbiter_namespace)/right_row"/>
 
 
 
   <!-- Lidar pipeline node -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="lidar_point_cloud_pipeline_node" name="lidar_point_cloud_pipeline_node" output="screen" launch-prefix="">
     <remap from="~input_point_cloud"                    to="$(arg lidar_point_cloud_topic)"/>
     <remap from="~ground_point_cloud"                   to="$(arg lidar_point_cloud_topic)/ground"/>
     <remap from="~objects_point_cloud"                  to="$(arg lidar_point_cloud_topic)/objects"/>
+    <remap from="~filtered_objects_point_cloud"         to="$(arg lidar_point_cloud_topic)/filtered_objects"/>
     <remap from="~objects"                              to="$(arg lidar_objects_topic)"/>
     <remap from="~processing_time"                      to="$(arg lidar_processing_time_topic)"/>
   </node>
 
   <!-- Stereo camera pipeline node -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="stereo_camera_point_cloud_pipeline_node" name="stereo_camera_point_cloud_pipeline_node" output="screen" launch-prefix="">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="stereo_camera_point_cloud_pipeline_node" name="stereo_camera_point_cloud_pipeline_node" output="screen" launch-prefix="">
     <remap from="~input_point_cloud"                    to="$(arg stereo_camera_point_cloud_topic)"/>
     <remap from="~ground_point_cloud"                   to="$(arg stereo_camera_point_cloud_topic)/ground"/>
     <remap from="~objects_point_cloud"                  to="$(arg stereo_camera_point_cloud_topic)/objects"/>
+    <remap from="~filtered_objects_point_cloud"         to="$(arg stereo_camera_point_cloud_topic)/filtered_objects"/>
     <remap from="~objects"                              to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~processing_time"                      to="$(arg stereo_camera_processing_time_topic)"/>
   </node>
 
 
   <!-- Point cloud late fusion node -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="point_cloud_late_fusion_node" name="point_cloud_late_fusion_node" output="screen" launch-prefix="">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="point_cloud_late_fusion_node" name="point_cloud_late_fusion_node" output="screen" launch-prefix="">
     <remap from="~in_1_objects"                         to="$(arg lidar_objects_topic)"/>
     <remap from="~in_2_objects"                         to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~out_objects"                          to="$(arg 3d_fused_objects_topic)"/>
@@ -70,7 +78,7 @@
 
 
   <!-- Point cloud RGB camera fusion node -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="point_cloud_rgb_camera_fusion_node" name="point_cloud_rgb_camera_fusion_node" output="screen" launch-prefix="">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="point_cloud_rgb_camera_fusion_node" name="point_cloud_rgb_camera_fusion_node" output="screen" launch-prefix="">
     <remap from="~in_3d_objects"                        to="$(arg 3d_fused_objects_topic)"/>
     <remap from="~out_objects"                          to="$(arg final_objects_topic)"/>
     <remap from="~processing_time"                      to="$(arg final_processing_time_topic)"/>
@@ -78,14 +86,7 @@
 
 
   <!-- Obstacles arbiter node -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="obstacles_arbiter_node" name="obstacles_arbiter_node" output="screen" launch-prefix="">
-
-    <rosparam command="load" file="$(env AGRIBOT_HOME)/agribot/configs/base/obstacle_detection/obstacles_arbiter.yaml" />
-
-    <param name="objects_target_frame_id"               value="base_footprint"/>
-    <param name="publish_processing_time"               value="true"/>
-    <param name="print_processing_time"                 value="false"/>
-
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="obstacles_arbiter_node" name="obstacles_arbiter_node" output="screen" launch-prefix="">
     <remap from="~in_objects"                           to="$(arg final_objects_topic)"/>
     <remap from="~path"                                 to="$(arg path_topic)"/>
     <remap from="~out_polygons"                         to="$(arg arbiter_polygons_topic)"/>
@@ -96,30 +97,38 @@
   </node>
 
 
+  <!-- Row detection node -->
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="row_detection_node" name="row_detection_node" output="screen" launch-prefix="">
+    <remap from="~row_objects"                          to="$(arg stereo_camera_objects_topic)"/>
+    <remap from="~left_row_path"                        to="$(arg left_row_path_topic)"/>
+    <remap from="~right_row_path"                       to="$(arg right_row_path_topic)"/>
+  </node>
+
+
 
   <!-- rviz_markers_visualization -->
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_lidar_objects_visualization_node" output="screen">
     <param name="color"                   value="2"/>
     <param name="marker_namespace"        value="front_lidar"/>
     <remap from="~object_3d_array"        to="$(arg lidar_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg lidar_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_stereo_camera_objects_visualization_node" output="screen">
     <param name="color"                   value="6"/>
     <param name="marker_namespace"        value="front_stereo_camera"/>
     <remap from="~object_3d_array"        to="$(arg stereo_camera_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg stereo_camera_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_3d_fused_objects_visualization_node" output="screen">
     <param name="color"                   value="11"/>
     <param name="marker_namespace"        value="front_fused"/>
     <remap from="~object_3d_array"        to="$(arg 3d_fused_objects_topic)"/>
     <remap from="~vision_markers"         to="$(arg 3d_fused_objects_markers_topic)"/>
   </node>
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_final_objects_visualization_node" output="screen">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_3d_array_visualization_node" name="front_final_objects_visualization_node" output="screen">
     <param name="color"                   value="13"/>
     <param name="marker_namespace"        value="front_final"/>
     <remap from="~object_3d_array"        to="$(arg final_objects_topic)"/>
@@ -127,7 +136,7 @@
   </node>
 
 
-  <node ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_polygon_array_visualization_node" name="arbiter_polygons_visualization_node" output="screen">
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_polygon_array_visualization_node" name="arbiter_polygons_visualization_node" output="screen">
     <param name="unknown_marker_color"              value="4"/>
     <param name="obstacle_clear_marker_color_"      value="6"/>
     <param name="obstacle_colliding_marker_color"   value="11"/>

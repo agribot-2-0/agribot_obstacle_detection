@@ -22,11 +22,64 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs:
   return msg;
 }
 
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array)
+{
+  agribot_msgs::ObjectPolygonArray msg;
+
+  for (const auto& object : object_array.objects)
+  {
+    auto polygon = convertToConvexHullPolygon(object);
+    polygon.type = polygon.OBSTACLE_CLEAR;
+    msg.polygons.push_back(polygon);
+  }
+  return msg;
+}
+
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object)
 {
   auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
   auto msg = getObjectPolygon(object.bbox.center.pose.position.x, object.bbox.center.pose.position.y,
                               object.bbox.size.x, object.bbox.size.y, yaw);
+
+  msg.header = object.header;
+  msg.type = msg.UNKNOWN;
+
+  return msg;
+}
+
+agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object)
+{
+  agribot_msgs::ObjectPolygon msg;
+
+  pcl::PCLPointCloud2 pcl_pointcloud2;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
+  pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
+
+  for (auto& point : pcl_pointcloud->points)
+  {
+    point.z = 0.0;
+  }
+
+  pcl::ConvexHull<pcl::PointXYZ> convex_hull;
+  convex_hull.setInputCloud(pcl_pointcloud);
+  convex_hull.setDimension(2);
+  convex_hull.setComputeAreaVolume(true);
+  convex_hull.reconstruct(*convex_hull_pointcloud);
+
+  for (const auto& point : convex_hull_pointcloud->points)
+  {
+    auto ros_point32 = Conversions::convertToPoint32Msg<pcl::PointXYZ>(point);
+    msg.polygon.points.push_back(ros_point32);
+  }
+
+  msg.area = convex_hull.getTotalArea();
+
+  pcl::PointXYZ pcl_centroid_point;
+  pcl::computeCentroid<pcl::PointXYZ>(*convex_hull_pointcloud, pcl_centroid_point);
+  msg.centroid = Conversions::convertToPoint32Msg<pcl::PointXYZ>(pcl_centroid_point);
+  msg.point_cloud = object.point_cloud;
 
   msg.header = object.header;
   msg.type = msg.UNKNOWN;
@@ -46,6 +99,33 @@ agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Pat
   return msg;
 }
 
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double min_x_size,
+                                                             double min_y_size, double max_x_size, double max_y_size,
+                                                             double path_horizon)
+{
+  agribot_msgs::ObjectPolygonArray msg;
+  for (const auto& pose : path.poses)
+  {
+    auto distance = std::hypot(pose.pose.position.x, pose.pose.position.y);
+
+    if (distance < path_horizon)
+    {
+      auto size_coefficient = 1.0 - (distance / path_horizon);
+
+      auto x_size_diff = max_x_size - min_x_size;
+      auto y_size_diff = max_y_size - min_y_size;
+
+      auto x_size = min_x_size + size_coefficient * x_size_diff;
+      auto y_size = min_y_size + size_coefficient * y_size_diff;
+
+      auto polygon = convertToObjectPolygon(pose, x_size, y_size);
+      polygon.type = polygon.PATH_CLEAR;
+      msg.polygons.push_back(polygon);
+    }
+  }
+  return msg;
+}
+
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, double x_size, double y_size)
 {
   auto yaw = tf::getYaw(pose.pose.orientation);
@@ -53,6 +133,8 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
 
   msg.header = pose.header;
   msg.type = msg.UNKNOWN;
+  msg.area = x_size * y_size;
+  msg.centroid = Conversions::convertToPoint32Msg(pose.pose.position);
 
   return msg;
 }
@@ -180,9 +262,31 @@ agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,
 
   // TODO(olek) - use lookupTransform instead of transform
   out_msg.center = tf_buffer.transform(in_msg.center, target_frame_id);
+  out_msg.center.header.frame_id = target_frame_id;
   out_msg.size = in_msg.size;
 
   return out_msg;
+}
+
+// ====================== //
+// Custom ROS conversions //
+// ====================== //
+geometry_msgs::Point convertToPointMsg(const geometry_msgs::Point32& p_32)
+{
+  geometry_msgs::Point p;
+  p.x = p_32.x;
+  p.y = p_32.y;
+  p.z = p_32.z;
+  return p;
+}
+
+geometry_msgs::Point32 convertToPoint32Msg(const geometry_msgs::Point& p)
+{
+  geometry_msgs::Point32 p_32;
+  p_32.x = p.x;
+  p_32.y = p.y;
+  p_32.z = p.z;
+  return p_32;
 }
 
 }  // namespace Conversions

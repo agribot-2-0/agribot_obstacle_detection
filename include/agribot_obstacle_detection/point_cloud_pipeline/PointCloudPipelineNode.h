@@ -43,6 +43,7 @@ private:
   ros::Publisher objects_pub_;
   ros::Publisher ground_point_cloud_pub_;
   ros::Publisher objects_point_cloud_pub_;
+  ros::Publisher filtered_objects_point_cloud_pub_;
 
   // Processing time publisher
   ros::Publisher processing_time_pub_;
@@ -80,6 +81,7 @@ PointCloudPipelineNode<PointT, DynamicReconfigureT>::PointCloudPipelineNode(ros:
   objects_pub_ = nh->advertise<agribot_msgs::Object3DArray>("objects", 1, true);
   ground_point_cloud_pub_ = nh->advertise<pcl::PointCloud<PointT>>("ground_point_cloud", 1, false);
   objects_point_cloud_pub_ = nh->advertise<pcl::PointCloud<PointT>>("objects_point_cloud", 1, false);
+  filtered_objects_point_cloud_pub_ = nh->advertise<pcl::PointCloud<PointT>>("filtered_objects_point_cloud", 1, false);
 
   processing_time_pub_ = nh->advertise<std_msgs::Float64>("processing_time", 1, false);
 
@@ -135,6 +137,11 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
   {
     auto objects_point_cloud = pipeline_.getObjectsPointCloud();
     objects_point_cloud_pub_.publish(*objects_point_cloud);
+
+    typename pcl::PointCloud<PointT>::Ptr filtered_objects_point_cloud{ new pcl::PointCloud<PointT> };
+    radiusOutlierRemoval<PointT>(objects_point_cloud, filtered_objects_point_cloud,
+                                 node_config_.pipeline_config_.filtered_objects_cloud_ror_config_);
+    filtered_objects_point_cloud_pub_.publish(*filtered_objects_point_cloud);
   }
 
   // Stop timer and log results
@@ -172,10 +179,20 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamicReconfigureCall
   node_config_.pipeline_config_.vgf_config_.resolution_ = dynamic_config.vgf_resolution;
   node_config_.pipeline_config_.vgf_config_.distance_filter_min_x_ = dynamic_config.vgf_min_x;
   node_config_.pipeline_config_.vgf_config_.distance_filter_max_x_ = dynamic_config.vgf_max_x;
+  node_config_.pipeline_config_.vgf_config_.use_passthrough_y_ = dynamic_config.use_passthrough_y;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_min_y_ = dynamic_config.vgf_min_y;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_max_y_ = dynamic_config.vgf_max_y;
+  node_config_.pipeline_config_.vgf_config_.use_passthrough_z_ = dynamic_config.use_passthrough_z;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_min_z_ = dynamic_config.vgf_min_z;
+  node_config_.pipeline_config_.vgf_config_.distance_filter_max_z_ = dynamic_config.vgf_max_z;
   node_config_.pipeline_config_.outlier_removal_method_ =
       static_cast<OutlierRemovalMethod>(dynamic_config.outlier_removal_method);
   node_config_.pipeline_config_.ror_config_.neighbours_n_ = dynamic_config.ror_neighbours_n;
   node_config_.pipeline_config_.ror_config_.radius_ = dynamic_config.ror_radius;
+  node_config_.pipeline_config_.filtered_objects_cloud_ror_config_.neighbours_n_ =
+      dynamic_config.filtered_objects_cloud_ror_neighbours_n;
+  node_config_.pipeline_config_.filtered_objects_cloud_ror_config_.radius_ =
+      dynamic_config.filtered_objects_cloud_ror_radius;
   node_config_.pipeline_config_.sor_config_.neighbours_n_ = dynamic_config.sor_neighbours_n;
   node_config_.pipeline_config_.sor_config_.stddev_mul_ = dynamic_config.sor_stddev_mul;
   node_config_.pipeline_config_.seg_config_.max_iterations_n = dynamic_config.segmentation_iterations_n;

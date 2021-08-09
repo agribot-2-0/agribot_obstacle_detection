@@ -35,11 +35,43 @@ void PointCloudLateFusionNode::objectArrayCallback(const agribot_msgs::Object3DA
       break;
   }
 
-  if (in_1_object_array_ == std::nullopt || in_2_object_array_ == std::nullopt)
+  // Check if we have all necessary data
+  switch (fusion_method_)
   {
-    ROS_WARN_STREAM(log_tag_ << "Missing object array from one of the inputs. Skipping output array publication...");
-    return;
+    case LateFusionMethod::rewrite_lidar:
+      if (in_1_object_array_ == std::nullopt)
+      {
+        ROS_WARN_STREAM(log_tag_ << "Missing object array from lidar. Skipping output array publication...");
+        return;
+      }
+      break;
+    case LateFusionMethod::rewrite_stereo_camera:
+      if (in_2_object_array_ == std::nullopt)
+      {
+        ROS_WARN_STREAM(log_tag_ << "Missing object array from stereo camera. Skipping output array publication...");
+        return;
+      }
+      break;
+    default:
+      if (in_1_object_array_ == std::nullopt && in_2_object_array_ == std::nullopt)
+      {
+        ROS_WARN_STREAM(
+            log_tag_ << "Missing object array from both of the inputs. Skipping output array publication...");
+        return;
+      }
+      else if (in_1_object_array_ == std::nullopt)
+      {
+        ROS_WARN_STREAM(log_tag_ << "Missing object array from lidar. Skipping output array publication...");
+        return;
+      }
+      else if (in_2_object_array_ == std::nullopt)
+      {
+        ROS_WARN_STREAM(log_tag_ << "Missing object array from stereo camera. Skipping output array publication...");
+        return;
+      }
+      break;
   }
+
   publishOutObjectArrary(objectArrayFusion());
 }
 

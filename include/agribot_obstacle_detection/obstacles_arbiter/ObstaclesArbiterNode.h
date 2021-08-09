@@ -13,12 +13,16 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "agribot_common/CommonFunctions/ros_common_functions.h"
 #include "agribot_msgs/Object3D.h"
 #include "agribot_msgs/Object3DArray.h"
+#include "agribot_msgs/ObjectPolygon.h"
 #include "agribot_msgs/ObjectPolygonArray.h"
 #include "agribot_msgs/ObstacleDetectionStatus.h"
+
+#include "agribot_obstacle_detection/ObstaclesArbiterConfig.h"
 #include "agribot_obstacle_detection/obstacles_arbiter/collision_detection/IPolygonCollisionDetection.h"
 #include "agribot_obstacle_detection/util/Conversions.h"
 #include "agribot_obstacle_detection/util/ProcessingTimer.h"
@@ -26,8 +30,13 @@
 class ObstaclesArbiterNode
 {
 private:
-  double safety_zone_length_;
-  double safety_zone_width_;
+  double robot_safety_zone_length_;
+  double robot_safety_zone_width_;
+  double min_path_safety_zone_length_;
+  double min_path_safety_zone_width_;
+  double max_path_safety_zone_length_;
+  double max_path_safety_zone_width_;
+  double path_safety_zone_horizon_;
   std::string objects_target_frame_id_;
   bool publish_processing_time_;
   bool print_processing_time_;
@@ -35,6 +44,7 @@ private:
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
   agribot_msgs::ObjectPolygonArray output_polygons_;
+  agribot_msgs::ObjectPolygon robot_polygon_;
   agribot_msgs::ObstacleDetectionStatus detection_status_;
 
   ros::NodeHandle* nh_;
@@ -54,18 +64,23 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
+  dynamic_reconfigure::Server<agribot_obstacle_detection::ObstaclesArbiterConfig> dynamic_reconfigure_server_;
+
   // Logging and debug
   std::string log_tag_;
   ProcessingTimer timer;
 
   std::unique_ptr<IPolygonCollisionDetection> collision_detection_;
 
+  agribot_msgs::ObjectPolygon buildRobotPolygon();
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void checkCollisions();
   void publishOutputPolygons();
   void publishDetectionStatus();
   void sendProcessingTimeInfo(double time_ms);
+  void dynamicReconfigureCallback(const agribot_obstacle_detection::ObstaclesArbiterConfig& dynamic_config,
+                                  uint32_t level);
 
 public:
   ObstaclesArbiterNode(ros::NodeHandle* nh, const std::string& log_tag,

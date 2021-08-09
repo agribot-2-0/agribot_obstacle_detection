@@ -9,6 +9,10 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/common.h>
 
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include <pcl/surface/convex_hull.h>
+#pragma GCC diagnostic pop
+
 #include <ros/ros.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -35,8 +39,13 @@ namespace Conversions
 // Polygon conversions  //
 // ==================== //
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
+agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double x_size, double y_size);
+agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double min_x_size,
+                                                             double min_y_size, double max_x_size, double max_y_size,
+                                                             double path_horizon);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStamped& pose, double x_size,
                                                    double y_size);
 agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, double x_size, double y_size,
@@ -47,6 +56,9 @@ agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, d
 // ================ //
 template <typename PointT>
 geometry_msgs::Point convertToPointMsg(PointT p);
+
+template <typename PointT>
+geometry_msgs::Point32 convertToPoint32Msg(PointT p);
 
 template <typename PointT>
 PointT getCenterPoint(const PointT& min_point, const PointT& max_point);
@@ -80,6 +92,12 @@ agribot_msgs::Object3D transform(const agribot_msgs::Object3D& in_msg, const std
 agribot_msgs::BoundingBox3D transform(const agribot_msgs::BoundingBox3D& in_msg,  // NOLINT [build/include_what_you_use]
                                       const std::string& target_frame_id, const tf2_ros::Buffer& tf_buffer);
 
+// ====================== //
+// Custom ROS conversions //
+// ====================== //
+geometry_msgs::Point convertToPointMsg(const geometry_msgs::Point32& p_32);
+geometry_msgs::Point32 convertToPoint32Msg(const geometry_msgs::Point& p);
+
 // ================ //
 // PCL conversions  //
 // ================ //
@@ -87,6 +105,16 @@ template <typename PointT>
 geometry_msgs::Point convertToPointMsg(PointT p)
 {
   geometry_msgs::Point point;
+  point.x = p.x;
+  point.y = p.y;
+  point.z = p.z;
+  return point;
+}
+
+template <typename PointT>
+geometry_msgs::Point32 convertToPoint32Msg(PointT p)
+{
+  geometry_msgs::Point32 point;
   point.x = p.x;
   point.y = p.y;
   point.z = p.z;
