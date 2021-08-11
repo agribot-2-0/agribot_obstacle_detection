@@ -9,6 +9,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <rviz_visual_tools/rviz_visual_tools.h>
 #include <nav_msgs/Path.h>
+#include <std_msgs/Bool.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <pcl/segmentation/sac_segmentation.h>
@@ -33,11 +35,19 @@ private:
   double row_polygon_area_threshold_;
   double row_plane_cutoff_z_;
   std::string objects_target_frame_id_;
+  bool is_in_row_ = false;
+  geometry_msgs::PoseStamped row_begin_pose_;
+  geometry_msgs::PoseStamped row_end_pose_;
+  LineCoefficients row_begin_line_;
+  LineCoefficients row_end_line_;
 
   ros::NodeHandle* nh_;
 
   // Main subscribers and publishers
   ros::Subscriber row_object_array_sub_;
+  ros::Subscriber is_row_sub_;
+  ros::Subscriber row_begin_pose_sub_;
+  ros::Subscriber row_end_pose_sub_;
   ros::Publisher left_row_path_pub_;
   ros::Publisher right_row_path_pub_;
 
@@ -63,8 +73,13 @@ private:
 
   rviz_visual_tools::RvizVisualToolsPtr left_row_plane_rviz_tools_;
   rviz_visual_tools::RvizVisualToolsPtr right_row_plane_rviz_tools_;
+  rviz_visual_tools::RvizVisualToolsPtr begin_row_line_rviz_tools_;
+  rviz_visual_tools::RvizVisualToolsPtr end_row_line_rviz_tools_;
 
   void rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
+  void isRowCallback(const std_msgs::Bool::ConstPtr& msg);
+  void rowBeginCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+  void rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
   void computeRowsPaths();
   PlaneCoefficients rowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2);
   LineCoefficients lineFromPlane(const PlaneCoefficients& plane, double cutoff_height) const;

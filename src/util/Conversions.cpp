@@ -35,6 +35,21 @@ agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_m
   return msg;
 }
 
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArrayWithRowLimits(
+    const agribot_msgs::Object3DArray& object_array, const geometry_msgs::PoseStamped& row_begin,
+    const geometry_msgs::PoseStamped& row_end)
+{
+  agribot_msgs::ObjectPolygonArray msg;
+
+  for (const auto& object : object_array.objects)
+  {
+    auto polygon = convertToConvexHullPolygonWithRowLimits(object, row_begin, row_end);
+    polygon.type = polygon.OBSTACLE_CLEAR;
+    msg.polygons.push_back(polygon);
+  }
+  return msg;
+}
+
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object)
 {
   auto yaw = tf::getYaw(object.bbox.center.pose.orientation);
@@ -56,6 +71,54 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Objec
   pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
   pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
+
+  for (auto& point : pcl_pointcloud->points)
+  {
+    point.z = 0.0;
+  }
+
+  pcl::ConvexHull<pcl::PointXYZ> convex_hull;
+  convex_hull.setInputCloud(pcl_pointcloud);
+  convex_hull.setDimension(2);
+  convex_hull.setComputeAreaVolume(true);
+  convex_hull.reconstruct(*convex_hull_pointcloud);
+
+  for (const auto& point : convex_hull_pointcloud->points)
+  {
+    auto ros_point32 = Conversions::convertToPoint32Msg<pcl::PointXYZ>(point);
+    msg.polygon.points.push_back(ros_point32);
+  }
+
+  msg.area = convex_hull.getTotalArea();
+
+  pcl::PointXYZ pcl_centroid_point;
+  pcl::computeCentroid<pcl::PointXYZ>(*convex_hull_pointcloud, pcl_centroid_point);
+  msg.centroid = Conversions::convertToPoint32Msg<pcl::PointXYZ>(pcl_centroid_point);
+  msg.point_cloud = object.point_cloud;
+
+  msg.header = object.header;
+  msg.type = msg.UNKNOWN;
+
+  return msg;
+}
+
+agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(const agribot_msgs::Object3D& object,
+                                                                    const geometry_msgs::PoseStamped& row_begin,
+                                                                    const geometry_msgs::PoseStamped& row_end)
+{
+  // TODO(olek) - remove static_cast
+  static_cast<void>(row_begin);
+  static_cast<void>(row_end);
+
+  agribot_msgs::ObjectPolygon msg;
+
+  pcl::PCLPointCloud2 pcl_pointcloud2;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
+  pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
+
+  // TODO(oelk) - remove points according to the row_end pose
 
   for (auto& point : pcl_pointcloud->points)
   {
@@ -183,6 +246,32 @@ agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, d
   msg.polygon.points.push_back(polygon_vertex);
 
   return msg;
+}
+
+LineCoefficients perpendicularLine(const geometry_msgs::PoseStamped& pose)
+{
+  auto yaw = tf::getYaw(pose.pose.orientation);
+  double slope;
+
+  if (yaw == 0.0)
+  {
+    slope = 0.0;
+  }
+  else
+  {
+    slope = std::tan(yaw);
+  }
+
+  // Point-slope equation for perpendicular line
+  // y = ax + b, with a=-1/m and b=1/m*x1 + y1
+  // where:
+  // m - slope
+  // (x1, y1) - point
+  // (a, b) - line coefficients
+  auto a = -1.0 / slope;
+  auto b = 1.0 / slope * pose.pose.position.x + pose.pose.position.y;
+
+  return LineCoefficients{ a, b };
 }
 
 // ================== //

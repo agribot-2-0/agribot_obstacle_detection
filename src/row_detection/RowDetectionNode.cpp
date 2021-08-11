@@ -15,12 +15,18 @@ RowDetectionNode::RowDetectionNode(ros::NodeHandle* nh, const std::string& log_t
 
   left_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "left_row_plane_marker"));
   right_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "right_row_plane_marker"));
+  begin_row_line_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "begin_row_line_marker"));
+  end_row_line_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "end_row_line_marker"));
 
   // Initialize publishers and subscribers
   left_row_path_pub_ = nh->advertise<nav_msgs::Path>("left_row_path", 1, true);
   right_row_path_pub_ = nh->advertise<nav_msgs::Path>("right_row_path", 1, true);
 
   row_object_array_sub_ = nh->subscribe("row_objects", 1, &RowDetectionNode::rowObjectsCallback, this);
+  is_row_sub_ = nh->subscribe("/agribot/navigation_manager/row/presence", 1, &RowDetectionNode::isRowCallback, this);
+  row_begin_pose_sub_ =
+      nh->subscribe("/agribot/navigation_manager/row/begin", 1, &RowDetectionNode::rowBeginCallback, this);
+  row_end_pose_sub_ = nh->subscribe("/agribot/navigation_manager/row/end", 1, &RowDetectionNode::rowEndCallback, this);
 }
 
 void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
@@ -35,21 +41,90 @@ void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::Con
     {
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
-        row_polygons_ = Conversions::convertToConvexHullPolygonArray(
-            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
+        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), row_begin_pose_, row_end_pose_);
       }
       else
       {
-        row_polygons_ = Conversions::convertToConvexHullPolygonArray(*msg);
+        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(*msg, row_begin_pose_, row_end_pose_);
       }
     }
 
-    computeRowsPaths();
+    if (is_in_row_)
+    {
+      computeRowsPaths();
+    }
+    else
+    {
+      ROS_INFO_STREAM_THROTTLE(2.0, log_tag_ << "Robot not in row. Skipping calculation of rows paths...");
+    }
   }
   catch (const std::exception& e)
   {
     ROS_WARN_STREAM(log_tag_ << e.what());
   }
+}
+
+void RowDetectionNode::isRowCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+  is_in_row_ = msg->data;
+}
+
+void RowDetectionNode::rowBeginCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+  if (msg->header.frame_id != objects_target_frame_id_)
+  {
+    row_begin_pose_ = tf_buffer_.transform(*msg, objects_target_frame_id_);
+  }
+  else
+  {
+    row_begin_pose_ = *msg;
+  }
+
+  row_begin_line_ = Conversions::perpendicularLine(row_begin_pose_);
+  begin_row_line_rviz_tools_->deleteAllMarkers();
+
+  geometry_msgs::Point p1;
+  geometry_msgs::Point p2;
+
+  // Arbitrary p1 and p2 x for visualization purposes only
+  p1.x = msg->pose.position.x - 3.0;
+  p2.x = msg->pose.position.x + 3.0;
+
+  p1.y = row_begin_line_.a_ * p1.x + row_begin_line_.b_;
+  p2.y = row_begin_line_.a_ * p2.x + row_begin_line_.b_;
+
+  begin_row_line_rviz_tools_->publishLine(p1, p2, rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
+  begin_row_line_rviz_tools_->trigger();
+}
+
+void RowDetectionNode::rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+  if (msg->header.frame_id != objects_target_frame_id_)
+  {
+    row_end_pose_ = tf_buffer_.transform(*msg, objects_target_frame_id_);
+  }
+  else
+  {
+    row_end_pose_ = *msg;
+  }
+
+  row_end_line_ = Conversions::perpendicularLine(row_end_pose_);
+
+  end_row_line_rviz_tools_->deleteAllMarkers();
+
+  geometry_msgs::Point p1;
+  geometry_msgs::Point p2;
+
+  // Arbitrary p1 and p2 x for visualization purposes only
+  p1.x = msg->pose.position.x - 3.0;
+  p2.x = msg->pose.position.x + 3.0;
+
+  p1.y = row_end_line_.a_ * p1.x + row_end_line_.b_;
+  p2.y = row_end_line_.a_ * p2.x + row_end_line_.b_;
+
+  end_row_line_rviz_tools_->publishLine(p1, p2, rviz_visual_tools::RED, rviz_visual_tools::LARGE);
+  end_row_line_rviz_tools_->trigger();
 }
 
 void RowDetectionNode::computeRowsPaths()

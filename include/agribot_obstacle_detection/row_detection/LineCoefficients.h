@@ -9,6 +9,6 @@ struct LineCoefficients
   double a_;
   double b_;
 
-  LineCoefficients() = delete;
+  LineCoefficients() = default;
   LineCoefficients(double a, double b) : a_{ a }, b_{ b } {};
 };
