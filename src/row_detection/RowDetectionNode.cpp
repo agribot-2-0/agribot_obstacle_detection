@@ -95,7 +95,7 @@ void RowDetectionNode::rowBeginCallback(const geometry_msgs::PoseStamped::ConstP
   p2.y = row_begin_line_.a_ * p2.x + row_begin_line_.b_;
 
   begin_row_line_rviz_tools_->publishLine(p1, p2, rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
-  begin_row_line_rviz_tools_->trigger();
+  begin_row_line_rviz_tools_->trigger(false);
 }
 
 void RowDetectionNode::rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
@@ -124,7 +124,7 @@ void RowDetectionNode::rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr
   p2.y = row_end_line_.a_ * p2.x + row_end_line_.b_;
 
   end_row_line_rviz_tools_->publishLine(p1, p2, rviz_visual_tools::RED, rviz_visual_tools::LARGE);
-  end_row_line_rviz_tools_->trigger();
+  end_row_line_rviz_tools_->trigger(false);
 }
 
 void RowDetectionNode::computeRowsPaths()
