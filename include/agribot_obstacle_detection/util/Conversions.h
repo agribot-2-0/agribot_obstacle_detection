@@ -43,13 +43,13 @@ namespace Conversions
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArrayWithRowLimits(
-    const agribot_msgs::Object3DArray& object_array, const geometry_msgs::PoseStamped& row_begin,
-    const geometry_msgs::PoseStamped& row_end);
+    const agribot_msgs::Object3DArray& object_array, const LineCoefficients& row_begin_line,
+    const LineCoefficients& row_end_line);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(const agribot_msgs::Object3D& object,
-                                                                    const geometry_msgs::PoseStamped& row_begin,
-                                                                    const geometry_msgs::PoseStamped& row_end);
+                                                                    const LineCoefficients& row_begin_line,
+                                                                    const LineCoefficients& row_end_line);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double x_size, double y_size);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double min_x_size,
                                                              double min_y_size, double max_x_size, double max_y_size,
@@ -60,11 +60,11 @@ agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, d
                                              double yaw);
 LineCoefficients perpendicularLine(const geometry_msgs::PoseStamped& pose);
 
-    // ================ //
-    // PCL conversions  //
-    // ================ //
-    template <typename PointT>
-    geometry_msgs::Point convertToPointMsg(PointT p);
+// ================ //
+// PCL conversions  //
+// ================ //
+template <typename PointT>
+geometry_msgs::Point convertToPointMsg(PointT p);
 
 template <typename PointT>
 geometry_msgs::Point32 convertToPoint32Msg(PointT p);

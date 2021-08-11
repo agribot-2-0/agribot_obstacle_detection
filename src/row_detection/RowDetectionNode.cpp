@@ -42,11 +42,11 @@ void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::Con
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
         row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(
-            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), row_begin_pose_, row_end_pose_);
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), row_begin_line_, row_end_line_);
       }
       else
       {
-        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(*msg, row_begin_pose_, row_end_pose_);
+        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(*msg, row_begin_line_, row_end_line_);
       }
     }
 
@@ -88,8 +88,8 @@ void RowDetectionNode::rowBeginCallback(const geometry_msgs::PoseStamped::ConstP
   geometry_msgs::Point p2;
 
   // Arbitrary p1 and p2 x for visualization purposes only
-  p1.x = msg->pose.position.x - 3.0;
-  p2.x = msg->pose.position.x + 3.0;
+  p1.x = row_begin_pose_.pose.position.x - 3.0;
+  p2.x = row_begin_pose_.pose.position.x + 3.0;
 
   p1.y = row_begin_line_.a_ * p1.x + row_begin_line_.b_;
   p2.y = row_begin_line_.a_ * p2.x + row_begin_line_.b_;
@@ -117,8 +117,8 @@ void RowDetectionNode::rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr
   geometry_msgs::Point p2;
 
   // Arbitrary p1 and p2 x for visualization purposes only
-  p1.x = msg->pose.position.x - 3.0;
-  p2.x = msg->pose.position.x + 3.0;
+  p1.x = row_end_pose_.pose.position.x - 3.0;
+  p2.x = row_end_pose_.pose.position.x + 3.0;
 
   p1.y = row_end_line_.a_ * p1.x + row_end_line_.b_;
   p2.y = row_end_line_.a_ * p2.x + row_end_line_.b_;

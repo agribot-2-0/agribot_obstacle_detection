@@ -36,14 +36,14 @@ agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_m
 }
 
 agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArrayWithRowLimits(
-    const agribot_msgs::Object3DArray& object_array, const geometry_msgs::PoseStamped& row_begin,
-    const geometry_msgs::PoseStamped& row_end)
+    const agribot_msgs::Object3DArray& object_array, const LineCoefficients& row_begin_line,
+    const LineCoefficients& row_end_line)
 {
   agribot_msgs::ObjectPolygonArray msg;
 
   for (const auto& object : object_array.objects)
   {
-    auto polygon = convertToConvexHullPolygonWithRowLimits(object, row_begin, row_end);
+    auto polygon = convertToConvexHullPolygonWithRowLimits(object, row_begin_line, row_end_line);
     polygon.type = polygon.OBSTACLE_CLEAR;
     msg.polygons.push_back(polygon);
   }
@@ -103,12 +103,12 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Objec
 }
 
 agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(const agribot_msgs::Object3D& object,
-                                                                    const geometry_msgs::PoseStamped& row_begin,
-                                                                    const geometry_msgs::PoseStamped& row_end)
+                                                                    const LineCoefficients& row_begin_line,
+                                                                    const LineCoefficients& row_end_line)
 {
   // TODO(olek) - remove static_cast
-  static_cast<void>(row_begin);
-  static_cast<void>(row_end);
+  static_cast<void>(row_begin_line);
+  static_cast<void>(row_end_line);
 
   agribot_msgs::ObjectPolygon msg;
 
@@ -118,7 +118,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(const agribo
   pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
   pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
 
-  // TODO(oelk) - remove points according to the row_end pose
+  // TODO(olek) - remove points according to the row_begin_line and row_end_line
 
   for (auto& point : pcl_pointcloud->points)
   {
