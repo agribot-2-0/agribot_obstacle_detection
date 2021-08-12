@@ -147,6 +147,18 @@
     <remap from="~vision_markers"                   to="$(arg arbiter_polygons_markers_topic)"/>
   </node>
 
+  <node machine="$(arg machine)" ns="$(arg detection_namespace)" pkg="agribot_obstacle_detection" type="object_polygon_array_visualization_node" name="row_polygons_visualization_node" output="screen">
+    <param name="unknown_marker_color"              value="4"/>
+    <param name="obstacle_clear_marker_color_"      value="6"/>
+    <param name="obstacle_colliding_marker_color"   value="11"/>
+    <param name="path_clear_marker_color"           value="7"/>
+    <param name="path_colliding_marker_color"       value="9"/>
+    <param name="marker_namespace"                  value="row_polygons"/>
+    <remap from="~object_polygon_array"             to="/agribot/obstacle_detection/row_detection_node/row_polygons"/>
+    <remap from="~vision_markers"                   to="/agribot/obstacle_detection/row_detection_node/row_polygons_markers"/>
+  </node>
+
+
 </launch>
 
 <!-- rviz colors table

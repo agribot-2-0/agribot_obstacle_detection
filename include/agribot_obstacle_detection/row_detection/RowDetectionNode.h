@@ -40,7 +40,11 @@ private:
   geometry_msgs::PoseStamped row_end_pose_;
   LineCoefficients row_begin_line_;
   LineCoefficients row_end_line_;
-
+  pcl::PointXYZ row_begin_point_1_;
+  pcl::PointXYZ row_begin_point_2_;
+  pcl::PointXYZ row_end_point_1_;
+  pcl::PointXYZ row_end_point_2_;
+  double row_cutoff_x_width_ = 5.0;
   ros::NodeHandle* nh_;
 
   // Main subscribers and publishers
@@ -50,6 +54,8 @@ private:
   ros::Subscriber row_end_pose_sub_;
   ros::Publisher left_row_path_pub_;
   ros::Publisher right_row_path_pub_;
+
+  ros::Publisher row_polygons_pub_;
 
   // TF Buffer and listener
   tf2_ros::Buffer tf_buffer_;

@@ -1,7 +1,10 @@
 <launch>
   <arg name="bag_path" />
   <arg name="clock" default="true" />
-  <arg name="topics" value="/agribot/obstacle_detection/front/3d/lidar/point_cloud /agribot/obstacle_detection/front/3d/stereo_camera/point_cloud /tf /tf_static"/>
+  <arg name="topics" value="/agribot/obstacle_detection/front/3d/lidar/point_cloud /agribot/obstacle_detection/front/3d/stereo_camera/point_cloud /tf /tf_static /agribot/navigation_manager/row/presence /agribot/navigation_manager/row/begin /agribot/navigation_manager/row/end /agribot/gnss/filtered"/>
+  <arg name="additional_rosbag_arguments" default="" />
+  
+  <arg name="rosbag_arguments" value="--topics $(arg topics) --bags $(arg bag_path) --pause $(arg additional_rosbag_arguments)"/>
 
   <param name="/use_sim_time" value="true" />
 
@@ -9,8 +12,9 @@
   <include file="$(find agribot_obstacle_detection)/launch/agribot_obstacle_detection.launch" />
 
   <!-- Replay rosbag -->
-  <node if="$(arg clock)" pkg="rosbag" type="play" name="player" output="screen" args="--clock --topics $(arg topics) --bags $(arg bag_path) --pause" />
-  <node unless="$(arg clock)" pkg="rosbag" type="play" name="player" output="screen" args="--topics $(arg topics) --bags $(arg bag_path) --pause" />
+
+  <node if="$(arg clock)" pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg rosbag_arguments)" />
+  <node unless="$(arg clock)" pkg="rosbag" type="play" name="player" output="screen" args="$(arg rosbag_arguments)" />
 
   <!-- Load description param -->
   <include file="$(find agribot_description)/launch/robot_description.xml" />

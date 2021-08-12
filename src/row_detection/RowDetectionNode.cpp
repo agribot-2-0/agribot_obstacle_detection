@@ -21,6 +21,7 @@ RowDetectionNode::RowDetectionNode(ros::NodeHandle* nh, const std::string& log_t
   // Initialize publishers and subscribers
   left_row_path_pub_ = nh->advertise<nav_msgs::Path>("left_row_path", 1, true);
   right_row_path_pub_ = nh->advertise<nav_msgs::Path>("right_row_path", 1, true);
+  row_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("row_polygons", 1, true);
 
   row_object_array_sub_ = nh->subscribe("row_objects", 1, &RowDetectionNode::rowObjectsCallback, this);
   is_row_sub_ = nh->subscribe("/agribot/navigation_manager/row/presence", 1, &RowDetectionNode::isRowCallback, this);
@@ -39,16 +40,25 @@ void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::Con
     }
     else
     {
+      pcl::PointCloud<pcl::PointXYZ>::Ptr row_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+      row_hull_pointcloud->push_back(row_begin_point_1_);
+      row_hull_pointcloud->push_back(row_begin_point_2_);
+      row_hull_pointcloud->push_back(row_end_point_1_);
+      row_hull_pointcloud->push_back(row_end_point_2_);
+
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
         row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(
-            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), row_begin_line_, row_end_line_);
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), row_hull_pointcloud);
       }
       else
       {
-        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(*msg, row_begin_line_, row_end_line_);
+        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(*msg, row_hull_pointcloud);
       }
     }
+
+    // TODO(olek) - debug only
+    row_polygons_pub_.publish(row_polygons_);
 
     if (is_in_row_)
     {
@@ -74,7 +84,7 @@ void RowDetectionNode::rowBeginCallback(const geometry_msgs::PoseStamped::ConstP
 {
   if (msg->header.frame_id != objects_target_frame_id_)
   {
-    row_begin_pose_ = tf_buffer_.transform(*msg, objects_target_frame_id_);
+    row_begin_pose_ = tf_buffer_.transform(*msg, objects_target_frame_id_, ros::Duration(0.1));
   }
   else
   {
@@ -82,19 +92,18 @@ void RowDetectionNode::rowBeginCallback(const geometry_msgs::PoseStamped::ConstP
   }
 
   row_begin_line_ = Conversions::perpendicularLine(row_begin_pose_);
+
+  row_begin_point_1_.x = row_begin_pose_.pose.position.x - row_cutoff_x_width_;
+  row_begin_point_2_.x = row_begin_pose_.pose.position.x + row_cutoff_x_width_;
+  row_begin_point_1_.y = row_begin_line_.a_ * row_begin_point_1_.x + row_begin_line_.b_;
+  row_begin_point_2_.y = row_begin_line_.a_ * row_begin_point_2_.x + row_begin_line_.b_;
+  row_begin_point_1_.z = 0.0;
+  row_begin_point_2_.z = 0.0;
+
   begin_row_line_rviz_tools_->deleteAllMarkers();
-
-  geometry_msgs::Point p1;
-  geometry_msgs::Point p2;
-
-  // Arbitrary p1 and p2 x for visualization purposes only
-  p1.x = row_begin_pose_.pose.position.x - 3.0;
-  p2.x = row_begin_pose_.pose.position.x + 3.0;
-
-  p1.y = row_begin_line_.a_ * p1.x + row_begin_line_.b_;
-  p2.y = row_begin_line_.a_ * p2.x + row_begin_line_.b_;
-
-  begin_row_line_rviz_tools_->publishLine(p1, p2, rviz_visual_tools::BLUE, rviz_visual_tools::LARGE);
+  begin_row_line_rviz_tools_->publishLine(Conversions::convertToPointMsg<pcl::PointXYZ>(row_begin_point_1_),
+                                          Conversions::convertToPointMsg<pcl::PointXYZ>(row_begin_point_2_),
+                                          rviz_visual_tools::BLUE, rviz_visual_tools::XXXXLARGE);
   begin_row_line_rviz_tools_->trigger(false);
 }
 
@@ -102,7 +111,7 @@ void RowDetectionNode::rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr
 {
   if (msg->header.frame_id != objects_target_frame_id_)
   {
-    row_end_pose_ = tf_buffer_.transform(*msg, objects_target_frame_id_);
+    row_end_pose_ = tf_buffer_.transform(*msg, objects_target_frame_id_, ros::Duration(0.1));
   }
   else
   {
@@ -111,19 +120,17 @@ void RowDetectionNode::rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr
 
   row_end_line_ = Conversions::perpendicularLine(row_end_pose_);
 
+  row_end_point_1_.x = row_end_pose_.pose.position.x - row_cutoff_x_width_;
+  row_end_point_2_.x = row_end_pose_.pose.position.x + row_cutoff_x_width_;
+  row_end_point_1_.y = row_end_line_.a_ * row_end_point_1_.x + row_end_line_.b_;
+  row_end_point_2_.y = row_end_line_.a_ * row_end_point_2_.x + row_end_line_.b_;
+  row_end_point_1_.z = 0.0;
+  row_end_point_2_.z = 0.0;
+
   end_row_line_rviz_tools_->deleteAllMarkers();
-
-  geometry_msgs::Point p1;
-  geometry_msgs::Point p2;
-
-  // Arbitrary p1 and p2 x for visualization purposes only
-  p1.x = row_end_pose_.pose.position.x - 3.0;
-  p2.x = row_end_pose_.pose.position.x + 3.0;
-
-  p1.y = row_end_line_.a_ * p1.x + row_end_line_.b_;
-  p2.y = row_end_line_.a_ * p2.x + row_end_line_.b_;
-
-  end_row_line_rviz_tools_->publishLine(p1, p2, rviz_visual_tools::RED, rviz_visual_tools::LARGE);
+  end_row_line_rviz_tools_->publishLine(Conversions::convertToPointMsg<pcl::PointXYZ>(row_end_point_1_),
+                                        Conversions::convertToPointMsg<pcl::PointXYZ>(row_end_point_2_),
+                                        rviz_visual_tools::RED, rviz_visual_tools::XXXXLARGE);
   end_row_line_rviz_tools_->trigger(false);
 }
 
