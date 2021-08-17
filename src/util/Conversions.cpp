@@ -308,6 +308,15 @@ LineCoefficients perpendicularLine(const geometry_msgs::PoseStamped& pose)
   return LineCoefficients{ a, b };
 }
 
+LineCoefficients lineThroughPoses(const geometry_msgs::PoseStamped& begin_pose,
+                                  const geometry_msgs::PoseStamped& end_pose)
+{
+  auto slope =
+      (end_pose.pose.position.y - begin_pose.pose.position.y) / (end_pose.pose.position.x - begin_pose.pose.position.x);
+
+  return { slope, -slope * begin_pose.pose.position.x + begin_pose.pose.position.y };
+}
+
 // ================== //
 // Eigen conversions  //
 // ================== //

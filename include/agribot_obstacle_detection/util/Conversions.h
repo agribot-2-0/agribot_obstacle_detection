@@ -43,9 +43,8 @@ namespace Conversions
 // ==================== //
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array);
-agribot_msgs::ObjectPolygonArray
-convertToConvexHullPolygonArrayWithRowLimits(const agribot_msgs::Object3DArray& object_array,
-                                             const pcl::PointCloud<pcl::PointXYZ>::Ptr& row_hull_pointcloud);
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArrayWithRowLimits(
+    const agribot_msgs::Object3DArray& object_array, const pcl::PointCloud<pcl::PointXYZ>::Ptr& row_hull_pointcloud);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
@@ -59,6 +58,8 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
 agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, double x_size, double y_size,
                                              double yaw);
 LineCoefficients perpendicularLine(const geometry_msgs::PoseStamped& pose);
+LineCoefficients lineThroughPoses(const geometry_msgs::PoseStamped& begin_pose,
+                                  const geometry_msgs::PoseStamped& end_pose);
 
 // ================ //
 // PCL conversions  //

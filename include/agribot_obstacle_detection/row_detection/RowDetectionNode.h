@@ -9,8 +9,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <rviz_visual_tools/rviz_visual_tools.h>
 #include <nav_msgs/Path.h>
-#include <std_msgs/Bool.h>
-#include <geometry_msgs/PoseStamped.h>
+#include <agribot_msgs/Row.h>
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <pcl/segmentation/sac_segmentation.h>
@@ -40,18 +39,17 @@ private:
   geometry_msgs::PoseStamped row_end_pose_;
   LineCoefficients row_begin_line_;
   LineCoefficients row_end_line_;
+  LineCoefficients row_axis_line_;
   pcl::PointXYZ row_begin_point_1_;
   pcl::PointXYZ row_begin_point_2_;
   pcl::PointXYZ row_end_point_1_;
   pcl::PointXYZ row_end_point_2_;
-  double row_cutoff_x_width_ = 5.0;
+  double row_width_;
   ros::NodeHandle* nh_;
 
   // Main subscribers and publishers
   ros::Subscriber row_object_array_sub_;
-  ros::Subscriber is_row_sub_;
-  ros::Subscriber row_begin_pose_sub_;
-  ros::Subscriber row_end_pose_sub_;
+  ros::Subscriber row_info_sub_;
   ros::Publisher left_row_path_pub_;
   ros::Publisher right_row_path_pub_;
 
@@ -79,13 +77,11 @@ private:
 
   rviz_visual_tools::RvizVisualToolsPtr left_row_plane_rviz_tools_;
   rviz_visual_tools::RvizVisualToolsPtr right_row_plane_rviz_tools_;
-  rviz_visual_tools::RvizVisualToolsPtr begin_row_line_rviz_tools_;
-  rviz_visual_tools::RvizVisualToolsPtr end_row_line_rviz_tools_;
+  rviz_visual_tools::RvizVisualToolsPtr row_perimeter_polygon_rviz_tools_;
+  rviz_visual_tools::RvizVisualToolsPtr row_axis_line_rviz_tools_;
 
   void rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
-  void isRowCallback(const std_msgs::Bool::ConstPtr& msg);
-  void rowBeginCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
-  void rowEndCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+  void rowInfoCallback(const agribot_msgs::Row::ConstPtr& msg);
   void computeRowsPaths();
   PlaneCoefficients rowPlaneSegmentation(const sensor_msgs::PointCloud2& pc2);
   LineCoefficients lineFromPlane(const PlaneCoefficients& plane, double cutoff_height) const;
