@@ -172,6 +172,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   pcl::computeCentroid<pcl::PointXYZ>(*convex_hull_pointcloud, pcl_centroid_point);
   msg.centroid = Conversions::convertToPoint32Msg<pcl::PointXYZ>(pcl_centroid_point);
 
+  // TODO - use cropped pointcloud
   msg.point_cloud = object.point_cloud;
   // pcl::toROSMsg(*cropped_pcl_pointcloud, msg.point_cloud);
   // pcl::PCLPointCloud2 cropped_pcl_pointcloud2;

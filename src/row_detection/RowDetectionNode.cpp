@@ -41,8 +41,8 @@ void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::Con
       pcl::PointCloud<pcl::PointXYZ>::Ptr row_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
       row_hull_pointcloud->push_back(row_begin_point_1_);
       row_hull_pointcloud->push_back(row_begin_point_2_);
-      row_hull_pointcloud->push_back(row_end_point_1_);
       row_hull_pointcloud->push_back(row_end_point_2_);
+      row_hull_pointcloud->push_back(row_end_point_1_);
 
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
