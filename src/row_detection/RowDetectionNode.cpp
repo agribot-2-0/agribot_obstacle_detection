@@ -77,63 +77,70 @@ void RowDetectionNode::rowInfoCallback(const agribot_msgs::Row::ConstPtr& msg)
 {
   is_in_row_ = msg->presence;
 
-  if (msg->begin.header.frame_id != objects_target_frame_id_)
+  try
   {
-    row_begin_pose_ = tf_buffer_.transform(msg->begin, objects_target_frame_id_, ros::Duration(0.1));
+    if (msg->begin.header.frame_id != objects_target_frame_id_)
+    {
+      row_begin_pose_ = tf_buffer_.transform(msg->begin, objects_target_frame_id_, ros::Duration(0.1));
+    }
+    else
+    {
+      row_begin_pose_ = msg->begin;
+    }
+
+    if (msg->end.header.frame_id != objects_target_frame_id_)
+    {
+      row_end_pose_ = tf_buffer_.transform(msg->end, objects_target_frame_id_, ros::Duration(0.1));
+    }
+    else
+    {
+      row_end_pose_ = msg->end;
+    }
+
+    if (is_in_row_)
+    {
+      row_begin_line_ = Conversions::perpendicularLine(row_begin_pose_);
+      row_end_line_ = Conversions::perpendicularLine(row_end_pose_);
+
+      auto begin_yaw = tf::getYaw(row_begin_pose_.pose.orientation);
+      auto end_yaw = tf::getYaw(row_end_pose_.pose.orientation);
+
+      row_begin_point_1_.x = row_begin_pose_.pose.position.x - sin(begin_yaw) * row_width_ / 2.0;
+      row_begin_point_2_.x = row_begin_pose_.pose.position.x + sin(begin_yaw) * row_width_ / 2.0;
+      row_begin_point_1_.y = row_begin_line_.a_ * row_begin_point_1_.x + row_begin_line_.b_;
+      row_begin_point_2_.y = row_begin_line_.a_ * row_begin_point_2_.x + row_begin_line_.b_;
+      row_begin_point_1_.z = 0.0;
+      row_begin_point_2_.z = 0.0;
+
+      row_end_point_1_.x = row_end_pose_.pose.position.x - sin(end_yaw) * row_width_ / 2.0;
+      row_end_point_2_.x = row_end_pose_.pose.position.x + sin(end_yaw) * row_width_ / 2.0;
+      row_end_point_1_.y = row_end_line_.a_ * row_end_point_1_.x + row_end_line_.b_;
+      row_end_point_2_.y = row_end_line_.a_ * row_end_point_2_.x + row_end_line_.b_;
+      row_end_point_1_.z = 0.0;
+      row_end_point_2_.z = 0.0;
+
+      row_perimeter_polygon_rviz_tools_->deleteAllMarkers();
+      agribot_msgs::ObjectPolygon polygon;
+      polygon.header = row_begin_pose_.header;
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_begin_point_1_));
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_begin_point_2_));
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_end_point_2_));
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_end_point_1_));
+      row_perimeter_polygon_rviz_tools_->publishPolygon(polygon, rviz_visual_tools::PINK, rviz_visual_tools::XLARGE,
+                                                        "row_outline_polygon");
+      row_perimeter_polygon_rviz_tools_->trigger(false);
+
+      row_axis_line_ = Conversions::lineThroughPoses(row_begin_pose_, row_end_pose_);
+
+      row_axis_line_rviz_tools_->deleteAllMarkers();
+      row_axis_line_rviz_tools_->publishLine(row_begin_pose_.pose.position, row_end_pose_.pose.position,
+                                             rviz_visual_tools::YELLOW, rviz_visual_tools::XXLARGE);
+      row_axis_line_rviz_tools_->trigger(false);
+    }
   }
-  else
+  catch (const std::exception& e)
   {
-    row_begin_pose_ = msg->begin;
-  }
-
-  if (msg->end.header.frame_id != objects_target_frame_id_)
-  {
-    row_end_pose_ = tf_buffer_.transform(msg->end, objects_target_frame_id_, ros::Duration(0.1));
-  }
-  else
-  {
-    row_end_pose_ = msg->end;
-  }
-
-  if (is_in_row_)
-  {
-    row_begin_line_ = Conversions::perpendicularLine(row_begin_pose_);
-    row_end_line_ = Conversions::perpendicularLine(row_end_pose_);
-
-    auto begin_yaw = tf::getYaw(row_begin_pose_.pose.orientation);
-    auto end_yaw = tf::getYaw(row_end_pose_.pose.orientation);
-
-    row_begin_point_1_.x = row_begin_pose_.pose.position.x - sin(begin_yaw) * row_width_ / 2.0;
-    row_begin_point_2_.x = row_begin_pose_.pose.position.x + sin(begin_yaw) * row_width_ / 2.0;
-    row_begin_point_1_.y = row_begin_line_.a_ * row_begin_point_1_.x + row_begin_line_.b_;
-    row_begin_point_2_.y = row_begin_line_.a_ * row_begin_point_2_.x + row_begin_line_.b_;
-    row_begin_point_1_.z = 0.0;
-    row_begin_point_2_.z = 0.0;
-
-    row_end_point_1_.x = row_end_pose_.pose.position.x - sin(end_yaw) * row_width_ / 2.0;
-    row_end_point_2_.x = row_end_pose_.pose.position.x + sin(end_yaw) * row_width_ / 2.0;
-    row_end_point_1_.y = row_end_line_.a_ * row_end_point_1_.x + row_end_line_.b_;
-    row_end_point_2_.y = row_end_line_.a_ * row_end_point_2_.x + row_end_line_.b_;
-    row_end_point_1_.z = 0.0;
-    row_end_point_2_.z = 0.0;
-
-    row_perimeter_polygon_rviz_tools_->deleteAllMarkers();
-    agribot_msgs::ObjectPolygon polygon;
-    polygon.header = row_begin_pose_.header;
-    polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_begin_point_1_));
-    polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_begin_point_2_));
-    polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_end_point_2_));
-    polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_end_point_1_));
-    row_perimeter_polygon_rviz_tools_->publishPolygon(polygon, rviz_visual_tools::PINK, rviz_visual_tools::XLARGE,
-                                                      "row_outline_polygon");
-    row_perimeter_polygon_rviz_tools_->trigger(false);
-
-    row_axis_line_ = Conversions::lineThroughPoses(row_begin_pose_, row_end_pose_);
-
-    row_axis_line_rviz_tools_->deleteAllMarkers();
-    row_axis_line_rviz_tools_->publishLine(row_begin_pose_.pose.position, row_end_pose_.pose.position,
-                                           rviz_visual_tools::YELLOW, rviz_visual_tools::XXLARGE);
-    row_axis_line_rviz_tools_->trigger(false);
+    ROS_WARN_STREAM(log_tag_ << e.what());
   }
 }
 
@@ -294,6 +301,11 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
 
   segmentation->setInputCloud(pcl_cloud);
   segmentation->segment(*inliers, plane_coefficients);
+
+  if (inliers->indices.size() == 0)
+  {
+    throw std::runtime_error("Error segmenting the row plane model! No solution found...");
+  }
 
   return { plane_coefficients.values[0], plane_coefficients.values[1], plane_coefficients.values[2],
            plane_coefficients.values[3] };

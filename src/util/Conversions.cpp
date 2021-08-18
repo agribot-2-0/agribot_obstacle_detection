@@ -108,22 +108,18 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Objec
 agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
     const agribot_msgs::Object3D& object, const pcl::PointCloud<pcl::PointXYZ>::Ptr& row_hull_pointcloud)
 {
-  // TODO(olek) - remove static_cast
-  static_cast<void>(row_hull_pointcloud);
-
   agribot_msgs::ObjectPolygon msg;
 
-  pcl::PCLPointCloud2 pcl_pointcloud2;
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::PointCloud<pcl::PointXYZ>::Ptr zeroed_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::PointCloud<pcl::PointXYZ>::Ptr cropped_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
-  pcl_conversions::toPCL(object.point_cloud, pcl_pointcloud2);
-  pcl::fromPCLPointCloud2(pcl_pointcloud2, *pcl_pointcloud);
+  std::vector<int> inliers;
 
-  // TODO(olek) - test one-line conversion
-  // pcl::fromROSMsg(object.point_cloud, *pcl_pointcloud);
+  pcl::fromROSMsg(object.point_cloud, *pcl_pointcloud);
+  pcl::copyPointCloud(*pcl_pointcloud, *zeroed_pcl_pointcloud);
 
-  for (auto& point : pcl_pointcloud->points)
+  for (auto& point : zeroed_pcl_pointcloud->points)
   {
     point.z = 0.0;
   }
@@ -131,7 +127,6 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   pcl::CropHull<pcl::PointXYZ> crop_hull_filter;
   crop_hull_filter.setHullCloud(row_hull_pointcloud);
 
-  // std::vector<pcl::Vertices> polygons{ { 0, 1, 2, 3 } };
   std::vector<pcl::Vertices> polygons;
   pcl::Vertices vertices;
   vertices.vertices.push_back(0);
@@ -140,12 +135,12 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   vertices.vertices.push_back(3);
   polygons.push_back(vertices);
   crop_hull_filter.setHullIndices(polygons);
-  crop_hull_filter.setInputCloud(pcl_pointcloud);
+  crop_hull_filter.setInputCloud(zeroed_pcl_pointcloud);
   crop_hull_filter.setDim(2);
   crop_hull_filter.setCropOutside(true);
-  crop_hull_filter.filter(*cropped_pcl_pointcloud);
+  crop_hull_filter.filter(inliers);
 
-  if (cropped_pcl_pointcloud->size() < 3)
+  if (inliers.size() < 3)
   {
     // TODO(olek) - it is just ugly workaround used to ignore clouds where all points are cropped as ObjectPolygon still
     // must be returned...
@@ -153,9 +148,10 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
     return msg;
   }
 
+  pcl::copyPointCloud(*pcl_pointcloud, inliers, *cropped_pcl_pointcloud);
+
   pcl::ConvexHull<pcl::PointXYZ> convex_hull;
   convex_hull.setInputCloud(cropped_pcl_pointcloud);
-  // convex_hull.setInputCloud(pcl_pointcloud);
   convex_hull.setDimension(2);
   convex_hull.setComputeAreaVolume(true);
   convex_hull.reconstruct(*convex_hull_pointcloud);
@@ -172,12 +168,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   pcl::computeCentroid<pcl::PointXYZ>(*convex_hull_pointcloud, pcl_centroid_point);
   msg.centroid = Conversions::convertToPoint32Msg<pcl::PointXYZ>(pcl_centroid_point);
 
-  // TODO - use cropped pointcloud
-  msg.point_cloud = object.point_cloud;
-  // pcl::toROSMsg(*cropped_pcl_pointcloud, msg.point_cloud);
-  // pcl::PCLPointCloud2 cropped_pcl_pointcloud2;
-  // pcl::toPCLPointCloud2(*cropped_pcl_pointcloud, cropped_pcl_pointcloud2);
-  // pcl_conversions::fromPCL(cropped_pcl_pointcloud2, msg.point_cloud);
+  pcl::toROSMsg(*cropped_pcl_pointcloud, msg.point_cloud);
 
   msg.header = object.header;
   msg.type = msg.UNKNOWN;

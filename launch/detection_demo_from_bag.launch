@@ -1,7 +1,7 @@
 <launch>
   <arg name="bag_path" />
   <arg name="clock" default="true" />
-  <arg name="topics" value="/agribot/obstacle_detection/front/3d/lidar/point_cloud /agribot/obstacle_detection/front/3d/stereo_camera/point_cloud /tf /tf_static /agribot/navigation_manager/row/presence /agribot/navigation_manager/row/begin /agribot/navigation_manager/row/end /agribot/gnss/filtered"/>
+  <arg name="topics" value="/agribot/obstacle_detection/front/3d/lidar/point_cloud /agribot/obstacle_detection/front/3d/stereo_camera/point_cloud /tf /tf_static /agribot/navigation_manager/row /agribot/gnss/filtered"/>
   <arg name="additional_rosbag_arguments" default="" />
   
   <arg name="rosbag_arguments" value="--topics $(arg topics) --bags $(arg bag_path) --pause $(arg additional_rosbag_arguments)"/>
