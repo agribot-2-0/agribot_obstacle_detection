@@ -14,7 +14,7 @@
 
   <!-- Stereo camera arguments -->
   <arg name="stereo_camera_namespace"                   default="front/3d/stereo_camera"/>
-  <arg name="stereo_camera_point_cloud_topic"           value="$(arg stereo_camera_namespace)/point_cloud"/>
+  <arg name="stereo_camera_point_cloud_topic"           value="$(arg lidar_namespace)/point_cloud"/>
   <arg name="stereo_camera_objects_topic"               value="$(arg stereo_camera_namespace)/objects"/>
   <arg name="stereo_camera_objects_markers_topic"       value="$(arg stereo_camera_namespace)/objects_markers"/>
   <arg name="stereo_camera_processing_time_topic"       value="$(arg stereo_camera_namespace)/processing_time"/>
