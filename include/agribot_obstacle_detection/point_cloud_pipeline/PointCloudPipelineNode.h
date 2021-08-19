@@ -93,18 +93,25 @@ template <typename PointT, typename DynamicReconfigureT>
 void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
     const typename pcl::PointCloud<PointT>::ConstPtr& msg)
 {
-  timer.start();
-
-  // Clear list of 3D objects
-  object_array_.objects.clear();
-
-  pipeline_.setInputCloud(msg);
-  pipeline_.process();
-  auto objects_clusters_ = pipeline_.getObjectsClusters();
-
-  // Create object for each cluster and push it to Object3DArray
   try
   {
+    timer.start();
+
+    // Clear list of 3D objects
+    object_array_.objects.clear();
+
+    typename pcl::PointCloud<PointT>::Ptr pointcloud_in_base_footprint_frame{ new pcl::PointCloud<PointT> };
+
+    auto transform = tf_buffer_.lookupTransform("base_footprint", msg->header.frame_id, ros::Time::now());
+    pcl_ros::transformPointCloud<PointT>(*msg, *pointcloud_in_base_footprint_frame, transform.transform);
+    pointcloud_in_base_footprint_frame->header.frame_id = "base_footprint";
+    ROS_ERROR_STREAM("Frame: " << pointcloud_in_base_footprint_frame->header.frame_id);
+
+    pipeline_.setInputCloud(pointcloud_in_base_footprint_frame);
+    pipeline_.process();
+    auto objects_clusters_ = pipeline_.getObjectsClusters();
+
+    // Create object for each cluster and push it to Object3DArray
     int id = 0;
     for (const auto& cluster : objects_clusters_)
     {
