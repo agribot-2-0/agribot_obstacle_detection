@@ -101,11 +101,7 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
     object_array_.objects.clear();
 
     typename pcl::PointCloud<PointT>::Ptr pointcloud_in_base_footprint_frame{ new pcl::PointCloud<PointT> };
-
-    auto transform = tf_buffer_.lookupTransform("base_footprint", msg->header.frame_id, ros::Time::now());
-    pcl_ros::transformPointCloud<PointT>(*msg, *pointcloud_in_base_footprint_frame, transform.transform);
-    pointcloud_in_base_footprint_frame->header.frame_id = "base_footprint";
-    ROS_ERROR_STREAM("Frame: " << pointcloud_in_base_footprint_frame->header.frame_id);
+    pcl_ros::transformPointCloud<PointT>("base_footprint", *msg, *pointcloud_in_base_footprint_frame, tf_buffer_);
 
     pipeline_.setInputCloud(pointcloud_in_base_footprint_frame);
     pipeline_.process();
