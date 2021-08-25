@@ -113,6 +113,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::PointCloud<pcl::PointXYZ>::Ptr zeroed_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::PointCloud<pcl::PointXYZ>::Ptr cropped_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+  pcl::PointCloud<pcl::PointXYZ>::Ptr zeroed_cropped_pcl_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   pcl::PointCloud<pcl::PointXYZ>::Ptr convex_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
   std::vector<int> inliers;
 
@@ -149,9 +150,10 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   }
 
   pcl::copyPointCloud(*pcl_pointcloud, inliers, *cropped_pcl_pointcloud);
+  pcl::copyPointCloud(*zeroed_pcl_pointcloud, inliers, *zeroed_cropped_pcl_pointcloud);
 
   pcl::ConvexHull<pcl::PointXYZ> convex_hull;
-  convex_hull.setInputCloud(cropped_pcl_pointcloud);
+  convex_hull.setInputCloud(zeroed_cropped_pcl_pointcloud);
   convex_hull.setDimension(2);
   convex_hull.setComputeAreaVolume(true);
   convex_hull.reconstruct(*convex_hull_pointcloud);
