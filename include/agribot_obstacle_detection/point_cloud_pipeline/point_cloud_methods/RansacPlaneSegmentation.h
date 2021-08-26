@@ -24,8 +24,10 @@ void ransacPlaneSegmentation(const typename pcl::PointCloud<PointT>::ConstPtr in
 
   // Prepare segmentation object
   seg.setOptimizeCoefficients(true);
-  seg.setModelType(pcl::SACMODEL_PLANE);
   seg.setMethodType(pcl::SAC_RANSAC);
+  seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
+  seg.setAxis(Eigen::Vector3f(0, 0, 1));
+  seg.setEpsAngle(config.perpendicular_plane_angle_threshold_);
   seg.setDistanceThreshold(config.distance_threshold_);
 
   if (config.max_iterations_n != 0)

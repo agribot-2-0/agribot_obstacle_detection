@@ -27,14 +27,70 @@ ObstaclesArbiterNode::ObstaclesArbiterNode(ros::NodeHandle* nh, const std::strin
   path_sub_ = nh->subscribe("path", 1, &ObstaclesArbiterNode::pathCallback, this);
 }
 
-agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildRobotPolygon()
+agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildChassisPolygon()
 {
   geometry_msgs::PoseStamped robot_pose;
   robot_pose.header.frame_id = "base_footprint";
   robot_pose.header.stamp = ros::Time::now();
   robot_pose.pose.orientation.w = 1.0;
 
-  return Conversions::convertToObjectPolygon(robot_pose, robot_safety_zone_length_, robot_safety_zone_width_);
+  geometry_msgs::PoseStamped robot_pose_in_objects_frame;
+
+  if (robot_pose.header.frame_id != objects_target_frame_id_)
+  {
+    robot_pose_in_objects_frame = tf_buffer_.transform(robot_pose, objects_target_frame_id_);
+  }
+  else
+  {
+    robot_pose_in_objects_frame = robot_pose;
+  }
+
+  return Conversions::convertToObjectPolygon(robot_pose_in_objects_frame, robot_safety_zone_length_,
+                                             robot_safety_zone_width_);
+}
+
+agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildFrontCartPolygon()
+{
+  geometry_msgs::PoseStamped front_cart_pose;
+  front_cart_pose.header.frame_id = "front_cart_link";
+  front_cart_pose.header.stamp = ros::Time::now();
+  front_cart_pose.pose.orientation.w = 1.0;
+
+  geometry_msgs::PoseStamped front_cart_pose_in_objects_frame;
+
+  if (front_cart_pose.header.frame_id != objects_target_frame_id_)
+  {
+    front_cart_pose_in_objects_frame = tf_buffer_.transform(front_cart_pose, objects_target_frame_id_);
+  }
+  else
+  {
+    front_cart_pose_in_objects_frame = front_cart_pose;
+  }
+
+  return Conversions::convertToObjectPolygon(front_cart_pose_in_objects_frame, cart_safety_zone_length_,
+                                             cart_safety_zone_width_);
+}
+
+agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildBackCartPolygon()
+{
+  geometry_msgs::PoseStamped back_cart_pose;
+  back_cart_pose.header.frame_id = "back_cart_link";
+  back_cart_pose.header.stamp = ros::Time::now();
+  back_cart_pose.pose.orientation.w = 1.0;
+
+  geometry_msgs::PoseStamped back_cart_pose_in_objects_frame;
+
+  if (back_cart_pose.header.frame_id != objects_target_frame_id_)
+  {
+    back_cart_pose_in_objects_frame = tf_buffer_.transform(back_cart_pose, objects_target_frame_id_);
+  }
+  else
+  {
+    back_cart_pose_in_objects_frame = back_cart_pose;
+  }
+
+  return Conversions::convertToObjectPolygon(back_cart_pose_in_objects_frame, cart_safety_zone_length_,
+                                             cart_safety_zone_width_);
 }
 
 void ObstaclesArbiterNode::object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
@@ -99,6 +155,7 @@ void ObstaclesArbiterNode::pathCallback(const nav_msgs::Path::ConstPtr& msg)
   catch (const std::exception& e)
   {
     ROS_WARN_STREAM(log_tag_ << e.what());
+    // TODO(olek) - consider setting collsiions to true in case we got exception
   }
 }
 
@@ -124,22 +181,46 @@ void ObstaclesArbiterNode::checkCollisions()
   // Clear detection status before checking new collisions
   detection_status_.status = detection_status_.NO_OBSTACLE;
 
-  // Regenerate robot polygon before checking new collisions
-  robot_polygon_ = buildRobotPolygon();
-  robot_polygon_.type = robot_polygon_.PATH_CLEAR;
+  // Regenerate chassis and carts polygon before checking new collisions
+  chassis_polygon_ = buildChassisPolygon();
+  chassis_polygon_.type = chassis_polygon_.PATH_CLEAR;
+  front_cart_polygon_ = buildFrontCartPolygon();
+  front_cart_polygon_.type = front_cart_polygon_.PATH_CLEAR;
+  back_cart_polygon_ = buildBackCartPolygon();
+  back_cart_polygon_.type = back_cart_polygon_.PATH_CLEAR;
 
   // If there are no polygons in any of the lists, NO_OBSTACLE will be published as for loop will be omitted
   for (auto& object_polygon : objects_polygons_->polygons)
   {
-    // Check collision with robot polygon
-    if (collision_detection_->areColliding(object_polygon, robot_polygon_))
+    // Check collision with chassis and carts polygons
+    if (collision_detection_->areColliding(object_polygon, chassis_polygon_))
     {
       detection_status_.status = detection_status_.OBSTACLE_DETECTED;
       publishDetectionStatus();
 
       // Mark path and objects polygons with _COLLIDING type
       object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
-      robot_polygon_.type = object_polygon.PATH_COLLIDING;
+      chassis_polygon_.type = chassis_polygon_.PATH_COLLIDING;
+    }
+
+    if (collision_detection_->areColliding(object_polygon, front_cart_polygon_))
+    {
+      detection_status_.status = detection_status_.OBSTACLE_DETECTED;
+      publishDetectionStatus();
+
+      // Mark path and objects polygons with _COLLIDING type
+      object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
+      front_cart_polygon_.type = front_cart_polygon_.PATH_COLLIDING;
+    }
+
+    if (collision_detection_->areColliding(object_polygon, back_cart_polygon_))
+    {
+      detection_status_.status = detection_status_.OBSTACLE_DETECTED;
+      publishDetectionStatus();
+
+      // Mark path and objects polygons with _COLLIDING type
+      object_polygon.type = object_polygon.OBSTACLE_COLLIDING;
+      back_cart_polygon_.type = back_cart_polygon_.PATH_COLLIDING;
     }
 
     // Check collisions with path polygons
@@ -172,7 +253,7 @@ void ObstaclesArbiterNode::publishOutputPolygons()
   // Just rewrite path and obstacles polygons. They should have proper "type" set already
   output_polygons_.polygons.clear();
 
-  std::size_t output_size = objects_polygons_->polygons.size() + 1;  // At least for objects and robot polygon
+  std::size_t output_size = objects_polygons_->polygons.size() + 3;  // At least for objects, chassis and carts polygons
 
   if (path_polygons_ != std::nullopt)
   {
@@ -189,7 +270,10 @@ void ObstaclesArbiterNode::publishOutputPolygons()
 
   output_polygons_.polygons.insert(output_polygons_.polygons.end(), objects_polygons_->polygons.begin(),
                                    objects_polygons_->polygons.end());
-  output_polygons_.polygons.push_back(robot_polygon_);
+
+  output_polygons_.polygons.push_back(chassis_polygon_);
+  output_polygons_.polygons.push_back(front_cart_polygon_);
+  output_polygons_.polygons.push_back(back_cart_polygon_);
 
   out_polygons_pub_.publish(output_polygons_);
 }
@@ -228,6 +312,8 @@ void ObstaclesArbiterNode::dynamicReconfigureCallback(
   print_processing_time_ = dynamic_config.print_processing_time;
   robot_safety_zone_length_ = dynamic_config.robot_safety_zone_length;
   robot_safety_zone_width_ = dynamic_config.robot_safety_zone_width;
+  cart_safety_zone_length_ = dynamic_config.cart_safety_zone_length;
+  cart_safety_zone_width_ = dynamic_config.cart_safety_zone_width;
   min_path_safety_zone_length_ = dynamic_config.min_path_safety_zone_length;
   min_path_safety_zone_width_ = dynamic_config.min_path_safety_zone_width;
   max_path_safety_zone_length_ = dynamic_config.max_path_safety_zone_length;

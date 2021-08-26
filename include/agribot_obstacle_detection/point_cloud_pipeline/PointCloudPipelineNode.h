@@ -93,18 +93,21 @@ template <typename PointT, typename DynamicReconfigureT>
 void PointCloudPipelineNode<PointT, DynamicReconfigureT>::inputPointCloudCb(
     const typename pcl::PointCloud<PointT>::ConstPtr& msg)
 {
-  timer.start();
-
-  // Clear list of 3D objects
-  object_array_.objects.clear();
-
-  pipeline_.setInputCloud(msg);
-  pipeline_.process();
-  auto objects_clusters_ = pipeline_.getObjectsClusters();
-
-  // Create object for each cluster and push it to Object3DArray
   try
   {
+    timer.start();
+
+    // Clear list of 3D objects
+    object_array_.objects.clear();
+
+    typename pcl::PointCloud<PointT>::Ptr pointcloud_in_base_footprint_frame{ new pcl::PointCloud<PointT> };
+    pcl_ros::transformPointCloud<PointT>("base_footprint", *msg, *pointcloud_in_base_footprint_frame, tf_buffer_);
+
+    pipeline_.setInputCloud(pointcloud_in_base_footprint_frame);
+    pipeline_.process();
+    auto objects_clusters_ = pipeline_.getObjectsClusters();
+
+    // Create object for each cluster and push it to Object3DArray
     int id = 0;
     for (const auto& cluster : objects_clusters_)
     {
@@ -197,6 +200,8 @@ void PointCloudPipelineNode<PointT, DynamicReconfigureT>::dynamicReconfigureCall
   node_config_.pipeline_config_.sor_config_.stddev_mul_ = dynamic_config.sor_stddev_mul;
   node_config_.pipeline_config_.seg_config_.max_iterations_n = dynamic_config.segmentation_iterations_n;
   node_config_.pipeline_config_.seg_config_.distance_threshold_ = dynamic_config.segmentation_distance_threshold;
+  node_config_.pipeline_config_.seg_config_.perpendicular_plane_angle_threshold_ =
+      dynamic_config.segmentation_perpendicular_plane_angle_threshold;
   node_config_.pipeline_config_.clustering_method_ = static_cast<ClusteringMethod>(dynamic_config.clustering_method);
   node_config_.pipeline_config_.ec_config_.min_cluster_size_ = dynamic_config.clustering_min_cluster_size;
   node_config_.pipeline_config_.ec_config_.max_cluster_size_ = dynamic_config.clustering_max_cluster_size;

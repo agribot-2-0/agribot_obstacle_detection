@@ -32,6 +32,8 @@ class ObstaclesArbiterNode
 private:
   double robot_safety_zone_length_;
   double robot_safety_zone_width_;
+  double cart_safety_zone_length_;
+  double cart_safety_zone_width_;
   double min_path_safety_zone_length_;
   double min_path_safety_zone_width_;
   double max_path_safety_zone_length_;
@@ -44,7 +46,9 @@ private:
   std::optional<agribot_msgs::ObjectPolygonArray> path_polygons_;
   std::optional<agribot_msgs::ObjectPolygonArray> objects_polygons_;
   agribot_msgs::ObjectPolygonArray output_polygons_;
-  agribot_msgs::ObjectPolygon robot_polygon_;
+  agribot_msgs::ObjectPolygon chassis_polygon_;
+  agribot_msgs::ObjectPolygon front_cart_polygon_;
+  agribot_msgs::ObjectPolygon back_cart_polygon_;
   agribot_msgs::ObstacleDetectionStatus detection_status_;
 
   ros::NodeHandle* nh_;
@@ -72,7 +76,9 @@ private:
 
   std::unique_ptr<IPolygonCollisionDetection> collision_detection_;
 
-  agribot_msgs::ObjectPolygon buildRobotPolygon();
+  agribot_msgs::ObjectPolygon buildChassisPolygon();
+  agribot_msgs::ObjectPolygon buildFrontCartPolygon();
+  agribot_msgs::ObjectPolygon buildBackCartPolygon();
   void object3DArrayCallback(const agribot_msgs::Object3DArray::ConstPtr& msg);
   void pathCallback(const nav_msgs::Path::ConstPtr& msg);
   void checkCollisions();

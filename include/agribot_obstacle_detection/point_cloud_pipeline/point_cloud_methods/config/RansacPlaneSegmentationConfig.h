@@ -7,5 +7,6 @@
 struct RansacPlaneSegmentationConfig
 {
   int max_iterations_n;
-  float distance_threshold_;
+  double distance_threshold_;
+  double perpendicular_plane_angle_threshold_;
 };

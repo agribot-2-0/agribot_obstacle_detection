@@ -8,6 +8,7 @@
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/common.h>
+#include <pcl/filters/crop_hull.h>
 
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include <pcl/surface/convex_hull.h>
@@ -33,6 +34,8 @@
 #include "agribot_msgs/ObjectPolygon.h"
 #include "agribot_msgs/ObjectPolygonArray.h"
 
+#include "agribot_obstacle_detection/row_detection/LineCoefficients.h"
+
 namespace Conversions
 {
 // ==================== //
@@ -40,8 +43,12 @@ namespace Conversions
 // ==================== //
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const agribot_msgs::Object3DArray& object_array);
 agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArray(const agribot_msgs::Object3DArray& object_array);
+agribot_msgs::ObjectPolygonArray convertToConvexHullPolygonArrayWithRowLimits(
+    const agribot_msgs::Object3DArray& object_array, const pcl::PointCloud<pcl::PointXYZ>::Ptr& row_hull_pointcloud);
 agribot_msgs::ObjectPolygon convertToObjectPolygon(const agribot_msgs::Object3D& object);
 agribot_msgs::ObjectPolygon convertToConvexHullPolygon(const agribot_msgs::Object3D& object);
+agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
+    const agribot_msgs::Object3D& object, const pcl::PointCloud<pcl::PointXYZ>::Ptr& row_hull_pointcloud);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double x_size, double y_size);
 agribot_msgs::ObjectPolygonArray convertToObjectPolygonArray(const nav_msgs::Path& path, double min_x_size,
                                                              double min_y_size, double max_x_size, double max_y_size,
@@ -50,6 +57,9 @@ agribot_msgs::ObjectPolygon convertToObjectPolygon(const geometry_msgs::PoseStam
                                                    double y_size);
 agribot_msgs::ObjectPolygon getObjectPolygon(double center_x, double center_y, double x_size, double y_size,
                                              double yaw);
+LineCoefficients perpendicularLine(const geometry_msgs::PoseStamped& pose);
+LineCoefficients lineThroughPoses(const geometry_msgs::PoseStamped& begin_pose,
+                                  const geometry_msgs::PoseStamped& end_pose);
 
 // ================ //
 // PCL conversions  //

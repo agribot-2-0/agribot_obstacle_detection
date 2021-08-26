@@ -15,12 +15,17 @@ RowDetectionNode::RowDetectionNode(ros::NodeHandle* nh, const std::string& log_t
 
   left_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "left_row_plane_marker"));
   right_row_plane_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "right_row_plane_marker"));
+  row_perimeter_polygon_rviz_tools_.reset(
+      new rviz_visual_tools::RvizVisualTools("base_footprint", "row_perimeter_polygon_marker"));
+  row_axis_line_rviz_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_footprint", "row_axis_line_marker"));
 
   // Initialize publishers and subscribers
   left_row_path_pub_ = nh->advertise<nav_msgs::Path>("left_row_path", 1, true);
   right_row_path_pub_ = nh->advertise<nav_msgs::Path>("right_row_path", 1, true);
+  row_polygons_pub_ = nh->advertise<agribot_msgs::ObjectPolygonArray>("row_polygons", 1, true);
 
   row_object_array_sub_ = nh->subscribe("row_objects", 1, &RowDetectionNode::rowObjectsCallback, this);
+  row_info_sub_ = nh->subscribe("/agribot/navigation_manager/row", 1, &RowDetectionNode::rowInfoCallback, this);
 }
 
 void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::ConstPtr& msg)
@@ -33,18 +38,105 @@ void RowDetectionNode::rowObjectsCallback(const agribot_msgs::Object3DArray::Con
     }
     else
     {
+      pcl::PointCloud<pcl::PointXYZ>::Ptr row_hull_pointcloud{ new pcl::PointCloud<pcl::PointXYZ> };
+      row_hull_pointcloud->push_back(row_begin_point_1_);
+      row_hull_pointcloud->push_back(row_begin_point_2_);
+      row_hull_pointcloud->push_back(row_end_point_2_);
+      row_hull_pointcloud->push_back(row_end_point_1_);
+
       if (msg->objects[0].header.frame_id != objects_target_frame_id_)
       {
-        row_polygons_ = Conversions::convertToConvexHullPolygonArray(
-            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_));
+        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(
+            Conversions::transform(*msg, objects_target_frame_id_, tf_buffer_), row_hull_pointcloud);
       }
       else
       {
-        row_polygons_ = Conversions::convertToConvexHullPolygonArray(*msg);
+        row_polygons_ = Conversions::convertToConvexHullPolygonArrayWithRowLimits(*msg, row_hull_pointcloud);
       }
     }
 
-    computeRowsPaths();
+    // TODO(olek) - debug only
+    row_polygons_pub_.publish(row_polygons_);
+
+    if (is_in_row_)
+    {
+      computeRowsPaths();
+    }
+    else
+    {
+      ROS_INFO_STREAM_THROTTLE(2.0, log_tag_ << "Robot not in row. Skipping calculation of rows paths...");
+    }
+  }
+  catch (const std::exception& e)
+  {
+    ROS_WARN_STREAM(log_tag_ << e.what());
+  }
+}
+
+void RowDetectionNode::rowInfoCallback(const agribot_msgs::Row::ConstPtr& msg)
+{
+  is_in_row_ = msg->presence;
+
+  try
+  {
+    if (msg->begin.header.frame_id != objects_target_frame_id_)
+    {
+      row_begin_pose_ = tf_buffer_.transform(msg->begin, objects_target_frame_id_, ros::Duration(0.1));
+    }
+    else
+    {
+      row_begin_pose_ = msg->begin;
+    }
+
+    if (msg->end.header.frame_id != objects_target_frame_id_)
+    {
+      row_end_pose_ = tf_buffer_.transform(msg->end, objects_target_frame_id_, ros::Duration(0.1));
+    }
+    else
+    {
+      row_end_pose_ = msg->end;
+    }
+
+    if (is_in_row_)
+    {
+      row_begin_line_ = Conversions::perpendicularLine(row_begin_pose_);
+      row_end_line_ = Conversions::perpendicularLine(row_end_pose_);
+
+      auto begin_yaw = tf::getYaw(row_begin_pose_.pose.orientation);
+      auto end_yaw = tf::getYaw(row_end_pose_.pose.orientation);
+
+      row_begin_point_1_.x = row_begin_pose_.pose.position.x - sin(begin_yaw) * row_width_ / 2.0;
+      row_begin_point_2_.x = row_begin_pose_.pose.position.x + sin(begin_yaw) * row_width_ / 2.0;
+      row_begin_point_1_.y = row_begin_line_.a_ * row_begin_point_1_.x + row_begin_line_.b_;
+      row_begin_point_2_.y = row_begin_line_.a_ * row_begin_point_2_.x + row_begin_line_.b_;
+      row_begin_point_1_.z = 0.0;
+      row_begin_point_2_.z = 0.0;
+
+      row_end_point_1_.x = row_end_pose_.pose.position.x - sin(end_yaw) * row_width_ / 2.0;
+      row_end_point_2_.x = row_end_pose_.pose.position.x + sin(end_yaw) * row_width_ / 2.0;
+      row_end_point_1_.y = row_end_line_.a_ * row_end_point_1_.x + row_end_line_.b_;
+      row_end_point_2_.y = row_end_line_.a_ * row_end_point_2_.x + row_end_line_.b_;
+      row_end_point_1_.z = 0.0;
+      row_end_point_2_.z = 0.0;
+
+      row_perimeter_polygon_rviz_tools_->deleteAllMarkers();
+      agribot_msgs::ObjectPolygon polygon;
+      polygon.header = row_begin_pose_.header;
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_begin_point_1_));
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_begin_point_2_));
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_end_point_2_));
+      polygon.polygon.points.push_back(Conversions::convertToPoint32Msg(row_end_point_1_));
+      row_perimeter_polygon_rviz_tools_->publishPolygon(polygon, rviz_visual_tools::PINK, rviz_visual_tools::XLARGE,
+                                                        "row_outline_polygon");
+      row_perimeter_polygon_rviz_tools_->trigger(false);
+
+      row_axis_line_ = Conversions::lineThroughPoses(row_begin_pose_, row_end_pose_);
+
+      row_axis_line_rviz_tools_->deleteAllMarkers();
+      row_axis_line_rviz_tools_->publishLine(row_begin_pose_.pose.position, row_end_pose_.pose.position,
+                                             rviz_visual_tools::YELLOW, rviz_visual_tools::XXLARGE);
+      row_axis_line_rviz_tools_->trigger(false);
+    }
   }
   catch (const std::exception& e)
   {
@@ -57,14 +149,33 @@ void RowDetectionNode::computeRowsPaths()
   nav_msgs::Path left_row_path;
   nav_msgs::Path right_row_path;
 
-  auto row_obstacle_on_the_left = [this](const agribot_msgs::ObjectPolygon& p) {
-    return p.centroid.y > this->row_polygon_centroid_y_threshold_ && p.area > this->row_polygon_area_threshold_;
-  };
-  auto row_obstacle_on_the_right = [this](const agribot_msgs::ObjectPolygon& p) {
-    return p.centroid.y < -this->row_polygon_centroid_y_threshold_ && p.area > this->row_polygon_area_threshold_;
+  auto row_obstacle_with_sufficient_area = [this](const agribot_msgs::ObjectPolygon& p) {
+    return p.area > this->row_polygon_area_threshold_;
   };
 
-  if (std::none_of(row_polygons_.polygons.begin(), row_polygons_.polygons.end(), row_obstacle_on_the_left))
+  auto row_obstacle_on_the_left = [this](const agribot_msgs::ObjectPolygon& p) {
+    // Calculate row axis y for x given by cluster centroid
+    auto row_axis_y = this->row_axis_line_.a_ * p.centroid.x + this->row_axis_line_.b_;
+    return p.centroid.y > row_axis_y;
+  };
+  auto row_obstacle_on_the_right = [this](const agribot_msgs::ObjectPolygon& p) {
+    // Calculate row axis y for x given by cluster centroid
+    auto row_axis_y = this->row_axis_line_.a_ * p.centroid.x + this->row_axis_line_.b_;
+    return p.centroid.y < row_axis_y;
+  };
+
+  auto row_obstacle_on_the_left_with_sufficient_area =
+      [this, row_obstacle_on_the_left, row_obstacle_with_sufficient_area](const agribot_msgs::ObjectPolygon& p) {
+        return row_obstacle_on_the_left(p) && row_obstacle_with_sufficient_area(p);
+      };
+
+  auto row_obstacle_on_the_right_with_sufficient_area =
+      [this, row_obstacle_on_the_right, row_obstacle_with_sufficient_area](const agribot_msgs::ObjectPolygon& p) {
+        return row_obstacle_on_the_right(p) && row_obstacle_with_sufficient_area(p);
+      };
+
+  if (std::none_of(row_polygons_.polygons.begin(), row_polygons_.polygons.end(),
+                   row_obstacle_on_the_left_with_sufficient_area))
   {
     left_row_path.poses.clear();
     left_row_path.header.frame_id = "base_footprint";
@@ -74,7 +185,8 @@ void RowDetectionNode::computeRowsPaths()
     right_row_path.header.stamp = ros::Time::now();
     ROS_DEBUG_STREAM("[RowDetectionNode] No row obstacle on the left. Publishing empty row paths...");
   }
-  else if (std::none_of(row_polygons_.polygons.begin(), row_polygons_.polygons.end(), row_obstacle_on_the_right))
+  else if (std::none_of(row_polygons_.polygons.begin(), row_polygons_.polygons.end(),
+                        row_obstacle_on_the_right_with_sufficient_area))
   {
     left_row_path.poses.clear();
     left_row_path.header.frame_id = "base_footprint";
@@ -93,10 +205,10 @@ void RowDetectionNode::computeRowsPaths()
     std::sort(row_polygons_.polygons.rbegin(), row_polygons_.polygons.rend(), area_comparison);
 
     // Find biggest polygons on the left and right
-    auto left_row_polygon_it =
-        std::find_if(row_polygons_.polygons.begin(), row_polygons_.polygons.end(), row_obstacle_on_the_left);
-    auto right_row_polygon_it =
-        std::find_if(row_polygons_.polygons.begin(), row_polygons_.polygons.end(), row_obstacle_on_the_right);
+    auto left_row_polygon_it = std::find_if(row_polygons_.polygons.begin(), row_polygons_.polygons.end(),
+                                            row_obstacle_on_the_left_with_sufficient_area);
+    auto right_row_polygon_it = std::find_if(row_polygons_.polygons.begin(), row_polygons_.polygons.end(),
+                                             row_obstacle_on_the_right_with_sufficient_area);
 
     auto left_row_plane_coefficients = rowPlaneSegmentation(left_row_polygon_it->point_cloud);
     auto right_row_plane_coefficients = rowPlaneSegmentation(right_row_polygon_it->point_cloud);
@@ -190,6 +302,11 @@ PlaneCoefficients RowDetectionNode::rowPlaneSegmentation(const sensor_msgs::Poin
   segmentation->setInputCloud(pcl_cloud);
   segmentation->segment(*inliers, plane_coefficients);
 
+  if (inliers->indices.size() == 0)
+  {
+    throw std::runtime_error("Error segmenting the row plane model! No solution found...");
+  }
+
   return { plane_coefficients.values[0], plane_coefficients.values[1], plane_coefficients.values[2],
            plane_coefficients.values[3] };
 }
@@ -273,4 +390,5 @@ void RowDetectionNode::dynamicReconfigureCallback(const agribot_obstacle_detecti
   row_polygon_centroid_y_threshold_ = dynamic_config.row_polygon_centroid_y_threshold;
   row_polygon_area_threshold_ = dynamic_config.row_polygon_area_threshold;
   row_plane_cutoff_z_ = dynamic_config.row_plane_cutoff_z;
+  row_width_ = dynamic_config.row_width;
 }
