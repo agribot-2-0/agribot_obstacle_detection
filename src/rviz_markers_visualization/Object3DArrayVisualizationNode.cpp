@@ -31,7 +31,7 @@ void Object3DArrayVisualizationNode::object3DArrayCallback(const agribot_msgs::O
     }
     else
     {
-      ROS_WARN_STREAM_THROTTLE(
+      ROS_INFO_STREAM_THROTTLE(
           5.0, "[Object3DArrayVisualizationNode] Message contains no objects, target_frame_id_ not set");
       return;
     }

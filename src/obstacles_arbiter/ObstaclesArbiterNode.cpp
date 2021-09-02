@@ -175,7 +175,7 @@ void ObstaclesArbiterNode::checkCollisions()
     detection_status_.status = detection_status_.WAITING_FOR_PATH;
     publishDetectionStatus();
 
-    ROS_WARN_STREAM_THROTTLE(5.0, log_tag_ << "Missing path info. Checking collisions only for robot polygon...");
+    ROS_INFO_STREAM_THROTTLE(5.0, log_tag_ << "Missing path info. Checking collisions only for robot polygon...");
   }
 
   // Clear detection status before checking new collisions

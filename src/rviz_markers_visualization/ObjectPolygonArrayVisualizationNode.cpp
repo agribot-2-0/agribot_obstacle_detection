@@ -41,8 +41,8 @@ void ObjectPolygonArrayVisualizationNode::objectPolygonArrayCallback(
     }
     else
     {
-      ROS_WARN_STREAM_THROTTLE(
-          5.0, "[ObjectPolygonArrayVisualizationNode] Message contains no objects, target_frame_id_ not set");
+      ROS_INFO_STREAM_THROTTLE(5.0, "[ObjectPolygonArrayVisualizationNode] Message contains no objects, "
+                                    "target_frame_id_ not set");
       return;
     }
   }
