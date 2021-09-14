@@ -141,7 +141,7 @@ agribot_msgs::ObjectPolygon convertToConvexHullPolygonWithRowLimits(
   crop_hull_filter.setCropOutside(true);
   crop_hull_filter.filter(inliers);
 
-  if (inliers.size() < 3)
+  if (inliers.size() < 10)
   {
     // TODO(olek) - it is just ugly workaround used to ignore clouds where all points are cropped as ObjectPolygon still
     // must be returned...
