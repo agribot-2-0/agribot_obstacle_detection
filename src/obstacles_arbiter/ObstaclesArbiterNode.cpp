@@ -31,7 +31,7 @@ agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildChassisPolygon()
 {
   geometry_msgs::PoseStamped robot_pose;
   robot_pose.header.frame_id = "base_footprint";
-  // robot_pose.header.stamp = ros::Time::now();
+  robot_pose.header.stamp = ros::Time(0);
   robot_pose.pose.orientation.w = 1.0;
 
   geometry_msgs::PoseStamped robot_pose_in_objects_frame;
@@ -53,7 +53,7 @@ agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildFrontCartPolygon()
 {
   geometry_msgs::PoseStamped front_cart_pose;
   front_cart_pose.header.frame_id = "front_cart_link";
-  // front_cart_pose.header.stamp = ros::Time::now();
+  front_cart_pose.header.stamp = ros::Time(0);
   front_cart_pose.pose.orientation.w = 1.0;
 
   geometry_msgs::PoseStamped front_cart_pose_in_objects_frame;
@@ -75,7 +75,7 @@ agribot_msgs::ObjectPolygon ObstaclesArbiterNode::buildBackCartPolygon()
 {
   geometry_msgs::PoseStamped back_cart_pose;
   back_cart_pose.header.frame_id = "back_cart_link";
-  // back_cart_pose.header.stamp = ros::Time::now();
+  back_cart_pose.header.stamp = ros::Time(0);
   back_cart_pose.pose.orientation.w = 1.0;
 
   geometry_msgs::PoseStamped back_cart_pose_in_objects_frame;
